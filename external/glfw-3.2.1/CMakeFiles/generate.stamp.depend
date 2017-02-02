@@ -1,0 +1,23 @@
+# CMake generation dependency list for this directory.
+F:/Programming/Engine/external/glfw-3.2.1/CMakeLists.txt
+F:/Programs/CMake/share/cmake-3.7/Modules/FindThreads.cmake
+F:/Programs/CMake/share/cmake-3.7/Modules/CheckLibraryExists.cmake
+F:/Programs/CMake/share/cmake-3.7/Modules/CheckSymbolExists.cmake
+F:/Programs/CMake/share/cmake-3.7/Modules/CheckIncludeFile.cmake
+F:/Programs/CMake/share/cmake-3.7/Modules/CheckIncludeFile.c.in
+F:/Programs/CMake/share/cmake-3.7/Modules/FindPackageHandleStandardArgs.cmake
+F:/Programs/CMake/share/cmake-3.7/Modules/FindPackageMessage.cmake
+F:/Programs/CMake/share/cmake-3.7/Modules/CMakeParseArguments.cmake
+F:/Programming/Engine/external/glfw-3.2.1/CMake/modules/FindVulkan.cmake
+F:/Programs/CMake/share/cmake-3.7/Modules/FindPackageHandleStandardArgs.cmake
+F:/Programs/CMake/share/cmake-3.7/Modules/FindPackageMessage.cmake
+F:/Programs/CMake/share/cmake-3.7/Modules/CMakeParseArguments.cmake
+F:/Programs/CMake/share/cmake-3.7/Modules/CMakePackageConfigHelpers.cmake
+F:/Programs/CMake/share/cmake-3.7/Modules/CMakeParseArguments.cmake
+F:/Programs/CMake/share/cmake-3.7/Modules/WriteBasicConfigVersionFile.cmake
+F:/Programs/CMake/share/cmake-3.7/Modules/CMakeParseArguments.cmake
+F:/Programming/Engine/external/glfw-3.2.1/src/glfw3Config.cmake.in
+F:/Programs/CMake/share/cmake-3.7/Modules/BasicConfigVersion-SameMajorVersion.cmake.in
+F:/Programming/Engine/external/glfw-3.2.1/src/glfw_config.h.in
+F:/Programming/Engine/external/glfw-3.2.1/src/glfw3.pc.in
+F:/Programming/Engine/external/glfw-3.2.1/cmake_uninstall.cmake.in
