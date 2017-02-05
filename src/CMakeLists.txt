@@ -2,15 +2,20 @@ cmake_minimum_required ( VERSION 3.0.2 )
 
 project ( Engine )
 
-# External libraries.
-include_directories ( ${CMAKE_SOURCE_DIR}/external/imgui)
-add_subdirectory ( ${CMAKE_SOURCE_DIR}/external/imgui ${CMAKE_CURRENT_BINARY_DIR}/imgui )
-include_directories ( ${CMAKE_SOURCE_DIR}/external/glad)
-add_subdirectory ( ${CMAKE_SOURCE_DIR}/external/glad ${CMAKE_CURRENT_BINARY_DIR}/glad )
-
 
 # Build and link executable.
 set(SOURCE_CODE main.cpp)
-add_executable ( IMPEngine ${SOURCE_CODE})
+set(IMGUI     
+	imconfig.h
+        imgui.cpp
+        imgui.h
+        imgui_demo.cpp
+        imgui_draw.cpp
+        imgui_internal.h
+        stb_rect_pack.h
+        stb_textedit.h
+        stb_truetype.h)
+set(GLAD glad.h glad.c khrplatform.h)
+add_executable ( IMPEngine ${SOURCE_CODE} ${IMGUI} ${GLAD})
 
-target_link_libraries(IMPEngine glfw imgui glad)
+target_link_libraries(IMPEngine glfw)
