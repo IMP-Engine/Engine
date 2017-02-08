@@ -1,9 +1,9 @@
-#include "glad.h"
+#include "glad\glad.h"
 #include <GLFW/glfw3.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "imgui.h"
-#include "imgui_impl_glfw_gl3.h"
+#include "imgui\imgui.h"
+#include "imgui\imgui_impl_glfw_gl3.h"
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
