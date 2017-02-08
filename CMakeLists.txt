@@ -4,7 +4,7 @@ project ( IMPEngine )
 
 set ( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin )
 
-set (  DEBUG )
+set ( DEBUG )
 
 # GLFW
 add_subdirectory(external/glfw-3.2.1)
