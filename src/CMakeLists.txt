@@ -12,6 +12,8 @@ set(IMGUI
         imgui_demo.cpp
         imgui_draw.cpp
         imgui_internal.h
+	imgui_impl_glfw_gl3.h
+	imgui_impl_glfw_gl3.cpp
         stb_rect_pack.h
         stb_textedit.h
         stb_truetype.h)
