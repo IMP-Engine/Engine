@@ -36,17 +36,18 @@ int main(void)
     glfwSwapInterval(1);
     // NOTE: OpenGL error checks have been omitted for brevity
 
+
+	// Showcase of how the box works
 	BoxConfig config;
 
-	config.width =  10.f;
-	config.height = 10.f;
-	config.depth =  10.f;
-	config.mass =   10.f;
-	config.num_particles_x = 4;
-	config.num_particles_y = 4;
-	config.num_particles_z = 4;
+	config.dimensions = make_vector<float>(10.f,10.f,10.f);
+	config.center_pos = make_vector<float>(5.f,5.f,5.f);
+	config.mass = 10.f;
+	config.num_particles = make_vector<int>(3,3,3);
 
 	Box *box = make_box(&config);
+
+
 
     while (!glfwWindowShouldClose(window))
     {

@@ -1,7 +1,11 @@
 #pragma once
+#include "linmath\float3.h"
+#include "linmath\int3.h"
 
+using namespace chag;
 
 struct BoxConfig {
-	float width, height, depth, mass;
-	int num_particles_x, num_particles_y, num_particles_z;
+	float mass;
+	float3 center_pos, dimensions;
+	int3 num_particles;
 };

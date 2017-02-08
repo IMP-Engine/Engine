@@ -9,8 +9,9 @@ class Box
 public:
 	Box();
 	~Box();
-	float width, height, depth, mass;
-	int num_particles_x, num_particles_y, num_particles_z;
+	float mass;
+	float3 dimensions, center_pos;
+	int3 num_particles;
 
 	std::vector<Particle *> particles;
 };
