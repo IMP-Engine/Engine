@@ -16,6 +16,10 @@ set(IMGUI
         stb_textedit.h
         stb_truetype.h)
 set(GLAD glad.h glad.c khrplatform.h)
-add_executable ( IMPEngine ${SOURCE_CODE} ${IMGUI} ${GLAD})
+set(GLHELPER glhelper.h glhelper.cpp)
+#set(SHADERS simple.frag simple.vert)
+add_executable ( IMPEngine ${SOURCE_CODE} ${IMGUI} ${GLAD} ${GLHELPER})
+
+include_directories(linmath, shaders)
 
 target_link_libraries(IMPEngine glfw)
