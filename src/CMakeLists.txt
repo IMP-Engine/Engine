@@ -4,7 +4,7 @@ project ( Engine )
 
 
 # Build and link executable.
-#set(SOURCE_CODE main.cpp Box.h Box.cpp)
+#set(SOURCE_CODE main.cpp)
 
 # Fetch all source and header files
 file(GLOB_RECURSE source_list RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*.cpp" "*.hpp" "*.h" "*.c")
