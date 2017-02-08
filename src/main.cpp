@@ -4,8 +4,12 @@
 #include <stdio.h>
 #include "imgui\imgui.h"
 #include "imgui\imgui_impl_glfw_gl3.h"
+#include <iostream>
+#include "debug.h"
+
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
+
 
 static void error_callback(int error, const char* description)
 {
@@ -25,24 +29,37 @@ int main(void)
     glfwSetErrorCallback(error_callback);
     if (!glfwInit())
         exit(EXIT_FAILURE);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+#if _DEBUG
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
+#endif
+
     window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
     if (!window)
     {
+		std::cout << "Failed to crate GLFW window" << std::endl;
         glfwTerminate();
-        exit(EXIT_FAILURE);
+		exit(EXIT_FAILURE);
     }
    
     glfwMakeContextCurrent(window);
-	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-		
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	{
+		std::cout << "Failed to initialize OpenGL context" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+#if _DEBUG		
+	debug::printGLDiagnostics();
+	debug::setupGLDebugMessages();
+#endif
+
 	ImVec4 clear_color = ImColor(164, 164, 164);
 	ImGui_ImplGlfwGL3_Init(window, true); 
 
 	// steal callback and call imgui in our callback
 	glfwSetKeyCallback(window, key_callback);
-
 
     while (!glfwWindowShouldClose(window))
     {
@@ -94,3 +111,4 @@ int main(void)
 	ImGui_ImplGlfwGL3_Shutdown();
     exit(EXIT_SUCCESS);
 }
+
