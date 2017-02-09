@@ -4,7 +4,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <chrono>
+#include "Box.h"
+
 #include "glHelper.h"
 #include "linmath\float3.h"
 #include "linmath\float4x4.h"
@@ -151,6 +152,7 @@ void initGL() {
 
 	glfwMakeContextCurrent(window);
 	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+
 	glfwSwapInterval(1); // v-sync
 
 	// NOTE: OpenGL error checks have been omitted for brevity
@@ -227,6 +229,16 @@ int main(void) {
 	}
 
 	double startTime = glfwGetTime();
+
+	// Showcase of how the box works
+	BoxConfig config;
+
+	config.dimensions = make_vector<float>(10.f, 10.f, 10.f);
+	config.center_pos = make_vector<float>(5.f, 5.f, 5.f);
+	config.mass = 10.f;
+	config.num_particles = make_vector<int>(3, 3, 3);
+
+	Box *box = make_box(&config);
 
     while (!glfwWindowShouldClose(window)) {
 		double timeElapsed = glfwGetTime() - startTime;
