@@ -8,4 +8,5 @@ struct BoxConfig {
 	float mass;
 	float3 center_pos, dimensions;
 	int3 num_particles;
+	int phase;
 };

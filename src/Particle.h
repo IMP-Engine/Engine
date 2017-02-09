@@ -6,12 +6,9 @@ using namespace chag;
 
 struct Particle
 {
-
 	float3 pos;
 	float3 velocity;
-	float3 force;
-
-	float mass;
-
+	float invmass;
+	int phase;
 };
 

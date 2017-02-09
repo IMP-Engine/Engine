@@ -41,10 +41,9 @@ Box *make_box(BoxConfig * const config) {
 				p->pos = base_pos + make_vector<float>(i*dx, j*dy, k*dz);
 
 				// Uniform distribution of mass
-				p->mass = config->mass / num_particles;
-
+				p->invmass = config->mass / num_particles;
 				p->velocity = make_vector(0.f, 0.f, 0.f);
-				p->force = make_vector(0.f, 0.f, 0.f);
+				p->phase = config->phase;
 
 				box->particles.push_back(p);
 			}
