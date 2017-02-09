@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "Box.h"
+
 static void error_callback(int error, const char* description)
 {
     fprintf(stderr, "Error: %s\n", description);
@@ -33,6 +35,19 @@ int main(void)
 	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
     glfwSwapInterval(1);
     // NOTE: OpenGL error checks have been omitted for brevity
+
+
+	// Showcase of how the box works
+	BoxConfig config;
+
+	config.dimensions = make_vector<float>(10.f,10.f,10.f);
+	config.center_pos = make_vector<float>(5.f,5.f,5.f);
+	config.mass = 10.f;
+	config.num_particles = make_vector<int>(3,3,3);
+
+	Box *box = make_box(&config);
+
+
 
     while (!glfwWindowShouldClose(window))
     {
