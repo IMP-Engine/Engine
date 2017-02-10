@@ -1,10 +1,11 @@
 #include "debug.h"
-#include "glad\glad.h"
-#include <GLFW\glfw3.h>
+#include "glad/glad.h"
+#include <GLFW/glfw3.h>
 
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <stdio.h>
 
 namespace debug {
 
@@ -28,7 +29,7 @@ namespace
 	GLvoid CALLBACK_ handle_debug_message_(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, GLchar const* message, GLvoid* /*user*/)
 	{
 		// source string
-		const char* srcStr = nullptr;
+		const char* srcStr = 0;
 		switch (source) {
 		case GL_DEBUG_SOURCE_API:				srcStr = "API";	break;
 		case GL_DEBUG_SOURCE_WINDOW_SYSTEM:		srcStr = "WINDOW_SYSTEM"; break;
@@ -40,7 +41,7 @@ namespace
 		}
 
 		// type
-		const char* typeStr = nullptr;
+		const char* typeStr = 0;
 		switch (type) {
 		case GL_DEBUG_TYPE_ERROR:				typeStr = "ERROR";	break;
 		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:	typeStr = "DEPRECATED_BEHAVIOR";	break;
@@ -52,7 +53,7 @@ namespace
 		}
 
 		// severity
-		const char* sevStr = nullptr;
+		const char* sevStr = 0;
 		switch (severity) {
 		case GL_DEBUG_SEVERITY_HIGH:			sevStr = "HIGH"; break;
 		case GL_DEBUG_SEVERITY_MEDIUM:			sevStr = "MEDIUM"; break;
@@ -95,7 +96,7 @@ void setupGLDebugMessages() {
 		*  the callback to be called immediately on error.
 		*/
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-		glDebugMessageCallback((GLDEBUGPROC)handle_debug_message_, nullptr);
+		glDebugMessageCallback((GLDEBUGPROC)handle_debug_message_, 0);
 		glDebugMessageControl(GL_DONT_CARE,
 			GL_DONT_CARE,
 			GL_DONT_CARE,
