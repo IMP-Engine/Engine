@@ -177,7 +177,6 @@ void initGL() {
 	debug::setupGLDebugMessages();
 #endif
 
-	ImVec4 clear_color = ImColor(164, 164, 164);
 	ImGui_ImplGlfwGL3_Init(window, true); 
 
 	// steal callback and call imgui in our callback
@@ -279,6 +278,9 @@ int main(void) {
     {
 		glfwPollEvents();
 		ImGui_ImplGlfwGL3_NewFrame();
+
+
+		ImVec4 clear_color = ImColor(164, 164, 164);
 
 		// Consider scapping incase of performance
 		static bool vsync = true;
