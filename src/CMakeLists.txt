@@ -6,7 +6,7 @@ project ( Engine )
 file(GLOB_RECURSE source_list RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*.cpp" "*.hpp" "*.h" "*.c")
 
 # Remove specific files
-list(FILTER source_list EXCLUDE REGEX "binary_to_compressed_c.cpp") 
+#list(FILTER source_list EXCLUDE REGEX "binary_to_compressed_c.cpp") 
 
 add_executable ( IMPEngine ${source_list})
 
