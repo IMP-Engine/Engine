@@ -157,7 +157,7 @@ void initGL() {
 #endif
 
 	if (!window) {
-    std::cout << "Failed to crate GLFW window" << std::endl;
+		std::cout << "Failed to crate GLFW window" << std::endl;
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
@@ -182,10 +182,6 @@ void initGL() {
 	// steal callback and call imgui in our callback
 	glfwSetKeyCallback(window, key_callback);
 
-	glfwSwapInterval(1); // v-sync
-
-	// NOTE: OpenGL error checks have been omitted for brevity
-
 	//glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_CULL_FACE);
 
@@ -201,11 +197,6 @@ void initGL() {
 	for (int i = 0; i < numFbos; i++)
 		fboList.push_back(FboInfo(w, h));*/
 
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		printf("Failed to initialize OpenGL context");
-		return;
-	}
-
 	// Triangle setup
 	GLuint vertex_buffer;
 
@@ -219,10 +210,9 @@ void initGL() {
 	glEnableVertexAttribArray(vcol_location);
 	glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
 		sizeof(float) * 5, (void*)(sizeof(float) * 2));
-
 }
 
-void display() {
+void display(ImVec4 clearColor) {
 	float ratio;
 	int width, height;
 	mat4x4 m, p, mvp;
@@ -231,7 +221,9 @@ void display() {
 	ratio = width / (float)height;
 
 	glViewport(0, 0, width, height);
+	glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
 	glClear(GL_COLOR_BUFFER_BIT);
+	
 
 	mat4x4_identity(m);
 	mat4x4_rotate_Z(m, m, (float)glfwGetTime());
@@ -242,15 +234,13 @@ void display() {
 	glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*)mvp);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
-  ImGui::Render();
+	ImGui::Render();
 
 	glfwSwapBuffers(window);
 }
 
 int main(void) {
 	initGL();
-
-	printf("OpenGL %d.%d\n", GLVersion.major, GLVersion.minor);
 
 	//if (GLAD_GL_EXT_framebuffer_multisample) {
 	//	/* GL_EXT_framebuffer_multisample is supported */
@@ -271,7 +261,7 @@ int main(void) {
 	config.num_particles = make_vector<int>(3,3,3);
 
 	Box *box = make_box(&config);
-
+	ImVec4 clearColor = ImColor(164, 164, 164);
     
 
     while (!glfwWindowShouldClose(window))
@@ -279,10 +269,7 @@ int main(void) {
 		glfwPollEvents();
 		ImGui_ImplGlfwGL3_NewFrame();
 
-
-		ImVec4 clear_color = ImColor(164, 164, 164);
-
-		// Consider scapping incase of performance
+		// Consider scrapping incase of performance
 		static bool vsync = true;
 		glfwSwapInterval(vsync ? 1 : 0);
 
@@ -296,7 +283,7 @@ int main(void) {
 			static bool show_demo_window = false;
 
 			ImGui::Begin("IMPEngine");
-			ImGui::ColorEdit3("clear color", (float*)&clear_color);
+			ImGui::ColorEdit3("clear color", (float*)&clearColor);
 			ImGui::Checkbox("Vsync", &vsync);
 			if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -311,7 +298,7 @@ int main(void) {
 			}
 		}
 
-        display();
+        display(clearColor);
     }
 
 	// Cleanup
