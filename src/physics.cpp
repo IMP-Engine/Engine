@@ -36,7 +36,7 @@ void simulate(std::vector<Particle*>* particles/*, std::vector<Constraint*>* con
 	// v_i = (x_i^* - x_i) / dt
 	// x_i = x_i^*
 
-	for (std::vector<float3>::size_type i = 0; i != particles->size(); i++) {
+	for (std::vector<float3>::size_type i = 0; i != particles->size(); i++) 
 	{
 		(*particles)[i]->velocity = (pPos[i] - (*particles)[i]->pos) / dt;
 		(*particles)[i]->pos = pPos[i];
