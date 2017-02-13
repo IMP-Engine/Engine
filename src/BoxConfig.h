@@ -1,12 +1,11 @@
 #pragma once
-#include "linmath/float3.h"
-#include "linmath/int3.h"
+#include <glm/vec3.hpp>
 
-using namespace chag;
+using namespace glm;
 
 struct BoxConfig {
 	float mass;
-	float3 center_pos, dimensions;
-	int3 num_particles;
+	vec3 center_pos, dimensions;
+	vec3 num_particles;
 	int phase;
 };

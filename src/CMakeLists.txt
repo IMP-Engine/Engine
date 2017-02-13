@@ -3,7 +3,7 @@ cmake_minimum_required ( VERSION 3.0.2 )
 project ( Engine )
 
 # Fetch all source and header files
-file(GLOB_RECURSE source_list RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*.cpp" "*.hpp" "*.h" "*.c")
+file(GLOB_RECURSE source_list RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*.cpp" "*.hpp" "*.h" "*.c" "*.vert" "*.frag")
 
 # Remove specific files
 #list(FILTER source_list EXCLUDE REGEX "binary_to_compressed_c.cpp") 

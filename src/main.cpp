@@ -1,4 +1,3 @@
-
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
 #include <stdlib.h>
@@ -23,12 +22,11 @@
 #include "Box.h"
 
 #include "glHelper.h"
-#include "linmath/float3.h"
-#include "linmath/float4x4.h"
-#include "linmath/linmath.h"
-#include <vector>
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
+using namespace glm;
 
-using namespace chag;
+#include <vector>
 
 // Global variables
 GLFWwindow* window;
@@ -39,8 +37,8 @@ GLuint simpleShader;
 
 // Light
 float point_light_intensity_multiplier = 1000.0f;
-float3 point_light_color = {1.f, 1.f, 1.f};
-const float3 lightPosition = {20.0f, 40.0f, 0.0f};
+vec3 point_light_color = {1.f, 1.f, 1.f};
+const vec3 lightPosition = {20.0f, 40.0f, 0.0f};
 
 static const struct {
 	float x, y;
@@ -233,7 +231,7 @@ void initGL() {
 void display() {
 	float ratio;
 	int width, height;
-	mat4x4 m, p, mvp;
+	mat4 m, p, mvp;
 
 	glfwGetFramebufferSize(window, &width, &height);
 	ratio = width / (float)height;
@@ -241,13 +239,18 @@ void display() {
 	glViewport(0, 0, width, height);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	mat4x4_identity(m);
-	mat4x4_rotate_Z(m, m, (float)glfwGetTime());
-	mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-	mat4x4_mul(mvp, p, m);
+	m = { 1.f, 0.f, 0.f, 0.f,
+		  0.f, 1.f, 0.f, 0.f,
+		  0.f, 0.f, 1.f, 0.f,
+		   0.f, 0.f, 0.f, 1.f
+		};
+
+	m = rotate((float)glfwGetTime(), vec3(0, 0, 1)) * m;
+	p = ortho(-1.f, 1.f, 1.f, -1.f);
+	mvp = p * m;
 
 	glUseProgram(simpleShader);
-	glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*)mvp);
+	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "MVP"), 1, false, &mvp[0].x);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
   ImGui::Render();
@@ -272,11 +275,11 @@ int main(void) {
 	// Showcase of how the box works
 	BoxConfig config;
 
-	config.dimensions = make_vector<float>(10.f, 10.f, 10.f);
-	config.center_pos = make_vector<float>(5.f, 5.f, 5.f);
+	config.dimensions =	vec3(10.f, 10.f, 10.f);
+	config.center_pos = vec3(5.f, 5.f, 5.f);
 	config.mass = 10.f;
 	config.phase = 1;
-	config.num_particles = make_vector<int>(3,3,3);
+	config.num_particles = vec3(3,3,3);
 
 	Box *box = make_box(&config);
 

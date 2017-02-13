@@ -1,13 +1,13 @@
 #pragma once
 
-#include "linmath/float3.h"
+#include <glm/vec3.hpp>
 
-using namespace chag;
+using namespace glm;
 
 struct Particle
 {
-	float3 pos;
-	float3 velocity;
+	vec3 pos;
+	vec3 velocity;
 	float invmass;
 	int phase;
 };
