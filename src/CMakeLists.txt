@@ -10,6 +10,9 @@ file(GLOB_RECURSE source_list RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*.cpp" "*.
 
 add_executable ( IMPEngine ${source_list})
 
+set_property(TARGET IMPEngine PROPERTY CXX_STANDARD 11)
+set_property(TARGET IMPEngine PROPERTY CXX_STANDARD_REQUIRED ON)
+
 # Make the IMPEngine project the start project in the solution
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT IMPEngine)
 
