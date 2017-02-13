@@ -25,7 +25,7 @@ Box *make_box(BoxConfig * const config) {
 	 
 
 	// Get the "minimum" corner to use as base position
-	float3 base_pos = config->center_pos - (config->dimensions * 0.5f);
+	vec3 base_pos = config->center_pos - (config->dimensions * 0.5f);
 
 	box->dimensions = config->dimensions;
 	box->center_pos = config->center_pos;
@@ -38,11 +38,11 @@ Box *make_box(BoxConfig * const config) {
 				Particle *p = new Particle;
 
 				// Offset from base
-				p->pos = base_pos + make_vector<float>(i*dx, j*dy, k*dz);
+				p->pos = base_pos + vec3(i*dx, j*dy, k*dz);
 
 				// Uniform distribution of mass
 				p->invmass = config->mass / num_particles;
-				p->velocity = make_vector(0.f, 0.f, 0.f);
+				p->velocity = vec3(0.f, 0.f, 0.f);
 				p->phase = config->phase;
 
 				box->particles.push_back(p);
