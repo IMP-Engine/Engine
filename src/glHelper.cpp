@@ -16,10 +16,10 @@ namespace glHelper {
 	// Reads, compiles, links and returns a shader from the given paths
 	GLuint loadShader(const std::string &vertexPath, const std::string &fragmentPath) {
 		// Read our shaders into the appropriate buffers
-		std::ifstream vs_file(vertexPath.c_str());
+		std::ifstream vs_file(vertexPath);
 		std::string vertexSource((std::istreambuf_iterator<char>(vs_file)), std::istreambuf_iterator<char>());
 
-		std::ifstream fs_file(fragmentPath.c_str());
+		std::ifstream fs_file(fragmentPath);
 		std::string fragmentSource((std::istreambuf_iterator<char>(fs_file)), std::istreambuf_iterator<char>());
 
 		const char *vs = vertexSource.c_str();
