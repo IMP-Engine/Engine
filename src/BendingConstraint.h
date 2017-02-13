@@ -22,45 +22,47 @@ public:
 	bool evaluate() {
 			return equality || (acos(calcDotNormals()) - this->angle) < 0;
 	}
-	//TODO
+	
 	float evaluateScaleFactor() {
-		float accum = acos(calcDotNormals()) - this->angle;
+		float accum = (acos(calcDotNormals()) - this->angle) * sqrtf(1- powf(calcDotNormals(), 2.0f));
+
 		for (std::vector<Particle*>::iterator it = this->particles.begin(); it != this->particles.end(); it++)
 		{
 			accum += (*it)->invmass + lengthSquared(evaluateGradient(it));
 		}
+
+		return accum;
 	}
 
-	// TODO
 	float3 evaluateGradient(std::vector<Particle*>::iterator p) {
 		float d = calcDotNormals();
-		switch (p - this->particles.begin)
-		{
-		case 0:
+		const float3 p1 = this->particles[0]->pos;
+		const float3 p2 = this->particles[1]->pos;
+		const float3 p3 = this->particles[2]->pos;
+		const float3 p4 = this->particles[3]->pos;
+		const float3 n1 = cross(p2 - p1, p3 - p1);
+		const float3 n2 = cross(p2 - p1, p4 - p1);
 
-			break;
-		case 1:
-			break;
-		case 2:
-			break;
-		case 3:
-			break;
-		default:
-			// hmmm
+		switch (p - this->particles.begin())
+		{
+		case 0:	return -evaluateGradient(p+1) - evaluateGradient(p + 2) - evaluateGradient(p + 3);
+		case 1:	return -(cross(p3, n2) + d*(cross(n1, p3))) / length(cross(p2, p3)) - (cross(p4, n1) + d*(cross(n2, p4))) / length(cross(p2, p4));
+		case 2:	return (cross(p2, n2) + d*(cross(n1, p2))) / length(cross(p2, p3));
+		case 3:	return (cross(p2, n1) + d*(cross(n2, p2))) / length(cross(p2, p4));
 		}
 	}
 
 private:
-	// Dot product of the normals of two contigious triangle sections
+	// Dot product of the normals of two contiguous triangle sections
 	float calcDotNormals() {
 		const float3 p1 = this->particles[0]->pos;
 		const float3 p2 = this->particles[1]->pos;
 		const float3 p3 = this->particles[2]->pos;
 		const float3 p4 = this->particles[3]->pos;
-		const float3 v1 = cross(p2 - p1, p3 - p1);
-		const float3 v2 = cross(p2 - p1, p4 - p1);
+		const float3 n1 = cross(p2 - p1, p3 - p1);
+		const float3 n2 = cross(p2 - p1, p4 - p1);
 
-		return dot(normalize(v1), normalize(v2));
+		return dot(normalize(n1), normalize(n2));
 	}
 };
 
