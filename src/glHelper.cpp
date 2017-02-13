@@ -25,6 +25,8 @@ namespace glHelper {
 		const char *vs = vertexSource.c_str();
 		const char *fs = fragmentSource.c_str();
 
+        // cout << vs << endl << fs << endl;
+
 		// Create an empty vertex shader handle
 		GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 
@@ -103,6 +105,7 @@ namespace glHelper {
 		// Note the different functions here: glGetProgram* instead of glGetShader*.
 		GLint isLinked = 0;
 		glGetProgramiv(program, GL_LINK_STATUS, (int *)&isLinked);
+
 		if (isLinked == GL_FALSE)
 		{
 			GLint maxLength = 0;
@@ -119,7 +122,11 @@ namespace glHelper {
 			glDeleteShader(fragmentShader);
 
 			// Time to use the infoLog.
-
+            //for (int i = 0; i < infoLog.size(); i++)
+            //{
+            //    std::cerr << infoLog[i];
+            //}
+            
 			// In this simple program, we'll just leave
 			return -1;
 		}
