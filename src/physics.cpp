@@ -1,11 +1,11 @@
 #include "physics.h"
-
+#include <glm\vec3.hpp>
 
 namespace physics {
 
 void simulate(std::vector<Particle*>* particles/*, std::vector<Constraint*>* constraints */, float dt)
 {
-	std::vector<float3> pPos(particles->size());
+	std::vector<glm::vec3> pPos(particles->size());
 	// Based on 2007 PBD, NOT Unified Framework 
 
 	// For all particles i
@@ -13,8 +13,8 @@ void simulate(std::vector<Particle*>* particles/*, std::vector<Constraint*>* con
 	// Damp velocities		-- Skip for now --
 	// Predict position		x_i^* = x_i + dt * v_i
 
-	for (std::vector<float3>::size_type i = 0; i != particles->size(); i++) {
-		//(*particles)[i]->velocity = (*particles)[i]->velocity - vec3(0.5f); // Gravity (Placeholder value. Also, using vec3 instead of float3.)
+	for (std::vector<glm::vec3>::size_type i = 0; i != particles->size(); i++) {
+		(*particles)[i]->velocity = (*particles)[i]->velocity - glm::vec3(0.5f); // Gravity (Placeholder value. Also, using vec3 instead of float3.)
 		pPos[i] = (*particles)[i]->pos + dt * (*particles)[i]->velocity;
 	}
 
@@ -36,7 +36,7 @@ void simulate(std::vector<Particle*>* particles/*, std::vector<Constraint*>* con
 	// v_i = (x_i^* - x_i) / dt
 	// x_i = x_i^*
 
-	for (std::vector<float3>::size_type i = 0; i != particles->size(); i++) 
+	for (std::vector<glm::vec3>::size_type i = 0; i != particles->size(); i++) 
 	{
 		(*particles)[i]->velocity = (pPos[i] - (*particles)[i]->pos) / dt;
 		(*particles)[i]->pos = pPos[i];
