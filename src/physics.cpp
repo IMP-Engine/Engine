@@ -14,7 +14,7 @@ void simulate(std::vector<Particle*>* particles/*, std::vector<Constraint*>* con
 	// Predict position		x_i^* = x_i + dt * v_i
 
 	for (std::vector<float3>::size_type i = 0; i != particles->size(); i++) {
-		//APPLY GRAVITY HERE
+		//(*particles)[i]->velocity = (*particles)[i]->velocity - vec3(0.5f); // Gravity (Placeholder value. Also, using vec3 instead of float3.)
 		pPos[i] = (*particles)[i]->pos + dt * (*particles)[i]->velocity;
 	}
 
