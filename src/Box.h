@@ -10,8 +10,8 @@ public:
 	Box();
 	~Box();
 	float mass;
-	float3 dimensions, center_pos;
-	int3 num_particles;
+	vec3 dimensions, center_pos;
+	vec3 num_particles;
 
 	std::vector<Particle *> particles;
 };
