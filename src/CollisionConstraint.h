@@ -1,6 +1,8 @@
 #pragma once
 #include "Constraint.h"
 #include "Particle.h"
+#include <glm\vec3.hpp>
+#include <glm\geometric.hpp>
 
 class CollisionConstraint :
 	public Constraint
@@ -21,10 +23,10 @@ public:
 	}
 
 	bool evaluate() {
-		float3 q  = this->particles[0]->pos;
-		float3 p1 = this->particles[1]->pos;
-		float3 p2 = this->particles[2]->pos;
-		float3 p3 = this->particles[3]->pos;
+		vec3 q  = this->particles[0]->pos;
+		vec3 p1 = this->particles[1]->pos;
+		vec3 p2 = this->particles[2]->pos;
+		vec3 p3 = this->particles[3]->pos;
 
 		if (qAbove) return equality || dot(q - p1, normalize(cross(p2 - p1, p3 - p1))) < 0;
 		else return equality || dot(q - p1, normalize(cross(p3 - p1, p2 - p1))) < 0;
@@ -36,8 +38,8 @@ public:
 	}
 
 	// TODO
-	float3 evaluateGradient(std::vector<Particle*>::iterator p) {
-		return float3();
+	vec3 evaluateGradient(std::vector<Particle*>::iterator p) {
+		return vec3();
 	}
 
 };

@@ -1,6 +1,7 @@
 #pragma once
 #include "Constraint.h"
 #include "Particle.h"
+#include <glm\vec3.hpp>
 
 class VolumeConstraint :
 	public Constraint
@@ -24,8 +25,8 @@ public:
 		return 0.0f;
 	}
 
-	float3 evaluateGradient(std::vector<Particle*>::iterator p) {
-		return float3();
+	vec3 evaluateGradient(std::vector<Particle*>::iterator p) {
+		return vec3();
 	}
 
 };

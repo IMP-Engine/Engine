@@ -1,7 +1,10 @@
 #pragma once
 #include "Constraint.h"
 #include "Particle.h"
-#include <cmath>
+#include <glm\geometric.hpp>
+#include <glm\gtx\norm.hpp>
+
+using namespace glm;
 
 class BendingConstraint :
 	public Constraint
@@ -24,24 +27,24 @@ public:
 	}
 	
 	float evaluateScaleFactor() {
-		float accum = (acos(calcDotNormals()) - this->angle) * sqrtf(1- powf(calcDotNormals(), 2.0f));
+		float accum = (acos(calcDotNormals()) - this->angle) * sqrt(1- pow(calcDotNormals(), 2.0f));
 
 		for (std::vector<Particle*>::iterator it = this->particles.begin(); it != this->particles.end(); it++)
 		{
-			accum += (*it)->invmass + lengthSquared(evaluateGradient(it));
+			accum += (*it)->invmass + length2(evaluateGradient(it));
 		}
-
+		
 		return accum;
 	}
 
-	float3 evaluateGradient(std::vector<Particle*>::iterator p) {
+	vec3 evaluateGradient(std::vector<Particle*>::iterator p) {
 		float d = calcDotNormals();
-		const float3 p1 = this->particles[0]->pos;
-		const float3 p2 = this->particles[1]->pos;
-		const float3 p3 = this->particles[2]->pos;
-		const float3 p4 = this->particles[3]->pos;
-		const float3 n1 = cross(p2 - p1, p3 - p1);
-		const float3 n2 = cross(p2 - p1, p4 - p1);
+		const vec3 p1 = this->particles[0]->pos;
+		const vec3 p2 = this->particles[1]->pos;
+		const vec3 p3 = this->particles[2]->pos;
+		const vec3 p4 = this->particles[3]->pos;
+		const vec3 n1 = cross(p2 - p1, p3 - p1);
+		const vec3 n2 = cross(p2 - p1, p4 - p1);
 
 		switch (p - this->particles.begin())
 		{
@@ -55,13 +58,13 @@ public:
 private:
 	// Dot product of the normals of two contiguous triangle sections
 	float calcDotNormals() {
-		const float3 p1 = this->particles[0]->pos;
-		const float3 p2 = this->particles[1]->pos;
-		const float3 p3 = this->particles[2]->pos;
-		const float3 p4 = this->particles[3]->pos;
-		const float3 n1 = cross(p2 - p1, p3 - p1);
-		const float3 n2 = cross(p2 - p1, p4 - p1);
-
+		const vec3 p1 = this->particles[0]->pos;
+		const vec3 p2 = this->particles[1]->pos;
+		const vec3 p3 = this->particles[2]->pos;
+		const vec3 p4 = this->particles[3]->pos;
+		const vec3 n1 = cross(p2 - p1, p3 - p1);
+		const vec3 n2 = cross(p2 - p1, p4 - p1);
+		
 		return dot(normalize(n1), normalize(n2));
 	}
 };

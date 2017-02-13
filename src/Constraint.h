@@ -1,6 +1,10 @@
 #pragma once
 #include "Particle.h"
 #include <vector>
+#include <glm\vec3.hpp>
+
+using namespace glm;
+
 class Constraint
 {
 public:
@@ -39,6 +43,6 @@ public:
 	 * This method might not work properly unless evaluate() has been called,
 	 * consult derived constraint for more information.
 	 */
-	virtual float3 evaluateGradient(std::vector<Particle*>::iterator p) = 0;
+	virtual vec3 evaluateGradient(std::vector<Particle*>::iterator p) = 0;
 };
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "Constraint.h"
 #include "Particle.h"
+#include <glm\geometric.hpp>
 
 class DistanceConstraint :
 	public Constraint
@@ -17,24 +18,24 @@ public:
 	}
 
 	bool evaluate() {
-		float3 p1 = this->particles[0]->pos;
-		float3 p2 = this->particles[1]->pos;
-		 
+		vec3 p1 = this->particles[0]->pos;
+		vec3 p2 = this->particles[1]->pos;
+		
 		return equality || length(p1 - p2) - distance < 0;
 	}
 
 	float evaluateScaleFactor() {
-		float3 p1 = this->particles[0]->pos;
-		float3 p2 = this->particles[1]->pos;
+		vec3 p1 = this->particles[0]->pos;
+		vec3 p2 = this->particles[1]->pos;
 
 		return (length(p1 - p2) - distance) / (this->particles[0]->invmass + this->particles[1]->invmass);
 	}
 
-	float3 evaluateGradient(std::vector<Particle*>::iterator p) {
-		float3 p1 = this->particles[0]->pos;
-		float3 p2 = this->particles[1]->pos;
+	vec3 evaluateGradient(std::vector<Particle*>::iterator p) {
+		vec3 p1 = this->particles[0]->pos;
+		vec3 p2 = this->particles[1]->pos;
 
-		float3 c = (p1 - p2) / length(p1 - p2);
+		vec3 c = (p1 - p2) / length(p1 - p2);
 
 		return (p == this->particles.begin() ? c : -c); // TODO typo? Where should '-' be?
 	}
