@@ -1,6 +1,6 @@
 #pragma once
-#include "linmath\float3.h"
-#include "linmath\int3.h"
+#include "linmath/float3.h"
+#include "linmath/int3.h"
 
 using namespace chag;
 

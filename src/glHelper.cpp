@@ -16,14 +16,16 @@ namespace glHelper {
 	// Reads, compiles, links and returns a shader from the given paths
 	GLuint loadShader(const std::string &vertexPath, const std::string &fragmentPath) {
 		// Read our shaders into the appropriate buffers
-		std::ifstream vs_file(vertexPath);
+		std::ifstream vs_file(vertexPath.c_str());
 		std::string vertexSource((std::istreambuf_iterator<char>(vs_file)), std::istreambuf_iterator<char>());
 
-		std::ifstream fs_file(fragmentPath);
+		std::ifstream fs_file(fragmentPath.c_str());
 		std::string fragmentSource((std::istreambuf_iterator<char>(fs_file)), std::istreambuf_iterator<char>());
 
 		const char *vs = vertexSource.c_str();
 		const char *fs = fragmentSource.c_str();
+
+        // cout << vs << endl << fs << endl;
 
 		// Create an empty vertex shader handle
 		GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -103,6 +105,7 @@ namespace glHelper {
 		// Note the different functions here: glGetProgram* instead of glGetShader*.
 		GLint isLinked = 0;
 		glGetProgramiv(program, GL_LINK_STATUS, (int *)&isLinked);
+
 		if (isLinked == GL_FALSE)
 		{
 			GLint maxLength = 0;
@@ -119,7 +122,11 @@ namespace glHelper {
 			glDeleteShader(fragmentShader);
 
 			// Time to use the infoLog.
-
+            //for (int i = 0; i < infoLog.size(); i++)
+            //{
+            //    std::cerr << infoLog[i];
+            //}
+            
 			// In this simple program, we'll just leave
 			return -1;
 		}

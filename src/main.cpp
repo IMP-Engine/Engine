@@ -11,13 +11,21 @@
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
+#ifdef _WIN32
+    #define VERT_SHADER_PATH "../../src/shaders/simple.vert"
+    #define FRAG_SHADER_PATH "../../src/shaders/simple.frag"
+#elif __unix__
+    #define VERT_SHADER_PATH "../src/shaders/simple.vert"
+    #define FRAG_SHADER_PATH "../src/shaders/simple.frag"
+#endif
+
 
 #include "Box.h"
 
 #include "glHelper.h"
-#include "linmath\float3.h"
-#include "linmath\float4x4.h"
-#include "linmath\linmath.h"
+#include "linmath/float3.h"
+#include "linmath/float4x4.h"
+#include "linmath/linmath.h"
 #include <vector>
 
 using namespace chag;
@@ -190,7 +198,7 @@ void initGL() {
 	//glEnable(GL_CULL_FACE);
 
 	// Shader setup
-	simpleShader = glHelper::loadShader("../../src/shaders/simple.vert", "../../src/shaders/simple.frag");
+	simpleShader = glHelper::loadShader(VERT_SHADER_PATH, FRAG_SHADER_PATH);
 	mvp_location = glGetUniformLocation(simpleShader, "MVP");
 	vpos_location = glGetAttribLocation(simpleShader, "vPos");
 	vcol_location = glGetAttribLocation(simpleShader, "vCol");
