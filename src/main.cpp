@@ -32,15 +32,14 @@ float point_light_intensity_multiplier = 1000.0f;
 vec3 point_light_color = {1.f, 1.f, 1.f};
 const vec3 lightPosition = {20.0f, 40.0f, 0.0f};
 
-static const struct {
-	float x, y;
-	float r, g, b;
-}
+float vertices[] = {
+	-10.f, -5.f, -10.f,
+	 10.f, -5.f, -10.f,
+	-10.f, -5.f,  10.f,
 
-vertices[3] = {
-	{ -0.6f, -0.4f, 1.f, 0.f, 0.f },
-	{ 0.6f, -0.4f, 0.f, 1.f, 0.f },
-	{ 0.f,  0.6f, 0.f, 0.f, 1.f }
+	-10.f, -5.f,  10.f,
+	 10.f, -5.f, -10.f,
+	 10.f, -5.f,  10.f
 };
 
 // Framebuffer
@@ -212,18 +211,19 @@ void initGL() {
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	glEnableVertexAttribArray(vpos_location);
-	glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE,
-		sizeof(float) * 5, (void*)0);
-	glEnableVertexAttribArray(vcol_location);
-	glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
-		sizeof(float) * 5, (void*)(sizeof(float) * 2));
+	glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE,
+		/*sizeof(float) * 3, (void*)0);*/
+		0, (void*)0);
+	//glEnableVertexAttribArray(vcol_location);
+	//glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
+	//	sizeof(float) * 5, (void*)(sizeof(float) * 2));
 
 }
 
 void display() {
 	float ratio;
 	int width, height;
-	mat4 m, p, mvp;
+	mat4 m, v, p, mvp;
 
 	glfwGetFramebufferSize(window, &width, &height);
 	ratio = width / (float)height;
@@ -235,15 +235,23 @@ void display() {
 		  0.f, 1.f, 0.f, 0.f,
 		  0.f, 0.f, 1.f, 0.f,
 		   0.f, 0.f, 0.f, 1.f
-		};
+		}; // Identity matrix
 
-	m = rotate((float)glfwGetTime(), vec3(0, 0, 1)) * m;
-	p = ortho(-1.f, 1.f, 1.f, -1.f);
-	mvp = p * m;
+	//m = rotate((float)glfwGetTime(), vec3(0, 0, 1)) * m;
+	v = lookAt(vec3(0, 4, 40), vec3(0), vec3(0, 1, 0));
+
+	// Set up a projection matrix
+	float fovy = radians(45.0f);
+	float nearPlane = 0.01f;
+	float farPlane = 300.0f;
+
+	p = perspective(fovy, ratio, nearPlane, farPlane); //ortho(-1.f, 1.f, 1.f, -1.f);
+	mvp = p * v * m;
 
 	glUseProgram(simpleShader);
 	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "MVP"), 1, false, &mvp[0].x);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glDrawArrays(GL_TRIANGLES, 3, 3);
 
   ImGui::Render();
 
