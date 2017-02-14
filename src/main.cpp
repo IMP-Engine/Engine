@@ -191,6 +191,10 @@ void initGL() {
 	mvp_location = glGetUniformLocation(simpleShader, "MVP");
 	vpos_location = glGetAttribLocation(simpleShader, "vPos");
 	vcol_location = glGetAttribLocation(simpleShader, "vCol");
+
+	glUniform3fv(glGetAttribLocation(simpleShader, "lightPos"), 1, &lightPosition.x);
+
+
 	// Framebuffer setup
 	/*int w, h;
 	glfwGetWindowSize(window, &w, &h);
@@ -223,7 +227,7 @@ void initGL() {
 void display() {
 	float ratio;
 	int width, height;
-	mat4 m, v, p, mvp;
+	mat4 m, v, p, mvp, mv, normalMatrix;
 
 	glfwGetFramebufferSize(window, &width, &height);
 	ratio = width / (float)height;
@@ -231,11 +235,7 @@ void display() {
 	glViewport(0, 0, width, height);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	m = { 1.f, 0.f, 0.f, 0.f,
-		  0.f, 1.f, 0.f, 0.f,
-		  0.f, 0.f, 1.f, 0.f,
-		   0.f, 0.f, 0.f, 1.f
-		}; // Identity matrix
+	m = mat4(1.0f); // Identity matrix
 
 	//m = rotate((float)glfwGetTime(), vec3(0, 0, 1)) * m;
 	v = lookAt(vec3(0, 4, 40), vec3(0), vec3(0, 1, 0));
@@ -246,10 +246,16 @@ void display() {
 	float farPlane = 300.0f;
 
 	p = perspective(fovy, ratio, nearPlane, farPlane); //ortho(-1.f, 1.f, 1.f, -1.f);
-	mvp = p * v * m;
+	mv = v * m;
+	mvp = p * mv;
+	normalMatrix = inverse(transpose(mv));
 
+	// Send uniforms to shader
 	glUseProgram(simpleShader);
 	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "MVP"), 1, false, &mvp[0].x);
+	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "MV"), 1, false, &mv[0].x);
+	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "normalMatrix"), 1, false, &normalMatrix[0].x);
+
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 	glDrawArrays(GL_TRIANGLES, 3, 3);
 
