@@ -23,23 +23,29 @@ using namespace glm;
 // Global variables
 GLFWwindow* window;
 GLint mvp_location, vpos_location, vcol_location;
+GLuint cube_ibo;
 
 // Shaders
 GLuint simpleShader;
 
-// Light
-float point_light_intensity_multiplier = 1000.0f;
-vec3 point_light_color = {1.f, 1.f, 1.f};
-const vec3 lightPosition = {20.0f, 40.0f, 0.0f};
-
 float vertices[] = {
-	-10.f, -5.f, -10.f,
+	/*-10.f, -5.f, -10.f,
 	 10.f, -5.f, -10.f,
 	-10.f, -5.f,  10.f,
 
 	-10.f, -5.f,  10.f,
 	 10.f, -5.f, -10.f,
-	 10.f, -5.f,  10.f
+	 10.f, -5.f,  10.f*/
+
+	-10.0f, -10.0f,  10.0f,
+	 10.0f, -10.0f,  10.0f,
+	 10.0f,  10.0f,  10.0f,
+	-10.0f,  10.0f,  10.0f,
+
+	-10.0f, -10.0f, -10.0f,
+	 10.0f, -10.0f, -10.0f,
+	 10.0f,  10.0f, -10.0f,
+	-10.0f,  10.0f, -10.0f,
 };
 
 // Framebuffer
@@ -192,8 +198,6 @@ void initGL() {
 	vpos_location = glGetAttribLocation(simpleShader, "vPos");
 	vcol_location = glGetAttribLocation(simpleShader, "vCol");
 
-	glUniform3fv(glGetAttribLocation(simpleShader, "lightPos"), 1, &lightPosition.x);
-
 
 	// Framebuffer setup
 	/*int w, h;
@@ -214,31 +218,80 @@ void initGL() {
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+	//glEnableVertexAttribArray(vpos_location);
+	//glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE,
+	//	/*sizeof(float) * 3, (void*)0);*/
+	//	0, (void*)0);
+
+	// Cube setup
+	GLushort indices[] = {
+		//// front
+		//2, 1, 0,
+		//0, 3, 2,
+		//// top
+		//6, 5, 1,
+		//1, 2, 6,
+		//// back
+		//5, 6, 7,
+		//7, 4, 5,
+		//// bottom
+		//3, 0, 4,
+		//4, 7, 3,
+		//// left
+		//1, 5, 4,
+		//4, 0, 1,
+		//// right
+		//6, 2, 3,
+		//3, 7, 6
+
+		// front
+		0, 1, 2,
+		2, 3, 0,
+		// top
+		1, 5, 6,
+		6, 2, 1,
+		// back
+		7, 6, 5,
+		5, 4, 7,
+		// bottom
+		4, 0, 3,
+		3, 7, 4,
+		// left
+		4, 5, 1,
+		1, 0, 4,
+		// right
+		3, 2, 6,
+		6, 7, 3
+	};
+
+	glGenBuffers(1, &cube_ibo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
 	glEnableVertexAttribArray(vpos_location);
 	glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE,
 		/*sizeof(float) * 3, (void*)0);*/
 		0, (void*)0);
-	//glEnableVertexAttribArray(vcol_location);
-	//glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
-	//	sizeof(float) * 5, (void*)(sizeof(float) * 2));
 
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
 }
 
 void display() {
 	float ratio;
 	int width, height;
-	mat4 m, v, p, mvp, mv, normalMatrix;
+	mat4 v, p, mvp, mv;
 
 	glfwGetFramebufferSize(window, &width, &height);
 	ratio = width / (float)height;
 
 	glViewport(0, 0, width, height);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	m = mat4(1.0f); // Identity matrix
+	mat4 m(1.0f); // Identity matrix
 
 	//m = rotate((float)glfwGetTime(), vec3(0, 0, 1)) * m;
-	v = lookAt(vec3(0, 4, 40), vec3(0), vec3(0, 1, 0));
+	v = lookAt(vec3(20, 4, 40), vec3(0), vec3(0, 1, 0));
 
 	// Set up a projection matrix
 	float fovy = radians(45.0f);
@@ -248,16 +301,22 @@ void display() {
 	p = perspective(fovy, ratio, nearPlane, farPlane); //ortho(-1.f, 1.f, 1.f, -1.f);
 	mv = v * m;
 	mvp = p * mv;
-	normalMatrix = inverse(transpose(mv));
 
 	// Send uniforms to shader
 	glUseProgram(simpleShader);
 	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "MVP"), 1, false, &mvp[0].x);
 	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "MV"), 1, false, &mv[0].x);
-	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "normalMatrix"), 1, false, &normalMatrix[0].x);
 
-	glDrawArrays(GL_TRIANGLES, 0, 3);
-	glDrawArrays(GL_TRIANGLES, 3, 3);
+	// Draw
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
+	int size;
+	glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+	glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0); //sizeof(GLushort),
+
+	//glDrawArrays(GL_TRIANGLES, 0, 3);
+	//glDrawArrays(GL_TRIANGLES, 3, 3);
+
 
   ImGui::Render();
 
