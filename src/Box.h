@@ -13,7 +13,7 @@ public:
 	vec3 dimensions, center_pos;
 	vec3 num_particles;
 
-	std::vector<Particle *> particles;
+	std::vector<Particle> particles;
 };
 
 

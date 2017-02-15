@@ -9,6 +9,6 @@ struct Particle
 	vec3 pos;
 	vec3 velocity;
 	float invmass;
-	int phase;
+	float phase;
 };
 

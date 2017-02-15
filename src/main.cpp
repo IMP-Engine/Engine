@@ -11,11 +11,20 @@
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
 #ifdef _WIN32
-    #define VERT_SHADER_PATH "../../src/shaders/simple.vert"
-    #define FRAG_SHADER_PATH "../../src/shaders/simple.frag"
+#define VERT_SHADER_PATH "../../src/shaders/simple.vert"
+#define FRAG_SHADER_PATH "../../src/shaders/simple.frag"
 #elif __unix__
-    #define VERT_SHADER_PATH "../src/shaders/simple.vert"
-    #define FRAG_SHADER_PATH "../src/shaders/simple.frag"
+#define VERT_SHADER_PATH "../src/shaders/simple.vert"
+#define FRAG_SHADER_PATH "../src/shaders/simple.frag"
+#endif
+
+
+#ifdef _WIN32
+#define PARTICLE_VERT_SHADER_PATH "../../src/shaders/particle.vert.glsl"
+#define PARTICLE_FRAG_SHADER_PATH "../../src/shaders/particle.frag.glsl"
+#elif __unix__
+#define PARTICLE_VERT_SHADER_PATH "../src/shaders/particle.vert.glsl"
+#define PARTICLE_FRAG_SHADER_PATH "../src/shaders/particle.frag.glsl"
 #endif
 
 
@@ -25,6 +34,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 using namespace glm;
+using namespace std;
 
 #include <vector>
 
@@ -33,12 +43,15 @@ GLFWwindow* window;
 GLint mvp_location, vpos_location, vcol_location;
 
 // Shaders
-GLuint simpleShader;
+GLuint simpleShader, particleShader;
 
 // Light
 float point_light_intensity_multiplier = 1000.0f;
 vec3 point_light_color = {1.f, 1.f, 1.f};
 const vec3 lightPosition = {20.0f, 40.0f, 0.0f};
+
+Box *box;
+
 
 static const struct {
 	float x, y;
@@ -148,7 +161,41 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
+
+void initParticleShader() {
+	particleShader = glHelper::loadShader(PARTICLE_VERT_SHADER_PATH, PARTICLE_FRAG_SHADER_PATH);
+
+	glBindAttribLocation(particleShader, 0, "position");
+
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+		printf("Failed to initialize OpenGL context");
+		return;
+	}
+
+	glUseProgram(particleShader);
+	// Triangle setup
+	GLuint particleBuffer;
+
+	Particle *particles = &(box->particles)[0];
+	glGenBuffers(1, &particleBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, particleBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(particles), particles, GL_STATIC_DRAW);
+
+	//int location = glGetAttribLocation(particleShader, "position");
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Particle), (void *)0);
+
+	/*
+
+	location = glGetAttribLocation(particleShader, "phase");
+	glEnableVertexAttribArray(location);
+	glVertexAttribPointer(location, 1, GL_INT, GL_FALSE, sizeof(Particle), (void *)(sizeof(Particle) - sizeof(int)));
+	*/
+
+}
+
 void initGL() {
+
 	glfwSetErrorCallback(error_callback);
 
 	if (!glfwInit())
@@ -157,7 +204,7 @@ void initGL() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-	window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
+	window = glfwCreateWindow(1280, 800, "Simple example", NULL, NULL);
 #if _DEBUG
   glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
 #endif
@@ -197,9 +244,12 @@ void initGL() {
 
 	// Shader setup
 	simpleShader = glHelper::loadShader(VERT_SHADER_PATH, FRAG_SHADER_PATH);
+	glUseProgram(simpleShader);
 	mvp_location = glGetUniformLocation(simpleShader, "MVP");
-	vpos_location = glGetAttribLocation(simpleShader, "vPos");
-	vcol_location = glGetAttribLocation(simpleShader, "vCol");
+	glBindAttribLocation(simpleShader, 0, "vPos");
+	glBindAttribLocation(simpleShader, 1, "vCol");
+	//vpos_location = glGetAttribLocation(simpleShader, "vPos");
+	//vcol_location = glGetAttribLocation(simpleShader, "vCol");
 	// Framebuffer setup
 	/*int w, h;
 	glfwGetWindowSize(window, &w, &h);
@@ -219,13 +269,24 @@ void initGL() {
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	glEnableVertexAttribArray(vpos_location);
-	glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE,
-		sizeof(float) * 5, (void*)0);
-	glEnableVertexAttribArray(vcol_location);
-	glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
-		sizeof(float) * 5, (void*)(sizeof(float) * 2));
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void*)(sizeof(float) * 2));
 
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	initParticleShader();
+
+	glPointSize(30.f);
+
+}
+
+
+void renderParticles() {
+	glUseProgram(particleShader);
+
+	glDrawArrays(GL_POINTS, 0, box->particles.size());
+
+	glUseProgram(0);
 }
 
 void display() {
@@ -253,12 +314,30 @@ void display() {
 	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "MVP"), 1, false, &mvp[0].x);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
-  ImGui::Render();
+	//renderParticles();
+
+	ImGui::Render();
 
 	glfwSwapBuffers(window);
 }
 
 int main(void) {
+
+
+	BoxConfig config;
+
+	config.dimensions =	vec3(10.f, 10.f, 10.f);
+	config.center_pos = vec3(5.f, 5.f, 5.f);
+	config.mass = 10.f;
+	config.phase = 1;
+	config.num_particles = vec3(3,3,3);
+
+	box = make_box(&config);
+
+
+
+
+
 	initGL();
 
 	printf("OpenGL %d.%d\n", GLVersion.major, GLVersion.minor);
@@ -273,15 +352,6 @@ int main(void) {
 	double startTime = glfwGetTime();
 
 	// Showcase of how the box works
-	BoxConfig config;
-
-	config.dimensions =	vec3(10.f, 10.f, 10.f);
-	config.center_pos = vec3(5.f, 5.f, 5.f);
-	config.mass = 10.f;
-	config.phase = 1;
-	config.num_particles = vec3(3,3,3);
-
-	Box *box = make_box(&config);
 
     
 

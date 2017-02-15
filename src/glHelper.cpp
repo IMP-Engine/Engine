@@ -15,6 +15,11 @@ namespace glHelper {
 
 	// Reads, compiles, links and returns a shader from the given paths
 	GLuint loadShader(const std::string &vertexPath, const std::string &fragmentPath) {
+
+		printf("Loading shader program with shaders:\n");
+		cout << "    Vertex:   " << vertexPath << endl;
+		cout << "    Fragment: " << fragmentPath << endl;
+
 		// Read our shaders into the appropriate buffers
 		std::ifstream vs_file(vertexPath);
 		std::string vertexSource((std::istreambuf_iterator<char>(vs_file)), std::istreambuf_iterator<char>());
@@ -53,6 +58,12 @@ namespace glHelper {
 			glDeleteShader(vertexShader);
 
 			// Time to use the infoLog.
+			for (unsigned int i = 0; i < infoLog.size(); i++)
+			{
+				std::cerr << infoLog[i];
+			}
+			std::cerr << endl;
+
 
 			// In this simple program, we'll just leave
 			return -1;
@@ -85,7 +96,11 @@ namespace glHelper {
 			glDeleteShader(vertexShader);
 
 			// Time to use the infoLog.
-
+			for (unsigned int i = 0; i < infoLog.size(); i++)
+			{
+				std::cerr << infoLog[i];
+			}
+			std::cerr << endl;
 			// In this simple program, we'll just leave
 			return -1;
 		}
@@ -122,19 +137,37 @@ namespace glHelper {
 			glDeleteShader(fragmentShader);
 
 			// Time to use the infoLog.
-            //for (int i = 0; i < infoLog.size(); i++)
-            //{
-            //    std::cerr << infoLog[i];
-            //}
+			for (unsigned int i = 0; i < infoLog.size(); i++)
+			{
+				std::cerr << infoLog[i];
+			}
+			std::cerr << endl;
             
 			// In this simple program, we'll just leave
 			return -1;
 		}
 
+		GLint maxLength = 0;
+		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
+
+		if (maxLength > 0) {
+
+			// The maxLength includes the NULL character
+			std::vector<GLchar> infoLog(maxLength);
+			glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
+			for (unsigned int i = 0; i < infoLog.size(); i++)
+			{
+				std::cerr << infoLog[i];
+			}
+			std::cerr << endl;
+		
+		}
 		// Detach shaders after a successful link.
 		glDetachShader(program, vertexShader);
 		glDetachShader(program, fragmentShader);
 
+
+		printf("Shader loaded.\n");
 		return program;
 	}
 }
