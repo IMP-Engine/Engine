@@ -1,7 +1,7 @@
-//#version 430
+#version 430
 
 in vec3 color;
-//out vec4 outColor;
+out vec4 outColor;
 
 
 struct Ray 
@@ -83,6 +83,6 @@ bool sphereIntersect(in vec3 center, in float radius, inout Ray r, out vec3 posi
 
 void main() {
 	vec3 c = color;
-    //outColor = vec4(color, 1.0);
-	gl_FragColor = vec4(0, 0, 1, 1);
+    outColor = vec4(color, 1.0);
+	//gl_FragColor = vec4(0, 0, 1, 1);
 }

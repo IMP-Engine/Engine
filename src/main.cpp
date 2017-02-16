@@ -45,6 +45,9 @@ GLint mvp_location, vpos_location, vcol_location;
 // Shaders
 GLuint simpleShader, particleShader;
 
+// VAOs
+GLuint simpleVao, particleVao;
+
 // Light
 float point_light_intensity_multiplier = 1000.0f;
 vec3 point_light_color = {1.f, 1.f, 1.f};
@@ -166,6 +169,7 @@ void initParticleShader() {
 	particleShader = glHelper::loadShader(PARTICLE_VERT_SHADER_PATH, PARTICLE_FRAG_SHADER_PATH);
 
 	glBindAttribLocation(particleShader, 0, "position");
+	glBindAttribLocation(particleShader, 1, "phase");
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		printf("Failed to initialize OpenGL context");
@@ -175,21 +179,25 @@ void initParticleShader() {
 	glUseProgram(particleShader);
 	// Triangle setup
 	GLuint particleBuffer;
+	/* Allocate and assign a Vertex Array Object to our handle */
+	glGenVertexArrays(1, &particleVao);
+
+	/* Bind our Vertex Array Object as the current used object */
+	glBindVertexArray(particleVao);
 
 	Particle *particles = &(box->particles)[0];
 	glGenBuffers(1, &particleBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, particleBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(particles), particles, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Particle) * box->particles.size(), particles, GL_STATIC_DRAW);
 
 	//int location = glGetAttribLocation(particleShader, "position");
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Particle), (void *)0);
 
-	/*
 
-	location = glGetAttribLocation(particleShader, "phase");
-	glEnableVertexAttribArray(location);
-	glVertexAttribPointer(location, 1, GL_INT, GL_FALSE, sizeof(Particle), (void *)(sizeof(Particle) - sizeof(int)));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (void *)(sizeof(Particle) - sizeof(float)));
+	/*
 	*/
 
 }
@@ -264,6 +272,11 @@ void initGL() {
 
 	// Triangle setup
 	GLuint vertex_buffer;
+	/* Allocate and assign a Vertex Array Object to our handle */
+	glGenVertexArrays(1, &simpleVao);
+
+	/* Bind our Vertex Array Object as the current used object */
+	glBindVertexArray(simpleVao);
 
 	glGenBuffers(1, &vertex_buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
@@ -284,7 +297,9 @@ void initGL() {
 void renderParticles() {
 	glUseProgram(particleShader);
 
-	glDrawArrays(GL_POINTS, 0, box->particles.size());
+	glBindVertexArray(particleVao);
+
+	glDrawArrays(GL_POINTS, 0, 2);
 
 	glUseProgram(0);
 }
@@ -311,10 +326,11 @@ void display() {
 	mvp = p * m;
 
 	glUseProgram(simpleShader);
+	glBindVertexArray(simpleVao);
 	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "MVP"), 1, false, &mvp[0].x);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
-	//renderParticles();
+	renderParticles();
 
 	ImGui::Render();
 
@@ -326,8 +342,8 @@ int main(void) {
 
 	BoxConfig config;
 
-	config.dimensions =	vec3(10.f, 10.f, 10.f);
-	config.center_pos = vec3(5.f, 5.f, 5.f);
+	config.dimensions =	vec3(1.f, 1.f, 1.f);
+	config.center_pos = vec3(0.f, 0.f, 0.f);
 	config.mass = 10.f;
 	config.phase = 1;
 	config.num_particles = vec3(3,3,3);
