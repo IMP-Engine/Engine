@@ -75,7 +75,7 @@ void initGL() {
 #endif
 
 	if (!window) {
-    std::cout << "Failed to crate GLFW window" << std::endl;
+		std::cout << "Failed to crate GLFW window" << std::endl;
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
@@ -100,20 +100,11 @@ void initGL() {
 	// steal callback and call imgui in our callback
 	glfwSetKeyCallback(window, key_callback);
 
-	glfwSwapInterval(1); // v-sync
-
-	// NOTE: OpenGL error checks have been omitted for brevity
-
 	// Shader setup
 	simpleShader = glHelper::loadShader(VERT_SHADER_PATH, FRAG_SHADER_PATH);
 	mvp_location = glGetUniformLocation(simpleShader, "MVP");
 	vpos_location = glGetAttribLocation(simpleShader, "vPos");
 	vcol_location = glGetAttribLocation(simpleShader, "vCol");
-
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		printf("Failed to initialize OpenGL context");
-		return;
-	}
 
 	// Triangle setup
 	GLuint vertex_buffer;
@@ -230,8 +221,6 @@ void gui()
 
 int main(void) {
 	initGL();
-
-	printf("OpenGL %d.%d\n", GLVersion.major, GLVersion.minor);
 
 	if (GLAD_GL_VERSION_4_3) {
 		/* We support at least OpenGL version 4.3 */
