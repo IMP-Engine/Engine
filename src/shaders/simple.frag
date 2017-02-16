@@ -1,3 +1,5 @@
+#version 430
+
 in vec3 color;
 in vec3 viewSpacePos;
 

@@ -37,14 +37,6 @@ GLuint cube_ibo;
 GLuint simpleShader;
 
 float vertices[] = {
-	/*-10.f, -5.f, -10.f,
-	 10.f, -5.f, -10.f,
-	-10.f, -5.f,  10.f,
-
-	-10.f, -5.f,  10.f,
-	 10.f, -5.f, -10.f,
-	 10.f, -5.f,  10.f*/
-
 	-10.0f, -10.0f,  10.0f,
 	 10.0f, -10.0f,  10.0f,
 	 10.0f,  10.0f,  10.0f,
@@ -206,7 +198,6 @@ void initGL() {
 	vpos_location = glGetAttribLocation(simpleShader, "vPos");
 	vcol_location = glGetAttribLocation(simpleShader, "vCol");
 
-
 	// Framebuffer setup
 	/*int w, h;
 	glfwGetWindowSize(window, &w, &h);
@@ -233,25 +224,6 @@ void initGL() {
 
 	// Cube setup
 	GLushort indices[] = {
-		//// front
-		//2, 1, 0,
-		//0, 3, 2,
-		//// top
-		//6, 5, 1,
-		//1, 2, 6,
-		//// back
-		//5, 6, 7,
-		//7, 4, 5,
-		//// bottom
-		//3, 0, 4,
-		//4, 7, 3,
-		//// left
-		//1, 5, 4,
-		//4, 0, 1,
-		//// right
-		//6, 2, 3,
-		//3, 7, 6
-
 		// front
 		0, 1, 2,
 		2, 3, 0,

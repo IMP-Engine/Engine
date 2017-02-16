@@ -1,3 +1,5 @@
+#version 430
+
 uniform mat4 MVP;
 uniform mat4 MV;
 uniform mat4 normalMatrix;
@@ -11,5 +13,5 @@ out vec3 viewSpacePos;
 void main() {
 	viewSpacePos = (MV * vec4(vPos, 1)).xyz;
     gl_Position = MVP * vec4(vPos, 1.0);
-    color = vec3(1.0f, 1.0f, 1.0f); //vCol;
+    color = vec3(1.0, 1.0, 1.0); //vCol;
 }
