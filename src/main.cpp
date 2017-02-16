@@ -32,6 +32,7 @@ using namespace glm;
 GLFWwindow* window;
 GLint mvp_location, vpos_location, vcol_location;
 GLuint cube_ibo; // IndicesBufferObject
+ImVec4 clear_color;
 
 // Shaders
 GLuint simpleShader;
@@ -163,6 +164,7 @@ void display() {
 	ratio = width / (float)height;
 
 	glViewport(0, 0, width, height);
+	glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	mat4 modelMatrix(1.0f); // Identity matrix
@@ -196,6 +198,36 @@ void display() {
 	glfwSwapBuffers(window);
 }
 
+void gui()
+{
+	// Consider scapping incase of performance
+	static bool vsync = true;
+	glfwSwapInterval(vsync ? 1 : 0);
+
+	// Data for plotting frametime
+	static float frameTimes[200] = { 0 };
+	static int offset = 0;
+	frameTimes[offset] = ImGui::GetIO().DeltaTime;
+	offset = (offset + 1) % COUNT_OF(frameTimes);
+
+	static bool show_demo_window = false;
+
+	ImGui::Begin("IMPEngine");
+	ImGui::ColorEdit3("clear color", (float*)&clear_color);
+	ImGui::Checkbox("Vsync", &vsync);
+	if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
+	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
+	ImGui::End();
+
+	// Demo window
+	if (show_demo_window)
+	{
+		ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
+		ImGui::ShowTestWindow(&show_demo_window);
+	}
+}
+
 int main(void) {
 	initGL();
 
@@ -216,43 +248,16 @@ int main(void) {
 	config.phase = 1;
 	config.num_particles = vec3(3,3,3);
 
-	Box *box = make_box(&config);    
+	Box *box = make_box(&config);
+
+	clear_color = ImColor(164, 164, 164);
 
     while (!glfwWindowShouldClose(window))
     {
 		glfwPollEvents();
 		ImGui_ImplGlfwGL3_NewFrame();
 
-		ImVec4 clear_color = ImColor(164, 164, 164);
-
-		// Consider scapping incase of performance
-		static bool vsync = true;
-		glfwSwapInterval(vsync ? 1 : 0);
-
-		{ // GUI
-			// Data for plotting frametime
-			static float frameTimes[200] = { 0 };
-			static int offset = 0;
-			frameTimes[offset] = ImGui::GetIO().DeltaTime;
-			offset = (offset + 1) % COUNT_OF(frameTimes);
-
-			static bool show_demo_window = false;
-
-			ImGui::Begin("IMPEngine");
-			ImGui::ColorEdit3("clear color", (float*)&clear_color);
-			ImGui::Checkbox("Vsync", &vsync);
-			if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
-			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-			ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
-			ImGui::End();
-
-			// Demo window
-			if (show_demo_window)
-			{
-				ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
-				ImGui::ShowTestWindow(&show_demo_window);
-			}
-		}
+		gui();
 
         display();
     }
