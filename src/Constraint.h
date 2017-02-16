@@ -1,7 +1,7 @@
 #pragma once
 #include "Particle.h"
 #include <vector>
-#include <glm\vec3.hpp>
+#include <glm/vec3.hpp>
 
 using namespace glm;
 

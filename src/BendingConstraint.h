@@ -1,8 +1,8 @@
 #pragma once
 #include "Constraint.h"
 #include "Particle.h"
-#include <glm\geometric.hpp>
-#include <glm\gtx\norm.hpp>
+#include <glm/geometric.hpp>
+#include <glm/gtx/norm.hpp>
 
 using namespace glm;
 

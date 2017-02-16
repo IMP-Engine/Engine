@@ -1,7 +1,7 @@
 #pragma once
 #include "Constraint.h"
 #include "Particle.h"
-#include <glm\geometric.hpp>
+#include <glm/geometric.hpp>
 
 class DistanceConstraint :
 	public Constraint
