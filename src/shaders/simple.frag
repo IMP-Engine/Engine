@@ -1,8 +1,9 @@
 #version 430
 
 in vec3 color;
-in vec3 viewSpacePos;
+
+out vec4 outColor;
 
 void main() {
-    gl_FragColor = vec4(color, 1.0);
+    outColor = vec4(color, 1.0);
 }

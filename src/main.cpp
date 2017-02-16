@@ -179,8 +179,8 @@ void display() {
 
 	// Send uniforms to shader
 	glUseProgram(simpleShader);
-	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "MVP"), 1, false, &modelViewProjectionMatrix[0].x);
-	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "MV"), 1, false, &modelViewMatrix[0].x);
+	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
+	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
 
 	// Draw
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
