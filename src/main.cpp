@@ -12,8 +12,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <vector>
-#include "particles\ParticleRenderer.h"
 
+#include "physics.h"
+#include "particles/ParticleRenderer.h"
 #include "particles/Box.h"
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
@@ -211,6 +212,8 @@ void display() {
 	// GUI
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+	
+	physics::simulate(&box->particles ,ImGui::GetIO().DeltaTime);
 	particleRenderer->render(modelViewProjectionMatrix);
 
 	ImGui::Render();

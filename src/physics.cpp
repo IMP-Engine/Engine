@@ -3,7 +3,7 @@
 
 namespace physics {
 
-void simulate(std::vector<Particle*>* particles/*, std::vector<Constraint*>* constraints */, float dt)
+void simulate(std::vector<Particle> *particles/*, std::vector<Constraint*>* constraints */, float dt)
 {
 	std::vector<glm::vec3> pPos(particles->size());
 	// Based on 2007 PBD, NOT Unified Framework 
@@ -14,8 +14,8 @@ void simulate(std::vector<Particle*>* particles/*, std::vector<Constraint*>* con
 	// Predict position		x_i^* = x_i + dt * v_i
 
 	for (std::vector<glm::vec3>::size_type i = 0; i != particles->size(); i++) {
-		(*particles)[i]->velocity = (*particles)[i]->velocity - glm::vec3(0.5f); // Gravity (Placeholder value. Also, using vec3 instead of float3.)
-		pPos[i] = (*particles)[i]->pos + dt * (*particles)[i]->velocity;
+		(*particles)[i].velocity = (*particles)[i].velocity - glm::vec3(0.5f); // Gravity (Placeholder value. Also, using vec3 instead of float3.)
+		pPos[i] = (*particles)[i].pos + dt * (*particles)[i].velocity;
 	}
 
 
@@ -38,8 +38,8 @@ void simulate(std::vector<Particle*>* particles/*, std::vector<Constraint*>* con
 
 	for (std::vector<glm::vec3>::size_type i = 0; i != particles->size(); i++) 
 	{
-		(*particles)[i]->velocity = (pPos[i] - (*particles)[i]->pos) / dt;
-		(*particles)[i]->pos = pPos[i];
+		(*particles)[i].velocity = (pPos[i] - (*particles)[i].pos) / dt;
+		(*particles)[i].pos = pPos[i];
 	}
 
 

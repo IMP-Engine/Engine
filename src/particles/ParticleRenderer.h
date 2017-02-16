@@ -27,6 +27,7 @@ public:
 
 	GLuint particleShader;
 	GLuint vao;
+	GLuint particleBuffer;
 
 	void init();
 	void render(mat4 &modelViewProjectionMatrix);

@@ -23,7 +23,6 @@ void ParticleRenderer::init()
 
 	glUseProgram(particleShader);
 
-	GLuint particleBuffer;
 
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
@@ -46,7 +45,9 @@ void ParticleRenderer::render(mat4 &modelViewProjectionMatrix)
 	glUseProgram(particleShader);
 
 	glBindVertexArray(vao);
-
+	Particle *ps = &(*ParticleRenderer::particles)[0];
+	glBindBuffer(GL_ARRAY_BUFFER, particleBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Particle) * ParticleRenderer::particles->size(), ps, GL_STATIC_DRAW);
 	glUniformMatrix4fv(glGetUniformLocation(particleShader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
 
 	glDrawArrays(GL_POINTS, 0, particles->size());
