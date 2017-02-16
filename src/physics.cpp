@@ -14,7 +14,7 @@ void simulate(std::vector<Particle> *particles/*, std::vector<Constraint*>* cons
 	// Predict position		x_i^* = x_i + dt * v_i
 
 	for (std::vector<glm::vec3>::size_type i = 0; i != particles->size(); i++) {
-		(*particles)[i].velocity = (*particles)[i].velocity - glm::vec3(0.5f); // Gravity (Placeholder value. Also, using vec3 instead of float3.)
+		(*particles)[i].velocity = (*particles)[i].velocity - glm::vec3(0.f, 0.5f, 0.f); // Gravity (Placeholder value. Also, using vec3 instead of float3.)
 		pPos[i] = (*particles)[i].pos + dt * (*particles)[i].velocity;
 	}
 
