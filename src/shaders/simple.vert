@@ -1,10 +1,13 @@
-uniform mat4 MVP;
-attribute vec2 vPos;
-attribute vec3 vCol;
+#version 430
 
-varying vec3 color;
+uniform mat4 modelViewProjectionMatrix;
+
+//in vec3 vCol;
+in vec3 vPos;
+
+out vec3 color;
 
 void main() {
-    gl_Position = MVP * vec4(vPos, 0.0, 1.0);
-    color = vCol;
+    gl_Position = modelViewProjectionMatrix * vec4(vPos, 1.0);
+    color = vec3(1.0, 1.0, 1.0); //vCol;
 }

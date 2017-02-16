@@ -2,12 +2,13 @@
 
 
 in vec3 position;
-in float phase;
+in int phase;
+uniform mat4 modelViewProjectionMatrix;
+
 
 out vec3 color;
-//varying flat vec3 center;
+
 void main() {
-	gl_Position = vec4(position, 1.0);
-	//center = vec3(1, 1, 1);
+	gl_Position = modelViewProjectionMatrix * vec4(position, 1.0);
     color = vec3(0,0,1);
 }
