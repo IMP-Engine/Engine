@@ -1,6 +1,6 @@
 #pragma once
 #include "Constraint.h"
-#include "Particle.h"
+#include "particles/Particle.h"
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
 
