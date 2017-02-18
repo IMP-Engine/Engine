@@ -29,6 +29,8 @@ using namespace glm;
 #include <vector>
 
 // Global variables
+#define MAX_FOV 70.0f
+#define MIN_FOV 1.0f
 GLFWwindow* window;
 GLint mvp_location, vpos_location, vcol_location;
 GLuint cube_ibo; // IndicesBufferObject
@@ -106,7 +108,7 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
         lastX = xpos;
         lastY = ypos;
 
-        GLfloat sensitivity = 0.05f;
+        GLfloat sensitivity = 0.1f;
         xoffset *= sensitivity;
         yoffset *= sensitivity;
 
@@ -136,12 +138,12 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
     }
 }
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
-    if (fovy >= 1.0f && fovy <= 70.0f)
+    if (fovy >= MIN_FOV && fovy <= MAX_FOV)
         fovy -= yoffset;
-    if (fovy <= 1.0f)
-        fovy = 1.0f;
-    if (fovy >= 70.0f)
-        fovy = 70.0f;
+    else if (fovy <= MIN_FOV)
+        fovy = MIN_FOV;
+    else 
+        fovy = MAX_FOV;
 }
 
 void doMovement() {
@@ -304,7 +306,7 @@ void display() {
     float farPlane = 300.0f;
 
     modelViewMatrix = viewMatrix * modelMatrix;
-    modelViewProjectionMatrix = perspective(fovy, ratio, nearPlane, farPlane) * modelViewMatrix;
+    modelViewProjectionMatrix = perspective(radians(fovy), ratio, nearPlane, farPlane) * modelViewMatrix;
 
     // Send uniforms to shader
     glUseProgram(simpleShader);
