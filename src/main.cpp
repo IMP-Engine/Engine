@@ -167,6 +167,10 @@ void doMovement() {
         cameraPos -= normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
     if (keys[GLFW_KEY_D])
         cameraPos += normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
+    if (keys[GLFW_KEY_SPACE])
+        cameraPos += cameraSpeed * cameraUp;
+    if (keys[GLFW_KEY_LEFT_CONTROL])
+        cameraPos -= cameraSpeed * cameraUp;
 }
 
 void initGL() {
