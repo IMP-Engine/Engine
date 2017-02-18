@@ -33,7 +33,7 @@ GLFWwindow* window;
 GLint mvp_location, vpos_location, vcol_location;
 GLuint cube_ibo; // IndicesBufferObject
 ImVec4 clear_color;
-const GLuint WIDTH = 640, HEIGHT = 480;
+const GLuint WIDTH = 1280, HEIGHT = 720;
 
 // Camera
 vec3 cameraPos = vec3(0.0f, 0.0f, 12.0f);
@@ -87,8 +87,8 @@ static void errorCallback(int error, const char* description) {
     fprintf(stderr, "Error: %s\n", description);
 }
 
-static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mode) {
-    ImGui_ImplGlfwGL3_KeyCallback(window, key, scancode, action, mode);
+static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    ImGui_ImplGlfwGL3_KeyCallback(window, key, scancode, action, mods);
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     if (key >= 0 && key < 1024) {
@@ -97,57 +97,44 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
         else if (action == GLFW_RELEASE)
             keys[key] = false;
     }
-
-    /*
-       GLfloat cameraSpeed = 0.5f;
-       if (key == GLFW_KEY_W) {
-       cameraPos += cameraSpeed * cameraFront;
-       }
-       if (key == GLFW_KEY_S) {
-       cameraPos -= cameraSpeed * cameraFront;
-       }
-       if (key == GLFW_KEY_A) {
-       cameraPos -= normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
-       }
-       if (key == GLFW_KEY_D) {
-       cameraPos += normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
-       }
-       */
 }
 
-bool firstMouse = true;
 void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
-    if (firstMouse) {
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        GLfloat xoffset = xpos - lastX;
+        GLfloat yoffset = lastY - ypos;
         lastX = xpos;
         lastY = ypos;
-        firstMouse = false;
+
+        GLfloat sensitivity = 0.05f;
+        xoffset *= sensitivity;
+        yoffset *= sensitivity;
+
+        yaw = mod(yaw + xoffset, (GLfloat)360.0f);
+        pitch += yoffset;
+
+        // Limit pitch within (-90, 90) degrees
+        if (pitch > 89.0f)
+            pitch = 89.0f;
+        if (pitch < -89.0f)
+            pitch = -89.0f;
+
+        vec3 front;
+        front.x = cos(radians(pitch)) * cos(radians(yaw));
+        front.y = sin(radians(pitch));
+        front.z = cos(radians(pitch)) * sin(radians(yaw));
+        cameraFront = normalize(front);
     }
-
-    GLfloat xoffset = xpos - lastX;
-    GLfloat yoffset = lastY - ypos;
-    lastX = xpos;
-    lastY = ypos;
-
-    GLfloat sensitivity = 0.05f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    yaw += xoffset;
-    pitch += yoffset;
-
-    // Limit pitch within (-90, 90) degrees
-    if (pitch > 89.0f)
-        pitch = 89.0f;
-    if (pitch < -89.0f)
-        pitch = -89.0f;
-
-    vec3 front;
-    front.x = cos(radians(pitch)) * cos(radians(yaw));
-    front.y = sin(radians(pitch));
-    front.z = cos(radians(pitch)) * sin(radians(yaw));
-    cameraFront = normalize(front);
 }
 
+void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        double x, y;
+        glfwGetCursorPos(window, &x, &y);
+        lastX = x;
+        lastY = y;
+    }
+}
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
     if (fovy >= 1.0f && fovy <= 70.0f)
         fovy -= yoffset;
@@ -195,8 +182,6 @@ void initGL() {
         exit(EXIT_FAILURE);
     }
 
-    glfwSetKeyCallback(window, keyCallback);
-
     glfwMakeContextCurrent(window);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -216,6 +201,7 @@ void initGL() {
     glfwSetKeyCallback(window, keyCallback);
     glfwSetCursorPosCallback(window, mouseCallback);
     glfwSetScrollCallback(window, scrollCallback);
+    glfwSetMouseButtonCallback(window, mouseButtonCallback);
 
     // Shader setup
     simpleShader = glHelper::loadShader(VERT_SHADER_PATH, FRAG_SHADER_PATH);
