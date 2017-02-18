@@ -309,36 +309,55 @@ void display() {
     glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0); //sizeof(GLushort),
     */
 
+    // Draw one cube
+    mat4 modelMatrix(1.0f); // Identity matrix
+    modelMatrix = translate(modelMatrix, vec3(0.0f, 0.0f, 0.0f));
+    modelMatrix = scale(modelMatrix, vec3(5.0f, 5.0f, 5.0f));
+
+    float nearPlane = 0.01f;
+    float farPlane = 300.0f;
+
+    modelViewMatrix = viewMatrix * modelMatrix;
+    modelViewProjectionMatrix = perspective(fovy, ratio, nearPlane, farPlane) * modelViewMatrix;
+
+    // Send uniforms to shader
+    glUseProgram(simpleShader);
+    glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
+    glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
+
+    // Draw cube
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
+    int size;
+    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+    glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0); //sizeof(GLushort),
+
+    /*
     // Draw two cubes
     for(GLuint i = 0; i < 2; i++) {
-        mat4 modelMatrix(1.0f); // Identity matrix
-        modelMatrix = translate(modelMatrix, cubePositions[i]);
-        modelMatrix = scale(modelMatrix, vec3(5.0f, 5.0f, 5.0f));
-        //GLfloat angle = 20.0f * i;
-        //modelMatrix = rotate(modelMatrix, angle, vec3(1.0f, 0.0f, 0.0f));
-        //modelMatrix = rotate(modelMatrix, (GLfloat)glfwGetTime() * 1.0f, vec3(0.5, 1.0f, 0.0f));
+    mat4 modelMatrix(1.0f); // Identity matrix
+    modelMatrix = translate(modelMatrix, cubePositions[i]);
+    modelMatrix = scale(modelMatrix, vec3(5.0f, 5.0f, 5.0f));
 
-        //viewMatrix = lookAt(vec3(20, 4, 40), vec3(0), vec3(0, 1, 0));
+    float nearPlane = 0.01f;
+    float farPlane = 300.0f;
 
-        float nearPlane = 0.01f;
-        float farPlane = 300.0f;
+    modelViewMatrix = viewMatrix * modelMatrix;
+    modelViewProjectionMatrix = perspective(fovy, ratio, nearPlane, farPlane) * modelViewMatrix;
 
-        modelViewMatrix = viewMatrix * modelMatrix;
-        modelViewProjectionMatrix = perspective(fovy, ratio, nearPlane, farPlane) * modelViewMatrix;
+    // Send uniforms to shader
+    glUseProgram(simpleShader);
+    glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
+    glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
 
-        // Send uniforms to shader
-        glUseProgram(simpleShader);
-        glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
-        glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
-
-        // Draw cube
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
-        int size;
-        glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-        glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0); //sizeof(GLushort),
+    // Draw cube
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
+    int size;
+    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+    glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0); //sizeof(GLushort),
     }
-    //
+    */
 
     // GUI
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
