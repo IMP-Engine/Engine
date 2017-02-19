@@ -36,6 +36,10 @@ GLint mvp_location, vpos_location, vcol_location;
 GLuint cube_ibo; // IndicesBufferObject
 ImVec4 clear_color;
 const GLuint WIDTH = 1280, HEIGHT = 720;
+GLfloat xoffset, yoffset;
+bool movedCamera = false;
+static float timeToSlide = 0;
+vec3 forwardMovement = vec3(0.0f);
 
 // Camera
 vec3 cameraPos = vec3(0.0f, 0.0f, 12.0f);
@@ -103,8 +107,8 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 
 void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        GLfloat xoffset = xpos - lastX;
-        GLfloat yoffset = lastY - ypos;
+        xoffset = xpos - lastX;
+        yoffset = lastY - ypos;
         lastX = xpos;
         lastY = ypos;
 
@@ -126,6 +130,9 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
         front.y = sin(radians(pitch));
         front.z = cos(radians(pitch)) * sin(radians(yaw));
         cameraFront = normalize(front);
+        if (xoffset == 0 && yoffset == 0) {
+            movedCamera = true;
+        }
     }
 }
 
@@ -146,10 +153,41 @@ void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
         fovy = MAX_FOV;
 }
 
+// Continue here, this shit doesn't work :(
+void cameraSlide(float deltaTime) {
+    timeToSlide += deltaTime;
+    std::cout << timeToSlide << std::endl;
+    if (timeToSlide <= 1.0f) {
+        yaw = mod(yaw + xoffset, (GLfloat)360.0f);
+        pitch += yoffset;
+        float slowdownRate = 0.5f;
+        yaw *= (1.0f - timeToSlide) * slowdownRate;
+        pitch *= (1.0f - timeToSlide) * slowdownRate;
+
+        // Limit pitch within (-90, 90) degrees
+        if (pitch > 89.0f)
+            pitch = 89.0f;
+        if (pitch < -89.0f)
+            pitch = -89.0f;
+
+        vec3 front;
+        front.x = cos(radians(pitch)) * cos(radians(yaw));
+        front.y = sin(radians(pitch));
+        front.z = cos(radians(pitch)) * sin(radians(yaw));
+        cameraFront = normalize(front);
+    }
+    else {
+        timeToSlide = 0;
+        movedCamera = false;
+    }
+}
+
 void doMovement() {
     GLfloat cameraSpeed = 10.0f * deltaTime;
-    if (keys[GLFW_KEY_W])
-        cameraPos += cameraSpeed * cameraFront;
+    if (keys[GLFW_KEY_W]) {
+        forwardMovement = cameraSpeed * cameraFront;
+        //cameraPos += cameraSpeed * cameraFront;
+    }
     if (keys[GLFW_KEY_S]) 
         cameraPos -= cameraSpeed * cameraFront;
     if (keys[GLFW_KEY_A])
@@ -160,6 +198,10 @@ void doMovement() {
         cameraPos += cameraSpeed * cameraUp;
     if (keys[GLFW_KEY_LEFT_CONTROL])
         cameraPos -= cameraSpeed * cameraUp;
+    std::cout << forwardMovement.x << ", " << forwardMovement.y << ", " << forwardMovement.z << std::endl;
+    vec3 slideForward = vec3(0.0f);
+    cameraPos += forwardMovement;
+    forwardMovement *= (1.0f - deltaTime * 4);
 }
 
 void initGL() {
@@ -415,6 +457,12 @@ int main(void) {
 
         glfwPollEvents();
         doMovement();
+        /*
+        if (movedCamera) {
+            cameraSlide(deltaTime);
+        }
+        */
+
         ImGui_ImplGlfwGL3_NewFrame();
 
         gui();
