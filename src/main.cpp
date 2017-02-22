@@ -76,6 +76,7 @@ GLuint simpleShader, particleShader;
 GLuint simpleVao, particleVao;
 
 bool doPyshics = false;
+int iterations = 5;
 std::vector<Particle> particles;
 std::vector<Constraint*> constraints;
 
@@ -294,9 +295,26 @@ void initGL() {
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
-    glPointSize(8.f);
-	particleRenderer->init();
+    glPointSize(4.f);
+	//particleRenderer->init();
 
+}
+
+void setupBox(vec3 dimension, vec3 centerpos, float totmass, vec3 numparticles)
+{
+	delete box;
+	delete particleRenderer;
+	BoxConfig config;
+
+	config.dimensions = dimension;
+	config.center_pos = centerpos;
+	config.mass = totmass;
+	config.phase = 1;
+	config.num_particles = numparticles;
+	box = make_box(&config);
+
+	particleRenderer = new ParticleRenderer(&box->particles);
+	particleRenderer->init();
 }
 
 void display() {
@@ -384,7 +402,7 @@ void display() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	
 	if(doPyshics)
-		physics::simulate(&particles, &constraints, ImGui::GetIO().DeltaTime);
+		physics::simulate(&box->particles, &box->constraints, ImGui::GetIO().DeltaTime, iterations);
 	particleRenderer->render(modelViewProjectionMatrix);
 
     ImGui::Render();
@@ -394,6 +412,10 @@ void display() {
 
 void gui()
 {
+
+	static ivec3 numparticles = vec3(5, 5, 5);
+	static vec3 dimension = vec3(1.f, 1.f, 1.f);
+	static float mass = 125.f;
     // Consider scapping incase of performance
     static bool vsync = true;
     glfwSwapInterval(vsync ? 1 : 0);
@@ -413,6 +435,16 @@ void gui()
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
 	ImGui::Checkbox("Physics", &doPyshics);
+	ImGui::SliderInt("Solver Iterations", &iterations, 1, 16);
+	ImGui::SliderInt("Particles x", &numparticles.x, 1, 10);
+	ImGui::SliderInt("Particles y", &numparticles.y, 1, 10);
+	ImGui::SliderInt("Particles z", &numparticles.z, 1, 10);
+	ImGui::SliderFloat("Dimension x", &dimension.x, 0, 5);
+	ImGui::SliderFloat("Dimension y", &dimension.y, 0, 5);
+	ImGui::SliderFloat("Dimension z", &dimension.z, 0, 5);
+	ImGui::SliderFloat("Mass (averaged over particles)", &mass, 0, 1000);
+	if (ImGui::Button("reset"))
+		setupBox(dimension, vec3(0.f, 0.f, 0.f), mass, numparticles);
     ImGui::End();
 
     // Demo window
@@ -424,44 +456,9 @@ void gui()
 }
 
 int main(void) {
-
-	BoxConfig config;
-	
-	config.dimensions = vec3(1.f, 1.f, 1.f);
-	config.center_pos = vec3(0.f, 0.f, 0.f);
-	config.mass = 10.f;
-	config.phase = 1;
-	config.num_particles = vec3(5, 5, 5);
-	box = make_box(&config);
-
-	Particle p1 = Particle();
-	p1.invmass = 1;
-	p1.pos = vec3(-8.0, 4.0, -8.0);
-	p1.velocity = vec3(0.0);
-	particles.push_back(p1);
-
-	Particle p2 = Particle();
-	p2.invmass = 1;
-	p2.pos = vec3(8.0, 4.0, 8.0);
-	p2.velocity = vec3(0.0);
-	particles.push_back(p2);
-
-	Particle p3 = Particle();
-	p3.invmass = 1;
-	p3.pos = vec3(0.0, 8.0, 0.0);
-	p3.velocity = vec3(0.0);
-	particles.push_back(p3);
-
-	DistanceConstraint* c1 = new DistanceConstraint(&particles[0], &particles[1], 0.5, 8);
-	DistanceConstraint* c2 = new DistanceConstraint(&particles[0], &particles[2], 0.5, 8);
-	DistanceConstraint* c3 = new DistanceConstraint(&particles[1], &particles[2], 0.5, 8);
-	constraints.push_back(c1);
-	constraints.push_back(c2);
-	constraints.push_back(c3);
-	particleRenderer = new ParticleRenderer(&particles);
-
-
 	initGL();
+	setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5));
+	
 
 	if (GLAD_GL_VERSION_4_3) {
 		/* We support at least OpenGL version 4.3 */

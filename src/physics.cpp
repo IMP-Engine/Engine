@@ -4,7 +4,7 @@
 
 namespace physics {
 
-void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constraints , float dt)
+void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constraints , float dt, int iterations)
 {
 	// Based on 2007 PBD, NOT Unified Framework 
 
@@ -26,14 +26,13 @@ void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constr
 	for (std::vector<glm::vec3>::size_type i = 0; i != particles->size(); i++) {
 		if ((*particles)[i].pPos.y < -10) {
 			(*particles)[i].pPos.y = -10;
-			(*particles)[i].velocity.y *= -1;
 		}
 	}
 
 
 	/* Stationary iterative linear solver */
 
-	for (size_t i = 0; i < 1; i++)
+	for (size_t i = 0; i < iterations; i++)
 	{
 		for (Constraint* c : *constraints)
 		{
@@ -60,7 +59,12 @@ void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constr
 		(*particles)[i].pos = (*particles)[i].pPos;
 	}
 
-
+	for (std::vector<glm::vec3>::size_type i = 0; i != particles->size(); i++) {
+		if ((*particles)[i].pos.y < -10) {
+			(*particles)[i].velocity.z = 0;
+			(*particles)[i].velocity.x = 0;
+		}
+	}
 		// Update velocities according to friction and restituition coefficients
 		/* Skip this for now */
 }

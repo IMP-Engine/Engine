@@ -52,44 +52,21 @@ Box *make_box(BoxConfig * const config) {
 			}
 		}
 	}
-	float stiffness = 1;
-	float distance = 1;
-	for (int i = 1; i < config->num_particles.x-1; i++) {
-		for (int j = 1; j < config->num_particles.y-1; j++) {
-			for (int k = 1; k < config->num_particles.z-1; k++) {
-				DistanceConstraint* c1 = new DistanceConstraint(
-					&box->particles[i * config->num_particles.z * config->num_particles.y + j * config->num_particles.z + k],
-					&box->particles[i * config->num_particles.z * config->num_particles.y + j * config->num_particles.z + k - 1],
-					stiffness, distance, true);
-				DistanceConstraint* c2 = new DistanceConstraint(
-					&box->particles[i * config->num_particles.z * config->num_particles.y + j * config->num_particles.z + k],
-					&box->particles[i * config->num_particles.z * config->num_particles.y + j * config->num_particles.z + k + 1],
-					stiffness, distance, true);
-				DistanceConstraint* c3 = new DistanceConstraint(
-					&box->particles[i * config->num_particles.z * config->num_particles.y + j * config->num_particles.z + k],
-					&box->particles[i * config->num_particles.z * config->num_particles.y + (j-1) * config->num_particles.z + k],
-					stiffness, distance, true);
-				DistanceConstraint* c4 = new DistanceConstraint(
-					&box->particles[i * config->num_particles.z * config->num_particles.y + j * config->num_particles.z + k],
-					&box->particles[i * config->num_particles.z * config->num_particles.y + (j+1) * config->num_particles.z + k],
-					stiffness, distance, true);
-				DistanceConstraint* c5 = new DistanceConstraint(
-					&box->particles[i * config->num_particles.z * config->num_particles.y + j * config->num_particles.z + k],
-					&box->particles[(i+1) * config->num_particles.z * config->num_particles.y + j * config->num_particles.z + k],
-					stiffness, distance, true);
-				DistanceConstraint* c6 = new DistanceConstraint(
-					&box->particles[i * config->num_particles.z * config->num_particles.y + j * config->num_particles.z + k],
-					&box->particles[(i-1) * config->num_particles.z * config->num_particles.y + j * config->num_particles.z + k],
-					stiffness, distance, true);
-				box->constraints.push_back(c1);
-				box->constraints.push_back(c2);
-				box->constraints.push_back(c3);
-				box->constraints.push_back(c4);
-				box->constraints.push_back(c5);
-				box->constraints.push_back(c6);
-				
+	// Do two passes? One binding the y planes together, One binding the x planes together?
+
+	float stiffness = 0.1;
+	for (int i = 0; i < box->particles.size(); i++) {
+		for (int j = 0; j < box->particles.size(); j++) {
+			if (j != i && glm::distance(box->particles[i].pos, box->particles[j].pos) < 0.1+sqrt(dx*dx + dy*dy + dz*dz))
+			{
+				Constraint* c = new DistanceConstraint(
+					&box->particles[i],
+					&box->particles[j],
+					stiffness, glm::distance(box->particles[i].pos, box->particles[j].pos));
+				box->constraints.push_back(c);
 			}
 		}
 	}
+	
 	return box;
 }
