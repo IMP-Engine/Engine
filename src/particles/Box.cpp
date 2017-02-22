@@ -35,15 +35,15 @@ Box *make_box(BoxConfig * const config) {
 	for (int i = 0; i < config->num_particles.x; i++) {
 		for (int j = 0; j < config->num_particles.y; j++) {
 			for (int k = 0; k < config->num_particles.z; k++) {
-				Particle *p = new Particle;
+				Particle p = Particle();
 
 				// Offset from base
-				p->pos = base_pos + vec3(i*dx, j*dy, k*dz);
+				p.pos = base_pos + vec3(i*dx, j*dy, k*dz);
 
 				// Uniform distribution of mass
-				p->invmass = config->mass / num_particles;
-				p->velocity = vec3(0.f, 0.f, 0.f);
-				p->phase = config->phase;
+				p.invmass = config->mass / num_particles;
+				p.velocity = vec3(0.f, 0.f, 0.f);
+				p.phase = config->phase;
 
 				box->particles.push_back(p);
 			}

@@ -8,6 +8,15 @@
 #include "debug.h"
 
 
+#include "glHelper.h"
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
+#include <vector>
+
+#include "physics.h"
+#include "particles/ParticleRenderer.h"
+#include "particles/Box.h"
+
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
 #ifdef _WIN32
@@ -19,14 +28,10 @@
 #endif
 
 
-#include "Box.h"
 
-#include "glHelper.h"
-#include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
 using namespace glm;
+using namespace std;
 
-#include <vector>
 
 // Global variables
 #define MAX_FOV 70.0f
@@ -48,7 +53,7 @@ GLfloat lastY = HEIGHT / 2;
 GLfloat fovy = 70.0f;
 bool keys[1024];
 GLfloat xoffset, yoffset; // not necessarily global if camera movement slide doesn't need it
-#define slideCoefficient 5 // lower = longer slide
+#define slideCoefficient 10 // lower = longer slide
 vec3 forwardMovement = vec3(0.0f);
 vec3 backwardMovement = vec3(0.0f);
 vec3 rightMovement = vec3(0.0f);
@@ -60,10 +65,15 @@ vec3 downMovement = vec3(0.0f);
 GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
 
-// Shaders
-GLuint simpleShader;
+Box *box;
+ParticleRenderer *particleRenderer;
 
-/*
+// Shaders
+GLuint simpleShader, particleShader;
+
+// VAOs
+GLuint simpleVao, particleVao;
+
    float cubeVertices[] = {
    -10.0f, -10.0f,  10.0f,
    10.0f, -10.0f,  10.0f,
@@ -74,8 +84,8 @@ GLuint simpleShader;
    10.0f, -10.0f, -10.0f,
    10.0f,  10.0f, -10.0f,
    -10.0f,  10.0f, -10.0f,
+/*
    };
-   */
 float cubeVertices[] = {
     -0.5f, -0.5f,  0.5f,
     0.5f, -0.5f,  0.5f,
@@ -86,6 +96,7 @@ float cubeVertices[] = {
     0.5f, -0.5f, -0.5f,
     0.5f,  0.5f, -0.5f,
     -0.5f,  0.5f, -0.5f,
+   */
 };
 
 vec3 cubePositions[] = {
@@ -139,6 +150,7 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		cout << "Press." << endl;
         double x, y;
         glfwGetCursorPos(window, &x, &y);
         lastX = x;
@@ -221,11 +233,12 @@ void initGL() {
 
     ImGui_ImplGlfwGL3_Init(window, true); 
 
-    // steal callback and call imgui in our callback
-    glfwSetKeyCallback(window, keyCallback);
-    glfwSetCursorPosCallback(window, mouseCallback);
-    glfwSetScrollCallback(window, scrollCallback);
-    glfwSetMouseButtonCallback(window, mouseButtonCallback);
+	// steal callback and call imgui in our callback
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetCursorPosCallback(window, mouseCallback);
+	glfwSetScrollCallback(window, scrollCallback);    
+	glfwSetMouseButtonCallback(window, mouseButtonCallback);
+
 
     // Shader setup
     simpleShader = glHelper::loadShader(VERT_SHADER_PATH, FRAG_SHADER_PATH);
@@ -233,44 +246,51 @@ void initGL() {
     vpos_location = glGetAttribLocation(simpleShader, "vPos");
     vcol_location = glGetAttribLocation(simpleShader, "vCol");
 
-    // Triangle setup
-    GLuint vertex_buffer;
+	// Triangle setup
+	GLuint vertex_buffer;
 
-    glGenBuffers(1, &vertex_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+	glGenVertexArrays(1, &simpleVao);
+	glBindVertexArray(simpleVao);
 
-    // Cube setup
-    GLushort cubeIndices[] = {
-        // front
-        0, 1, 2,
-        2, 3, 0,
-        // top
-        1, 5, 6,
-        6, 2, 1,
-        // back
-        7, 6, 5,
-        5, 4, 7,
-        // bottom
-        4, 0, 3,
-        3, 7, 4,
-        // left
-        4, 5, 1,
-        1, 0, 4,
-        // right
-        3, 2, 6,
-        6, 7, 3
-    };
+	glGenBuffers(1, &vertex_buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
 
-    glGenBuffers(1, &cube_ibo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeIndices), cubeIndices, GL_STATIC_DRAW);
+	// Cube setup
+	GLushort cubeIndices[] = {
+		// front
+		0, 1, 2,
+		2, 3, 0,
+		// top
+		1, 5, 6,
+		6, 2, 1,
+		// back
+		7, 6, 5,
+		5, 4, 7,
+		// bottom
+		4, 0, 3,
+		3, 7, 4,
+		// left
+		4, 5, 1,
+		1, 0, 4,
+		// right
+		3, 2, 6,
+		6, 7, 3
+	};
 
-    glEnableVertexAttribArray(vpos_location);
-    glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glGenBuffers(1, &cube_ibo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeIndices), cubeIndices, GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(vpos_location);
+	glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
+
+    glPointSize(2.f);
+	particleRenderer->init();
+
 }
 
 void display() {
@@ -286,49 +306,32 @@ void display() {
     glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    vec3 cameraTarget = vec3(0.0f, 0.0f, 0.0f);
-    vec3 cameraDirection = normalize(cameraPos - cameraTarget);
-    vec3 cameraRight = normalize(cross(cameraUp, cameraDirection));
+    //vec3 cameraTarget = vec3(0.0f, 0.0f, 0.0f);
+    //vec3 cameraDirection = normalize(cameraPos - cameraTarget);
+    //vec3 cameraRight = normalize(cross(cameraUp, cameraDirection));
 
-    viewMatrix = lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+	glfwGetFramebufferSize(window, &width, &height);
+	ratio = width / (float)height;
 
-    /*
-    // Original code for drawing cube
-    mat4 modelMatrix(1.0f); // Identity matrix
-    modelMatrix = rotate(modelMatrix, (GLfloat)glfwGetTime() * 1.0f, vec3(0.5f, 1.0f, 0.0f));
+	glViewport(0, 0, width, height);
+	glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    viewMatrix = lookAt(vec3(20, 4, 40), vec3(0), vec3(0, 1, 0));
-    // Set up a projection matrix
-    float fovy = radians(45.0f);
-    float nearPlane = 0.01f;
-    float farPlane = 300.0f;
+	mat4 modelMatrix(1.0f); // Identity matrix
 
-    modelViewMatrix = viewMatrix * modelMatrix;
-    modelViewProjectionMatrix = perspective(fovy, ratio, nearPlane, farPlane) * modelViewMatrix;
+	viewMatrix = lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
-    // Send uniforms to shader
-    glUseProgram(simpleShader);
-    glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
-    glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
+	// Set up a projection matrix
+	float fovy = radians(45.0f);
+	float nearPlane = 0.01f;
+	float farPlane = 300.0f;
 
-    // Draw cube
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
-    int size;
-    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-    glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0); //sizeof(GLushort),
-    */
+	modelViewMatrix = viewMatrix * modelMatrix;
+	modelViewProjectionMatrix = perspective(fovy, ratio, nearPlane, farPlane) * modelViewMatrix;
 
-    // Draw one cube
-    mat4 modelMatrix(1.0f); // Identity matrix
-    modelMatrix = translate(modelMatrix, vec3(0.0f, 0.0f, 0.0f));
-    modelMatrix = scale(modelMatrix, vec3(5.0f, 5.0f, 5.0f));
+    //modelMatrix = translate(modelMatrix, vec3(0.0f, 0.0f, 0.0f));
+    //modelMatrix = scale(modelMatrix, vec3(5.0f, 5.0f, 5.0f));
 
-    float nearPlane = 0.01f;
-    float farPlane = 300.0f;
-
-    modelViewMatrix = viewMatrix * modelMatrix;
-    modelViewProjectionMatrix = perspective(radians(fovy), ratio, nearPlane, farPlane) * modelViewMatrix;
 
     // Send uniforms to shader
     glUseProgram(simpleShader);
@@ -337,6 +340,8 @@ void display() {
 
     // Draw cube
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	glBindVertexArray(simpleVao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
     int size;
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
@@ -371,6 +376,10 @@ void display() {
 
     // GUI
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    physics::simulate(&box->particles ,ImGui::GetIO().DeltaTime);
+	particleRenderer->render(modelViewProjectionMatrix);
+
     ImGui::Render();
 
     glfwSwapBuffers(window);
@@ -407,26 +416,34 @@ void gui()
 }
 
 int main(void) {
-    initGL();
 
     if (GLAD_GL_VERSION_4_3) {
         /* We support at least OpenGL version 4.3 */
     }
 
-    double startTime = glfwGetTime();
+	BoxConfig config;
 
-    // Showcase of how the box works
-    BoxConfig config;
+	config.dimensions =	vec3(1.f, 1.f, 1.f);
+	config.center_pos = vec3(0.f, 0.f, 0.f);
+	config.mass = 10.f;
+	config.phase = 1;
+	config.num_particles = vec3(5,5,5);
 
-    config.dimensions =	vec3(10.f, 10.f, 10.f);
-    config.center_pos = vec3(5.f, 5.f, 5.f);
-    config.mass = 10.f;
-    config.phase = 1;
-    config.num_particles = vec3(3,3,3);
+	box = make_box(&config);
 
-    Box *box = make_box(&config);
+	particleRenderer = new ParticleRenderer(&box->particles);
 
-    clear_color = ImColor(164, 164, 164);
+	initGL();
+
+	if (GLAD_GL_VERSION_4_3) {
+		/* We support at least OpenGL version 4.3 */
+	}
+
+	double startTime = glfwGetTime();
+
+	// Showcase of how the box works
+
+	clear_color = ImColor(164, 164, 164);
 
     while (!glfwWindowShouldClose(window))
     {
