@@ -34,10 +34,36 @@ using namespace std;
 
 
 // Global variables
+#define MAX_FOV 70.0f
+#define MIN_FOV 1.0f
 GLFWwindow* window;
 GLint mvp_location, vpos_location, vcol_location;
 GLuint cube_ibo; // IndicesBufferObject
 ImVec4 clear_color;
+const GLuint WIDTH = 1280, HEIGHT = 720;
+
+// Camera
+vec3 cameraPos = vec3(0.0f, 0.0f, 12.0f);
+vec3 cameraFront = vec3(0.0f, 0.0f, -1.0f);
+vec3 cameraUp = vec3(0.0f, 1.0f, 0.0f);
+GLfloat yaw = -90.0f;
+GLfloat pitch = 0.0f;
+GLfloat lastX = WIDTH / 2;
+GLfloat lastY = HEIGHT / 2;
+GLfloat fovy = 70.0f;
+bool keys[1024];
+GLfloat xoffset, yoffset; // not necessarily global if camera movement slide doesn't need it
+#define slideCoefficient 10 // lower = longer slide
+vec3 forwardMovement = vec3(0.0f);
+vec3 backwardMovement = vec3(0.0f);
+vec3 rightMovement = vec3(0.0f);
+vec3 leftMovement = vec3(0.0f);
+vec3 upMovement = vec3(0.0f);
+vec3 downMovement = vec3(0.0f);
+
+// Deltatime
+GLfloat deltaTime = 0.0f;
+GLfloat lastFrame = 0.0f;
 
 Box *box;
 ParticleRenderer *particleRenderer;
@@ -48,82 +74,181 @@ GLuint simpleShader, particleShader;
 // VAOs
 GLuint simpleVao, particleVao;
 
-float cubeVertices[] = {
-	-10.0f, -10.0f,  10.0f,
-	 10.0f, -10.0f,  10.0f,
-	 10.0f,  10.0f,  10.0f,
-	-10.0f,  10.0f,  10.0f,
+   float cubeVertices[] = {
+   -10.0f, -10.0f,  10.0f,
+   10.0f, -10.0f,  10.0f,
+   10.0f,  10.0f,  10.0f,
+   -10.0f,  10.0f,  10.0f,
 
-	-10.0f, -10.0f, -10.0f,
-	 10.0f, -10.0f, -10.0f,
-	 10.0f,  10.0f, -10.0f,
-	-10.0f,  10.0f, -10.0f,
+   -10.0f, -10.0f, -10.0f,
+   10.0f, -10.0f, -10.0f,
+   10.0f,  10.0f, -10.0f,
+   -10.0f,  10.0f, -10.0f,
+/*
+   };
+float cubeVertices[] = {
+    -0.5f, -0.5f,  0.5f,
+    0.5f, -0.5f,  0.5f,
+    0.5f,  0.5f,  0.5f,
+    -0.5f,  0.5f,  0.5f,
+
+    -0.5f, -0.5f, -0.5f,
+    0.5f, -0.5f, -0.5f,
+    0.5f,  0.5f, -0.5f,
+    -0.5f,  0.5f, -0.5f,
+   */
 };
 
-static void error_callback(int error, const char* description) {
+vec3 cubePositions[] = {
+    vec3(-3.0f, 0.0f, 0.0f),
+    vec3(3.0f, 0.0f, 0.0f)
+};
+
+static void errorCallback(int error, const char* description) {
     fprintf(stderr, "Error: %s\n", description);
 }
 
-static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-	ImGui_ImplGlfwGL3_KeyCallback(window, key, scancode, action, mods);
+static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    ImGui_ImplGlfwGL3_KeyCallback(window, key, scancode, action, mods);
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+    if (key >= 0 && key < 1024) {
+        if (action == GLFW_PRESS)
+            keys[key] = true;
+        else if (action == GLFW_RELEASE)
+            keys[key] = false;
+    }
 }
 
+void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        xoffset = xpos - lastX;
+        yoffset = lastY - ypos;
+        lastX = xpos;
+        lastY = ypos;
+
+        GLfloat sensitivity = 0.1f;
+        xoffset *= sensitivity;
+        yoffset *= sensitivity;
+
+        yaw = mod(yaw + xoffset, (GLfloat)360.0f);
+        pitch += yoffset;
+
+        // Limit pitch within (-90, 90) degrees
+        if (pitch > 89.0f)
+            pitch = 89.0f;
+        if (pitch < -89.0f)
+            pitch = -89.0f;
+
+        vec3 front;
+        front.x = cos(radians(pitch)) * cos(radians(yaw));
+        front.y = sin(radians(pitch));
+        front.z = cos(radians(pitch)) * sin(radians(yaw));
+        cameraFront = normalize(front);
+    }
+}
+
+void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		cout << "Press." << endl;
+        double x, y;
+        glfwGetCursorPos(window, &x, &y);
+        lastX = x;
+        lastY = y;
+    }
+}
+
+void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+    if (fovy >= MIN_FOV && fovy <= MAX_FOV)
+        fovy -= yoffset;
+    else if (fovy <= MIN_FOV)
+        fovy = MIN_FOV;
+    else 
+        fovy = MAX_FOV;
+}
+
+void doMovement() {
+    GLfloat cameraSpeed = 10.0f * deltaTime;
+    if (keys[GLFW_KEY_W])
+        forwardMovement = cameraSpeed * cameraFront;
+    if (keys[GLFW_KEY_S]) 
+        backwardMovement = - cameraSpeed * cameraFront;
+    if (keys[GLFW_KEY_A])
+        leftMovement = - normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
+    if (keys[GLFW_KEY_D])
+        rightMovement = normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
+    if (keys[GLFW_KEY_SPACE])
+        upMovement = cameraSpeed * cameraUp;
+    if (keys[GLFW_KEY_LEFT_CONTROL])
+        downMovement = - cameraSpeed * cameraUp;
+    cameraPos += forwardMovement;
+    cameraPos += backwardMovement;
+    cameraPos += rightMovement;
+    cameraPos += leftMovement;
+    cameraPos += upMovement;
+    cameraPos += downMovement;
+    // Camera slide after input has finished
+    forwardMovement *= (1.0f - deltaTime * slideCoefficient);
+    backwardMovement *= (1.0f - deltaTime * slideCoefficient);
+    rightMovement *= (1.0f - deltaTime * slideCoefficient);
+    leftMovement *= (1.0f - deltaTime * slideCoefficient);
+    upMovement *= (1.0f - deltaTime * slideCoefficient);
+    downMovement *= (1.0f - deltaTime * slideCoefficient);
+}
 
 void initGL() {
+    glfwSetErrorCallback(errorCallback);
 
-	glfwSetErrorCallback(error_callback);
+    if (!glfwInit())
+        exit(EXIT_FAILURE);
 
-	if (!glfwInit())
-		exit(EXIT_FAILURE);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-
-	window = glfwCreateWindow(1280, 800, "Simple example", NULL, NULL);
+    window = glfwCreateWindow(WIDTH, HEIGHT, "Simple example", NULL, NULL);
 #if _DEBUG
-  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
 #endif
 
-	if (!window) {
-		std::cout << "Failed to crate GLFW window" << std::endl;
-		glfwTerminate();
-		exit(EXIT_FAILURE);
-	}
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-	glfwSetKeyCallback(window, key_callback);
+    if (!window) {
+        std::cout << "Failed to crate GLFW window" << std::endl;
+        glfwTerminate();
+        exit(EXIT_FAILURE);
+    }
 
-	glfwMakeContextCurrent(window);
+    glfwMakeContextCurrent(window);
 
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-	{
-		std::cout << "Failed to initialize OpenGL context" << std::endl;
-		exit(EXIT_FAILURE);
-	}
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        std::cout << "Failed to initialize OpenGL context" << std::endl;
+        exit(EXIT_FAILURE);
+    }
 
 #if _DEBUG		
-	debug::printGLDiagnostics();
-	debug::setupGLDebugMessages();
+    debug::printGLDiagnostics();
+    debug::setupGLDebugMessages();
 #endif
 
-	ImGui_ImplGlfwGL3_Init(window, true); 
+    ImGui_ImplGlfwGL3_Init(window, true); 
 
 	// steal callback and call imgui in our callback
-	glfwSetKeyCallback(window, key_callback);
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetCursorPosCallback(window, mouseCallback);
+	glfwSetScrollCallback(window, scrollCallback);    
+	glfwSetMouseButtonCallback(window, mouseButtonCallback);
 
-	// Shader setup
-	simpleShader = glHelper::loadShader(VERT_SHADER_PATH, FRAG_SHADER_PATH);
-	glUseProgram(simpleShader);
-	mvp_location = glGetUniformLocation(simpleShader, "MVP");
-	vpos_location = glGetAttribLocation(simpleShader, "vPos");
-	vcol_location = glGetAttribLocation(simpleShader, "vCol");
+
+    // Shader setup
+    simpleShader = glHelper::loadShader(VERT_SHADER_PATH, FRAG_SHADER_PATH);
+    mvp_location = glGetUniformLocation(simpleShader, "MVP");
+    vpos_location = glGetAttribLocation(simpleShader, "vPos");
+    vcol_location = glGetAttribLocation(simpleShader, "vCol");
 
 	// Triangle setup
 	GLuint vertex_buffer;
 
-	/* Allocate and assign a Vertex Array Object to our handle */
 	glGenVertexArrays(1, &simpleVao);
 	glBindVertexArray(simpleVao);
 
@@ -160,21 +285,30 @@ void initGL() {
 	glEnableVertexAttribArray(vpos_location);
 	glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-	glDisable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
 
-	glPointSize(2.f);
+    glPointSize(2.f);
 	particleRenderer->init();
 
 }
 
-
-
-
 void display() {
-	float ratio;
-	int width, height;
-	mat4 viewMatrix, modelViewProjectionMatrix, modelViewMatrix;
+    float ratio;
+    int width, height;
+    mat4 viewMatrix, modelViewProjectionMatrix, modelViewMatrix;
+
+    glfwGetFramebufferSize(window, &width, &height);
+    //ratio = width / (float)height;
+    ratio = (GLfloat)WIDTH / (GLfloat)HEIGHT;
+
+    glViewport(0, 0, width, height);
+    glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    //vec3 cameraTarget = vec3(0.0f, 0.0f, 0.0f);
+    //vec3 cameraDirection = normalize(cameraPos - cameraTarget);
+    //vec3 cameraRight = normalize(cross(cameraUp, cameraDirection));
 
 	glfwGetFramebufferSize(window, &width, &height);
 	ratio = width / (float)height;
@@ -185,7 +319,7 @@ void display() {
 
 	mat4 modelMatrix(1.0f); // Identity matrix
 
-	viewMatrix = lookAt(vec3(20, 4, 40), vec3(0), vec3(0, 1, 0));
+	viewMatrix = lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
 	// Set up a projection matrix
 	float fovy = radians(45.0f);
@@ -195,68 +329,101 @@ void display() {
 	modelViewMatrix = viewMatrix * modelMatrix;
 	modelViewProjectionMatrix = perspective(fovy, ratio, nearPlane, farPlane) * modelViewMatrix;
 
-	// Send uniforms to shader
-	glUseProgram(simpleShader);
+    //modelMatrix = translate(modelMatrix, vec3(0.0f, 0.0f, 0.0f));
+    //modelMatrix = scale(modelMatrix, vec3(5.0f, 5.0f, 5.0f));
+
+
+    // Send uniforms to shader
+    glUseProgram(simpleShader);
+    glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
+    glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
+
+    // Draw cube
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 	glBindVertexArray(simpleVao);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
+    int size;
+    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+    glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0); //sizeof(GLushort),
 
-	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
-	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
+    /*
+    // Draw two cubes
+    for(GLuint i = 0; i < 2; i++) {
+    mat4 modelMatrix(1.0f); // Identity matrix
+    modelMatrix = translate(modelMatrix, cubePositions[i]);
+    modelMatrix = scale(modelMatrix, vec3(5.0f, 5.0f, 5.0f));
 
-	// Draw
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
-	int size;
-	glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-	glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0); //sizeof(GLushort),
+    float nearPlane = 0.01f;
+    float farPlane = 300.0f;
 
-	// GUI
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    modelViewMatrix = viewMatrix * modelMatrix;
+    modelViewProjectionMatrix = perspective(fovy, ratio, nearPlane, farPlane) * modelViewMatrix;
 
-	
-	physics::simulate(&box->particles ,ImGui::GetIO().DeltaTime);
+    // Send uniforms to shader
+    glUseProgram(simpleShader);
+    glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
+    glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
+
+    // Draw cube
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
+    int size;
+    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+    glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0); //sizeof(GLushort),
+    }
+    */
+
+    // GUI
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    physics::simulate(&box->particles ,ImGui::GetIO().DeltaTime);
 	particleRenderer->render(modelViewProjectionMatrix);
 
-	ImGui::Render();
+    ImGui::Render();
 
-	glfwSwapBuffers(window);
+    glfwSwapBuffers(window);
 }
 
 void gui()
 {
-	// Consider scapping incase of performance
-	static bool vsync = true;
-	glfwSwapInterval(vsync ? 1 : 0);
+    // Consider scapping incase of performance
+    static bool vsync = true;
+    glfwSwapInterval(vsync ? 1 : 0);
 
-	// Data for plotting frametime
-	static float frameTimes[200] = { 0 };
-	static int offset = 0;
-	frameTimes[offset] = ImGui::GetIO().DeltaTime;
-	offset = (offset + 1) % COUNT_OF(frameTimes);
+    // Data for plotting frametime
+    static float frameTimes[200] = { 0 };
+    static int offset = 0;
+    frameTimes[offset] = ImGui::GetIO().DeltaTime;
+    offset = (offset + 1) % COUNT_OF(frameTimes);
 
-	static bool show_demo_window = false;
+    static bool show_demo_window = false;
 
-	ImGui::Begin("IMPEngine");
-	ImGui::ColorEdit3("clear color", (float*)&clear_color);
-	ImGui::Checkbox("Vsync", &vsync);
-	if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
-	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-	ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
-	ImGui::End();
+    ImGui::Begin("IMPEngine");
+    ImGui::ColorEdit3("clear color", (float*)&clear_color);
+    ImGui::Checkbox("Vsync", &vsync);
+    if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
+    ImGui::End();
 
-	// Demo window
-	if (show_demo_window)
-	{
-		ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
-		ImGui::ShowTestWindow(&show_demo_window);
-	}
+    // Demo window
+    if (show_demo_window)
+    {
+        ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
+        ImGui::ShowTestWindow(&show_demo_window);
+    }
 }
 
 int main(void) {
 
+    if (GLAD_GL_VERSION_4_3) {
+        /* We support at least OpenGL version 4.3 */
+    }
 
 	BoxConfig config;
 
-	config.dimensions =	vec3(5.f, 5.f, 5.f);
+	config.dimensions =	vec3(1.f, 1.f, 1.f);
 	config.center_pos = vec3(0.f, 0.f, 0.f);
 	config.mass = 10.f;
 	config.phase = 1;
@@ -280,18 +447,25 @@ int main(void) {
 
     while (!glfwWindowShouldClose(window))
     {
-		glfwPollEvents();
-		ImGui_ImplGlfwGL3_NewFrame();
+        // Calculate deltatime of current frame
+        GLfloat currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
 
-		gui();
+        glfwPollEvents();
+        doMovement();
+
+        ImGui_ImplGlfwGL3_NewFrame();
+
+        gui();
 
         display();
     }
 
-	// Cleanup
+    // Cleanup
     glfwDestroyWindow(window);
+    ImGui_ImplGlfwGL3_Shutdown();
     glfwTerminate();
-	ImGui_ImplGlfwGL3_Shutdown();
     exit(EXIT_SUCCESS);
 }
 
