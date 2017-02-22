@@ -8,25 +8,30 @@
 #include "debug.h"
 
 
-#define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
-
-#ifdef _WIN32
-    #define VERT_SHADER_PATH "../../src/shaders/simple.vert"
-    #define FRAG_SHADER_PATH "../../src/shaders/simple.frag"
-#elif __unix__
-    #define VERT_SHADER_PATH "../src/shaders/simple.vert"
-    #define FRAG_SHADER_PATH "../src/shaders/simple.frag"
-#endif
-
-
-#include "Box.h"
-
 #include "glHelper.h"
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
-using namespace glm;
-
 #include <vector>
+
+#include "physics.h"
+#include "particles/ParticleRenderer.h"
+#include "particles/Box.h"
+
+#define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
+
+#ifdef _WIN32
+#define VERT_SHADER_PATH "../../src/shaders/simple.vert"
+#define FRAG_SHADER_PATH "../../src/shaders/simple.frag"
+#elif __unix__
+#define VERT_SHADER_PATH "../src/shaders/simple.vert"
+#define FRAG_SHADER_PATH "../src/shaders/simple.frag"
+#endif
+
+
+
+using namespace glm;
+using namespace std;
+
 
 // Global variables
 GLFWwindow* window;
@@ -34,8 +39,14 @@ GLint mvp_location, vpos_location, vcol_location;
 GLuint cube_ibo; // IndicesBufferObject
 ImVec4 clear_color;
 
+Box *box;
+ParticleRenderer *particleRenderer;
+
 // Shaders
-GLuint simpleShader;
+GLuint simpleShader, particleShader;
+
+// VAOs
+GLuint simpleVao, particleVao;
 
 float cubeVertices[] = {
 	-10.0f, -10.0f,  10.0f,
@@ -60,7 +71,9 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
+
 void initGL() {
+
 	glfwSetErrorCallback(error_callback);
 
 	if (!glfwInit())
@@ -69,7 +82,7 @@ void initGL() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-	window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
+	window = glfwCreateWindow(1280, 800, "Simple example", NULL, NULL);
 #if _DEBUG
   glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
 #endif
@@ -102,12 +115,17 @@ void initGL() {
 
 	// Shader setup
 	simpleShader = glHelper::loadShader(VERT_SHADER_PATH, FRAG_SHADER_PATH);
+	glUseProgram(simpleShader);
 	mvp_location = glGetUniformLocation(simpleShader, "MVP");
 	vpos_location = glGetAttribLocation(simpleShader, "vPos");
 	vcol_location = glGetAttribLocation(simpleShader, "vCol");
 
 	// Triangle setup
 	GLuint vertex_buffer;
+
+	/* Allocate and assign a Vertex Array Object to our handle */
+	glGenVertexArrays(1, &simpleVao);
+	glBindVertexArray(simpleVao);
 
 	glGenBuffers(1, &vertex_buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
@@ -144,7 +162,14 @@ void initGL() {
 
 	glDisable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
+
+	glPointSize(2.f);
+	particleRenderer->init();
+
 }
+
+
+
 
 void display() {
 	float ratio;
@@ -172,6 +197,8 @@ void display() {
 
 	// Send uniforms to shader
 	glUseProgram(simpleShader);
+	glBindVertexArray(simpleVao);
+
 	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
 	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
 
@@ -184,6 +211,11 @@ void display() {
 
 	// GUI
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	
+	physics::simulate(&box->particles ,ImGui::GetIO().DeltaTime);
+	particleRenderer->render(modelViewProjectionMatrix);
+
 	ImGui::Render();
 
 	glfwSwapBuffers(window);
@@ -220,6 +252,20 @@ void gui()
 }
 
 int main(void) {
+
+
+	BoxConfig config;
+
+	config.dimensions =	vec3(5.f, 5.f, 5.f);
+	config.center_pos = vec3(0.f, 0.f, 0.f);
+	config.mass = 10.f;
+	config.phase = 1;
+	config.num_particles = vec3(5,5,5);
+
+	box = make_box(&config);
+
+	particleRenderer = new ParticleRenderer(&box->particles);
+
 	initGL();
 
 	if (GLAD_GL_VERSION_4_3) {
@@ -229,15 +275,6 @@ int main(void) {
 	double startTime = glfwGetTime();
 
 	// Showcase of how the box works
-	BoxConfig config;
-
-	config.dimensions =	vec3(10.f, 10.f, 10.f);
-	config.center_pos = vec3(5.f, 5.f, 5.f);
-	config.mass = 10.f;
-	config.phase = 1;
-	config.num_particles = vec3(3,3,3);
-
-	Box *box = make_box(&config);
 
 	clear_color = ImColor(164, 164, 164);
 
