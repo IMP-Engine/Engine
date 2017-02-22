@@ -1,5 +1,5 @@
 #include "Box.h"
-
+#include "../DistanceConstraint.h"
 
 
 Box::Box()
@@ -9,6 +9,9 @@ Box::Box()
 
 Box::~Box()
 {
+	for (auto c : this->constraints) {
+		delete c;
+	}
 }
 
 
@@ -46,6 +49,45 @@ Box *make_box(BoxConfig * const config) {
 				p.phase = config->phase;
 
 				box->particles.push_back(p);
+			}
+		}
+	}
+	float stiffness = 1;
+	float distance = 1;
+	for (int i = 1; i < config->num_particles.x-1; i++) {
+		for (int j = 1; j < config->num_particles.y-1; j++) {
+			for (int k = 1; k < config->num_particles.z-1; k++) {
+				DistanceConstraint* c1 = new DistanceConstraint(
+					&box->particles[i * config->num_particles.z * config->num_particles.y + j * config->num_particles.z + k],
+					&box->particles[i * config->num_particles.z * config->num_particles.y + j * config->num_particles.z + k - 1],
+					stiffness, distance, true);
+				DistanceConstraint* c2 = new DistanceConstraint(
+					&box->particles[i * config->num_particles.z * config->num_particles.y + j * config->num_particles.z + k],
+					&box->particles[i * config->num_particles.z * config->num_particles.y + j * config->num_particles.z + k + 1],
+					stiffness, distance, true);
+				DistanceConstraint* c3 = new DistanceConstraint(
+					&box->particles[i * config->num_particles.z * config->num_particles.y + j * config->num_particles.z + k],
+					&box->particles[i * config->num_particles.z * config->num_particles.y + (j-1) * config->num_particles.z + k],
+					stiffness, distance, true);
+				DistanceConstraint* c4 = new DistanceConstraint(
+					&box->particles[i * config->num_particles.z * config->num_particles.y + j * config->num_particles.z + k],
+					&box->particles[i * config->num_particles.z * config->num_particles.y + (j+1) * config->num_particles.z + k],
+					stiffness, distance, true);
+				DistanceConstraint* c5 = new DistanceConstraint(
+					&box->particles[i * config->num_particles.z * config->num_particles.y + j * config->num_particles.z + k],
+					&box->particles[(i+1) * config->num_particles.z * config->num_particles.y + j * config->num_particles.z + k],
+					stiffness, distance, true);
+				DistanceConstraint* c6 = new DistanceConstraint(
+					&box->particles[i * config->num_particles.z * config->num_particles.y + j * config->num_particles.z + k],
+					&box->particles[(i-1) * config->num_particles.z * config->num_particles.y + j * config->num_particles.z + k],
+					stiffness, distance, true);
+				box->constraints.push_back(c1);
+				box->constraints.push_back(c2);
+				box->constraints.push_back(c3);
+				box->constraints.push_back(c4);
+				box->constraints.push_back(c5);
+				box->constraints.push_back(c6);
+				
 			}
 		}
 	}

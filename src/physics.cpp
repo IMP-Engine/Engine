@@ -4,9 +4,8 @@
 
 namespace physics {
 
-void simulate(std::vector<Particle*>* particles, std::vector<Constraint*>* constraints , float dt)
+void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constraints , float dt)
 {
-	std::vector<glm::vec3> pPos(particles->size());
 	// Based on 2007 PBD, NOT Unified Framework 
 
 	// For all particles i
@@ -15,8 +14,8 @@ void simulate(std::vector<Particle*>* particles, std::vector<Constraint*>* const
 	// Predict position		x_i^* = x_i + dt * v_i
 
 	for (std::vector<glm::vec3>::size_type i = 0; i != particles->size(); i++) {
-		(*particles)[i].velocity = (*particles)[i].velocity - glm::vec3(0.f, 0.5f, 0.f); // Gravity (Placeholder value. Also, using vec3 instead of float3.)
-		pPos[i] = (*particles)[i].pos + dt * (*particles)[i].velocity;
+		(*particles)[i].velocity = (*particles)[i].velocity - glm::vec3(0.f, 0.2f, 0.f); // Gravity (Placeholder value. Also, using vec3 instead of float3.)
+		(*particles)[i].pPos = (*particles)[i].pos + dt * (*particles)[i].velocity;
 	}
 
 
@@ -24,13 +23,17 @@ void simulate(std::vector<Particle*>* particles, std::vector<Constraint*>* const
 	// For all particles i
 	// Generate collision constraints
 	/* Add constraints from collisions to already given list of constraints */
-
-
+	for (std::vector<glm::vec3>::size_type i = 0; i != particles->size(); i++) {
+		if ((*particles)[i].pPos.y < -10) {
+			(*particles)[i].pPos.y = -10;
+			(*particles)[i].velocity.y *= -1;
+		}
+	}
 
 
 	/* Stationary iterative linear solver */
 
-	for (size_t i = 0; i < 10; i++)
+	for (size_t i = 0; i < 1; i++)
 	{
 		for (Constraint* c : *constraints)
 		{
@@ -38,8 +41,9 @@ void simulate(std::vector<Particle*>* particles, std::vector<Constraint*>* const
 			{ 
 				for (std::vector<Particle*>::iterator p = c->particles.begin(); p != c->particles.end(); p++)
 				{
-					// delta p_i = w_i * s * grad_{p_i} C(p) * stiffness correction 
-					(*p)->pos -= (*p)->invmass * c->evaluateScaleFactor() * c->evaluateGradient(p) * (1 - pow(1 - c->stiffness, 1/(float)i));
+					// delta p_i = -w_i * s * grad_{p_i} C(p) * stiffness correction 
+			
+					(*p)->pPos -= (*p)->invmass * c->evaluateScaleFactor() * c->evaluateGradient(p) * (1 - pow(1 - c->stiffness, 1/(float)i));
 				}
 			}
 		}
@@ -52,8 +56,8 @@ void simulate(std::vector<Particle*>* particles, std::vector<Constraint*>* const
 
 	for (std::vector<glm::vec3>::size_type i = 0; i != particles->size(); i++) 
 	{
-		(*particles)[i].velocity = (pPos[i] - (*particles)[i].pos) / dt;
-		(*particles)[i].pos = pPos[i];
+		(*particles)[i].velocity = ((*particles)[i].pPos - (*particles)[i].pos) / dt;
+		(*particles)[i].pos = (*particles)[i].pPos;
 	}
 
 

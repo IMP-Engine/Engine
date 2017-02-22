@@ -16,6 +16,7 @@
 #include "physics.h"
 #include "particles/ParticleRenderer.h"
 #include "particles/Box.h"
+#include "DistanceConstraint.h";
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
@@ -43,7 +44,7 @@ ImVec4 clear_color;
 const GLuint WIDTH = 1280, HEIGHT = 720;
 
 // Camera
-vec3 cameraPos = vec3(0.0f, 0.0f, 12.0f);
+vec3 cameraPos = vec3(0.0f, 0.0f, 30.0f);
 vec3 cameraFront = vec3(0.0f, 0.0f, -1.0f);
 vec3 cameraUp = vec3(0.0f, 1.0f, 0.0f);
 GLfloat yaw = -90.0f;
@@ -74,6 +75,10 @@ GLuint simpleShader, particleShader;
 // VAOs
 GLuint simpleVao, particleVao;
 
+bool doPyshics = false;
+std::vector<Particle> particles;
+std::vector<Constraint*> constraints;
+
    float cubeVertices[] = {
    -10.0f, -10.0f,  10.0f,
    10.0f, -10.0f,  10.0f,
@@ -86,6 +91,7 @@ GLuint simpleVao, particleVao;
    -10.0f,  10.0f, -10.0f,
 /*
    };
+
 float cubeVertices[] = {
     -0.5f, -0.5f,  0.5f,
     0.5f, -0.5f,  0.5f,
@@ -288,7 +294,7 @@ void initGL() {
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
-    glPointSize(2.f);
+    glPointSize(8.f);
 	particleRenderer->init();
 
 }
@@ -376,8 +382,9 @@ void display() {
 
     // GUI
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    physics::simulate(&box->particles ,ImGui::GetIO().DeltaTime);
+	
+	if(doPyshics)
+		physics::simulate(&particles, &constraints, ImGui::GetIO().DeltaTime);
 	particleRenderer->render(modelViewProjectionMatrix);
 
     ImGui::Render();
@@ -405,6 +412,7 @@ void gui()
     if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
+	ImGui::Checkbox("Physics", &doPyshics);
     ImGui::End();
 
     // Demo window
@@ -417,21 +425,41 @@ void gui()
 
 int main(void) {
 
-    if (GLAD_GL_VERSION_4_3) {
-        /* We support at least OpenGL version 4.3 */
-    }
-
 	BoxConfig config;
-
-	config.dimensions =	vec3(1.f, 1.f, 1.f);
+	
+	config.dimensions = vec3(1.f, 1.f, 1.f);
 	config.center_pos = vec3(0.f, 0.f, 0.f);
 	config.mass = 10.f;
 	config.phase = 1;
-	config.num_particles = vec3(5,5,5);
-
+	config.num_particles = vec3(5, 5, 5);
 	box = make_box(&config);
 
-	particleRenderer = new ParticleRenderer(&box->particles);
+	Particle p1 = Particle();
+	p1.invmass = 1;
+	p1.pos = vec3(-8.0, 4.0, -8.0);
+	p1.velocity = vec3(0.0);
+	particles.push_back(p1);
+
+	Particle p2 = Particle();
+	p2.invmass = 1;
+	p2.pos = vec3(8.0, 4.0, 8.0);
+	p2.velocity = vec3(0.0);
+	particles.push_back(p2);
+
+	Particle p3 = Particle();
+	p3.invmass = 1;
+	p3.pos = vec3(0.0, 8.0, 0.0);
+	p3.velocity = vec3(0.0);
+	particles.push_back(p3);
+
+	DistanceConstraint* c1 = new DistanceConstraint(&particles[0], &particles[1], 0.5, 8);
+	DistanceConstraint* c2 = new DistanceConstraint(&particles[0], &particles[2], 0.5, 8);
+	DistanceConstraint* c3 = new DistanceConstraint(&particles[1], &particles[2], 0.5, 8);
+	constraints.push_back(c1);
+	constraints.push_back(c2);
+	constraints.push_back(c3);
+	particleRenderer = new ParticleRenderer(&particles);
+
 
 	initGL();
 
