@@ -18,6 +18,7 @@ function(assign_source_group)
     endforeach()
 endfunction(assign_source_group)
 
+set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 
 set ( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin )
 
