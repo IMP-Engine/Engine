@@ -53,12 +53,13 @@ Box *make_box(BoxConfig * const config) {
 		}
 	}
 	// Do two passes? One binding the y planes together, One binding the x planes together?
-
+	std::vector<std::pair<int, int>> con;
 	float stiffness = 0.1;
 	for (int i = 0; i < box->particles.size(); i++) {
 		for (int j = 0; j < box->particles.size(); j++) {
-			if (j != i && glm::distance(box->particles[i].pos, box->particles[j].pos) < 0.1+sqrt(dx*dx + dy*dy + dz*dz))
+			if (j != i && glm::distance(box->particles[i].pos, box->particles[j].pos) < FLT_EPSILON+sqrt(dx*dx + dy*dy + dz*dz) && std::find(con.begin(), con.end(), std::pair<int,int>(j,i)) == con.end())
 			{
+				con.push_back(std::pair<int, int>(i, j));
 				Constraint* c = new DistanceConstraint(
 					&box->particles[i],
 					&box->particles[j],

@@ -1,5 +1,6 @@
 #include "physics.h"
 #include <glm/vec3.hpp>
+#include <glm/geometric.hpp>
 #include "Constraint.h"
 
 namespace physics {
@@ -14,7 +15,7 @@ void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constr
 	// Predict position		x_i^* = x_i + dt * v_i
 
 	for (std::vector<glm::vec3>::size_type i = 0; i != particles->size(); i++) {
-		(*particles)[i].velocity = (*particles)[i].velocity - glm::vec3(0.f, 0.2f, 0.f); // Gravity (Placeholder value. Also, using vec3 instead of float3.)
+		(*particles)[i].velocity = (*particles)[i].velocity - glm::vec3(0.f, 0.2f, 0.f) * (*particles)[i].invmass; // Gravity (Placeholder value. Also, using vec3 instead of float3.)
 		(*particles)[i].pPos = (*particles)[i].pos + dt * (*particles)[i].velocity;
 	}
 
@@ -29,7 +30,7 @@ void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constr
 		}
 	}
 
-
+	printf("Num %d", constraints->size());
 	/* Stationary iterative linear solver */
 
 	for (size_t i = 0; i < iterations; i++)
@@ -56,13 +57,15 @@ void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constr
 	for (std::vector<glm::vec3>::size_type i = 0; i != particles->size(); i++) 
 	{
 		(*particles)[i].velocity = ((*particles)[i].pPos - (*particles)[i].pos) / dt;
-		(*particles)[i].pos = (*particles)[i].pPos;
+		if (glm::length((*particles)[i].pos - (*particles)[i].pPos) > 0.01)
+			(*particles)[i].pos = (*particles)[i].pPos;
 	}
 
+
 	for (std::vector<glm::vec3>::size_type i = 0; i != particles->size(); i++) {
-		if ((*particles)[i].pos.y < -10) {
-			(*particles)[i].velocity.z = 0;
-			(*particles)[i].velocity.x = 0;
+		if ((*particles)[i].pos.y <= -10) {
+			(*particles)[i].velocity.z *= 0.4;
+			(*particles)[i].velocity.x *= 0.4;
 		}
 	}
 		// Update velocities according to friction and restituition coefficients
