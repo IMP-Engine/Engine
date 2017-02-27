@@ -295,7 +295,8 @@ void initGL() {
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
-    glPointSize(4.f);
+    glPointSize(10.f);
+	glEnable(GL_POINT_SPRITE);
 	//particleRenderer->init();
 
 }

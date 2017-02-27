@@ -1,6 +1,7 @@
 #version 430
 
 in vec3 color;
+in vec2 gl_PointCoord;
 out vec4 outColor;
 
 
@@ -83,5 +84,7 @@ bool sphereIntersect(in vec3 center, in float radius, inout Ray r, out vec3 posi
 
 void main() {
 	vec3 c = color;
-    outColor = vec4(color, 1.0);
+	if (length(gl_PointCoord - vec2(0.5)) > 0.5) discard;
+
+	outColor = vec4(gl_PointCoord, 0.0, 1.0); //vec4(color, 1.0);
 }
