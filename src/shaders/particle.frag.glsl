@@ -93,7 +93,7 @@ void main() {
 
 	vec3 normal = normalize(vec3(pointCoord, 0.5-length));
 	vec3 fragPos = centerPos + (particleSize) * vec3(normal.x, -normal.y, -normal.z);
-	float diffuse = max(0.0, dot(viewSpaceLightPos - fragPos, normal));
+	float diffuse = max(0.0, dot(normalize(viewSpaceLightPos - fragPos), normal));
 
-	outColor = vec4(fragPos, 1.0);//vec4((0.2 + diffuse) * color, 1.0);
+	outColor = vec4((0.2 + diffuse) * color, 1.0);
 }

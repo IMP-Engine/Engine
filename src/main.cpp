@@ -72,6 +72,9 @@ ParticleRenderer *particleRenderer;
 // Shaders
 GLuint simpleShader, particleShader;
 
+// Light
+const vec3 lightPosition = vec3(50.0f);
+
 // VAOs
 GLuint simpleVao, particleVao;
 
@@ -361,7 +364,7 @@ void display() {
 	projectionMatrix = perspective(fovy, ratio, nearPlane, farPlane);
 	modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
 
-	vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(30.0, 30.0, 30.0, 1.0));
+	vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
 
     //modelMatrix = translate(modelMatrix, vec3(0.0f, 0.0f, 0.0f));
     //modelMatrix = scale(modelMatrix, vec3(5.0f, 5.0f, 5.0f));
