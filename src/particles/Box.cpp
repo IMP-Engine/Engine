@@ -35,6 +35,7 @@ Box *make_box(BoxConfig * const config) {
 	box->mass = config->mass;
 	box->num_particles = config->num_particles;
 
+	// Create particles
 	for (int i = 0; i < config->num_particles.x; i++) {
 		for (int j = 0; j < config->num_particles.y; j++) {
 			for (int k = 0; k < config->num_particles.z; k++) {
@@ -52,12 +53,14 @@ Box *make_box(BoxConfig * const config) {
 			}
 		}
 	}
-	// Do two passes? One binding the y planes together, One binding the x planes together?
+
+	// Create constraints
 	std::vector<std::pair<int, int>> con;
-	float stiffness = 0.1;
+	float stiffness = config->stiffness;
 	for (int i = 0; i < box->particles.size(); i++) {
 		for (int j = 0; j < box->particles.size(); j++) {
-			if (j != i && glm::distance(box->particles[i].pos, box->particles[j].pos) < FLT_EPSILON+sqrt(dx*dx + dy*dy + dz*dz) && std::find(con.begin(), con.end(), std::pair<int,int>(j,i)) == con.end())
+			if (j != i && glm::distance(box->particles[i].pos, box->particles[j].pos) < FLT_EPSILON+sqrt(dx*dx + dy*dy + dz*dz) 
+				&& std::find(con.begin(), con.end(), std::pair<int,int>(j,i)) == con.end())
 			{
 				con.push_back(std::pair<int, int>(i, j));
 				Constraint* c = new DistanceConstraint(

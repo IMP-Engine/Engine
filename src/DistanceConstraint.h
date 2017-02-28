@@ -37,7 +37,7 @@ public:
 
 		vec3 c = (p1 - p2) / length(p1 - p2);
 
-		return (p == this->particles.begin() ? c : -c); // TODO typo? Where should '-' be?
+		return (p == this->particles.begin() ? c : -c);
 	}
 
 };
