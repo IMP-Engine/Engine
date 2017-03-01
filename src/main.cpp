@@ -7,15 +7,19 @@
 #include <iostream>
 #include "debug.h"
 
-
 #include "glHelper.h"
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <vector>
 
+
+#define WORLD_MIN vec3(-20.f,-20.f,-20.f)
+#define WORLD_MAX vec3( 20.f, 20.f, 20.f)
+
 #include "physics.h"
 #include "particles/ParticleRenderer.h"
 #include "particles/Box.h"
+#include "Scene.h"
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
@@ -36,9 +40,10 @@ using namespace std;
 // Global variables
 #define MAX_FOV 70.0f
 #define MIN_FOV 1.0f
+
+
 GLFWwindow* window;
 GLint mvp_location, vpos_location, vcol_location;
-GLuint cube_ibo; // IndicesBufferObject
 ImVec4 clear_color;
 const GLuint WIDTH = 1280, HEIGHT = 720;
 
@@ -65,44 +70,19 @@ vec3 downMovement = vec3(0.0f);
 GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
 
-Box *box;
+Box *box1, *box2;
+Scene *scene;
+vector<Particle> particles;
 ParticleRenderer *particleRenderer;
 
 // Shaders
 GLuint simpleShader, particleShader;
 
 // VAOs
-GLuint simpleVao, particleVao;
+GLuint particleVao;
 
-   float cubeVertices[] = {
-   -10.0f, -10.0f,  10.0f,
-   10.0f, -10.0f,  10.0f,
-   10.0f,  10.0f,  10.0f,
-   -10.0f,  10.0f,  10.0f,
 
-   -10.0f, -10.0f, -10.0f,
-   10.0f, -10.0f, -10.0f,
-   10.0f,  10.0f, -10.0f,
-   -10.0f,  10.0f, -10.0f,
-/*
-   };
-float cubeVertices[] = {
-    -0.5f, -0.5f,  0.5f,
-    0.5f, -0.5f,  0.5f,
-    0.5f,  0.5f,  0.5f,
-    -0.5f,  0.5f,  0.5f,
 
-    -0.5f, -0.5f, -0.5f,
-    0.5f, -0.5f, -0.5f,
-    0.5f,  0.5f, -0.5f,
-    -0.5f,  0.5f, -0.5f,
-   */
-};
-
-vec3 cubePositions[] = {
-    vec3(-3.0f, 0.0f, 0.0f),
-    vec3(3.0f, 0.0f, 0.0f)
-};
 
 static void errorCallback(int error, const char* description) {
     fprintf(stderr, "Error: %s\n", description);
@@ -122,10 +102,10 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 
 void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        xoffset = xpos - lastX;
-        yoffset = lastY - ypos;
-        lastX = xpos;
-        lastY = ypos;
+        xoffset = (GLfloat)xpos - lastX;
+        yoffset = lastY - (GLfloat)ypos;
+        lastX = (GLfloat)xpos;
+        lastY = (GLfloat)ypos;
 
         GLfloat sensitivity = 0.1f;
         xoffset *= sensitivity;
@@ -153,14 +133,14 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 		cout << "Press." << endl;
         double x, y;
         glfwGetCursorPos(window, &x, &y);
-        lastX = x;
-        lastY = y;
+        lastX = (GLfloat)x;
+        lastY = (GLfloat)y;
     }
 }
 
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
     if (fovy >= MIN_FOV && fovy <= MAX_FOV)
-        fovy -= yoffset;
+        fovy -= (GLfloat)yoffset;
     else if (fovy <= MIN_FOV)
         fovy = MIN_FOV;
     else 
@@ -244,46 +224,22 @@ void initGL() {
     simpleShader = glHelper::loadShader(VERT_SHADER_PATH, FRAG_SHADER_PATH);
     mvp_location = glGetUniformLocation(simpleShader, "MVP");
     vpos_location = glGetAttribLocation(simpleShader, "vPos");
-    vcol_location = glGetAttribLocation(simpleShader, "vCol");
 
-	// Triangle setup
-	GLuint vertex_buffer;
+	// Scene setup
+	glGenVertexArrays(1, &scene->vao);
+	glBindVertexArray(scene->vao);
 
-	glGenVertexArrays(1, &simpleVao);
-	glBindVertexArray(simpleVao);
+	glGenBuffers(1, &scene->vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, scene->vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * scene->vertexes.size(), &(scene->vertexes[0]), GL_STATIC_DRAW);
 
-	glGenBuffers(1, &vertex_buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+    glGenBuffers(1, &scene->ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, scene->ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLshort) * scene->indices.size(), &(scene->indices[0]), GL_STATIC_DRAW);
 
-	// Cube setup
-	GLushort cubeIndices[] = {
-		// front
-		0, 1, 2,
-		2, 3, 0,
-		// top
-		1, 5, 6,
-		6, 2, 1,
-		// back
-		7, 6, 5,
-		5, 4, 7,
-		// bottom
-		4, 0, 3,
-		3, 7, 4,
-		// left
-		4, 5, 1,
-		1, 0, 4,
-		// right
-		3, 2, 6,
-		6, 7, 3
-	};
-
-	glGenBuffers(1, &cube_ibo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeIndices), cubeIndices, GL_STATIC_DRAW);
-
-	glEnableVertexAttribArray(vpos_location);
-	glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glEnableVertexAttribArray(vpos_location);
+    glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    
 
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
@@ -305,17 +261,6 @@ void display() {
     glViewport(0, 0, width, height);
     glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    //vec3 cameraTarget = vec3(0.0f, 0.0f, 0.0f);
-    //vec3 cameraDirection = normalize(cameraPos - cameraTarget);
-    //vec3 cameraRight = normalize(cross(cameraUp, cameraDirection));
-
-	glfwGetFramebufferSize(window, &width, &height);
-	ratio = width / (float)height;
-
-	glViewport(0, 0, width, height);
-	glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	mat4 modelMatrix(1.0f); // Identity matrix
 
@@ -341,43 +286,16 @@ void display() {
     // Draw cube
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	glBindVertexArray(simpleVao);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
+	glBindVertexArray(scene->vao);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, scene->ibo);
     int size;
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
     glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0); //sizeof(GLushort),
-
-    /*
-    // Draw two cubes
-    for(GLuint i = 0; i < 2; i++) {
-    mat4 modelMatrix(1.0f); // Identity matrix
-    modelMatrix = translate(modelMatrix, cubePositions[i]);
-    modelMatrix = scale(modelMatrix, vec3(5.0f, 5.0f, 5.0f));
-
-    float nearPlane = 0.01f;
-    float farPlane = 300.0f;
-
-    modelViewMatrix = viewMatrix * modelMatrix;
-    modelViewProjectionMatrix = perspective(fovy, ratio, nearPlane, farPlane) * modelViewMatrix;
-
-    // Send uniforms to shader
-    glUseProgram(simpleShader);
-    glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
-    glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
-
-    // Draw cube
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
-    int size;
-    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-    glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0); //sizeof(GLushort),
-    }
-    */
 
     // GUI
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    physics::simulate(&box->particles ,ImGui::GetIO().DeltaTime);
+    physics::simulate(&particles, scene, ImGui::GetIO().DeltaTime);
 	particleRenderer->render(modelViewProjectionMatrix);
 
     ImGui::Render();
@@ -429,9 +347,21 @@ int main(void) {
 	config.phase = 1;
 	config.num_particles = vec3(5,5,5);
 
-	box = make_box(&config);
+    box1 = make_box(&config);
 
-	particleRenderer = new ParticleRenderer(&box->particles);
+    config.center_pos += vec3(0.55f,1.55f,0.55f);
+    config.phase = 2;
+
+    box2 = make_box(&config);
+
+
+    scene = new Scene;
+
+    particles.insert(particles.end(), box1->particles.begin(), box1->particles.end());
+    particles.insert(particles.end(), box2->particles.begin(), box2->particles.end());
+
+
+	particleRenderer = new ParticleRenderer(&particles);
 
 	initGL();
 
@@ -443,12 +373,12 @@ int main(void) {
 
 	// Showcase of how the box works
 
-	clear_color = ImColor(164, 164, 164);
+	clear_color = ImColor(50, 50, 50);
 
     while (!glfwWindowShouldClose(window))
     {
         // Calculate deltatime of current frame
-        GLfloat currentFrame = glfwGetTime();
+        GLfloat currentFrame = (GLfloat)glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
