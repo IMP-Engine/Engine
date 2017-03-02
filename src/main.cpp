@@ -74,6 +74,9 @@ GLfloat lastFrame = 0.0f;
 GLuint simpleShader, particleShader;
 ParticleRenderer *particleRenderer;
 
+// Light
+const vec3 lightPosition = vec3(50.0f);
+
 // VAOs
 GLuint simpleVao, particleVao;
 
@@ -303,7 +306,14 @@ void initGL() {
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
-    glPointSize(4.f);
+	glEnable(GL_POINT_SPRITE);
+    glPointSize(0.1f);
+	//glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_LOWER_LEFT); // Not sure if needed, keeping meanwhile
+
+	// Not sure which one to use, keeping both meanwhile
+	glEnable(GL_PROGRAM_POINT_SIZE);
+	//glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+
 	//particleRenderer->init();
 
 }
@@ -334,7 +344,7 @@ void setupBox(vec3 dimension, vec3 centerpos, float totmass, vec3 numparticles, 
 void display() {
     float ratio;
     int width, height;
-    mat4 viewMatrix, modelViewProjectionMatrix, modelViewMatrix;
+    mat4 viewMatrix, modelViewProjectionMatrix, modelViewMatrix, projectionMatrix;
 
     glfwGetFramebufferSize(window, &width, &height);
     //ratio = width / (float)height;
@@ -365,7 +375,10 @@ void display() {
 	float farPlane = 300.0f;
 
 	modelViewMatrix = viewMatrix * modelMatrix;
-	modelViewProjectionMatrix = perspective(fovy, ratio, nearPlane, farPlane) * modelViewMatrix;
+	projectionMatrix = perspective(fovy, ratio, nearPlane, farPlane);
+	modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
+
+	vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
 
     //modelMatrix = translate(modelMatrix, vec3(0.0f, 0.0f, 0.0f));
     //modelMatrix = scale(modelMatrix, vec3(5.0f, 5.0f, 5.0f));
@@ -417,7 +430,7 @@ void display() {
 	
 	if(doPyshics)
 		physics::simulate(&box->particles, &box->constraints, ImGui::GetIO().DeltaTime, iterations);
-	particleRenderer->render(modelViewProjectionMatrix);
+	particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
 
     ImGui::Render();
 
