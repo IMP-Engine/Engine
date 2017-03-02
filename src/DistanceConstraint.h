@@ -17,11 +17,11 @@ public:
 		this->equality = equality;
 	}
 
-	bool evaluate() {
+	float evaluate() {
 		vec3 p1 = this->particles[0]->pPos;
 		vec3 p2 = this->particles[1]->pPos;
 		
-		return equality || length(p1 - p2) - distance < 0;
+		return equality ? 0 : (length(p1 - p2) - distance);
 	}
 
 	float evaluateScaleFactor() {

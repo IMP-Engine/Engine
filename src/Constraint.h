@@ -29,7 +29,7 @@ public:
 	 * Is the constraint fulfilled?
 	 * The constraint will not be fulfilled even if the constraint evaluates to zero.
 	 */
-	virtual bool evaluate() = 0;
+	virtual float evaluate() = 0;
 	
 	/*
 	 * C(P1,...) / Sum_j w_j |grad_j C(P1,...)|^2 
