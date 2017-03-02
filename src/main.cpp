@@ -90,6 +90,7 @@ ivec3 numparticles = vec3(5, 5, 5);
 vec3 dimension = vec3(1.f, 1.f, 1.f);
 float mass = 30.f;
 float stiffness = 0.5f;
+float distanceThreshold = 0.2f;
 
    float cubeVertices[] = {
    -10.0f, -10.0f,  10.0f,
@@ -321,7 +322,7 @@ void initGL() {
 /*
 * Creates a box with given parameters and hooks it up to rendering. Also makes sure that any old box is removed.
 */
-void setupBox(vec3 dimension, vec3 centerpos, float totmass, vec3 numparticles, float stiffness)
+void setupBox(vec3 dimension, vec3 centerpos, float totmass, vec3 numparticles, float stiffness, float distanceThreshold)
 {
 	delete box;
 	delete particleRenderer;
@@ -333,6 +334,7 @@ void setupBox(vec3 dimension, vec3 centerpos, float totmass, vec3 numparticles, 
 	config.phase = 1;
 	config.num_particles = numparticles;
 	config.stiffness = stiffness;
+	config.distanceThreshold = distanceThreshold;
 	box = make_box(&config);
 
 	std::cout << "Constraints: " << box->constraints.size() << std::endl;
@@ -466,8 +468,9 @@ void gui()
 	ImGui::SliderFloat("Dimension z", &dimension.z, 0, 10);
 	ImGui::SliderFloat("Stiffness", &stiffness, 0, 1);
 	ImGui::SliderFloat("Mass (averaged over particles)", &mass, 0, 10000, "%.3f", 10.f);
+	ImGui::SliderFloat("Distance threshold", &distanceThreshold, 0, 1);
 	if (ImGui::Button("reset"))
-		setupBox(dimension, vec3(0.f, 0.f, 0.f), mass, numparticles, stiffness);
+		setupBox(dimension, vec3(0.f, 0.f, 0.f), mass, numparticles, stiffness, distanceThreshold);
     ImGui::End();
 
 	// Remove when all group members feel comfortable with how GUI works and what it can provide
@@ -481,7 +484,7 @@ void gui()
 
 int main(void) {
 	initGL();
-	setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5), stiffness);
+	setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5), stiffness, distanceThreshold);
 
 	if (GLAD_GL_VERSION_4_3) {
 		/* We support at least OpenGL version 4.3 */

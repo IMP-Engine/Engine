@@ -9,13 +9,13 @@ class DistanceConstraint :
 public:
 	float distance;
 
-	DistanceConstraint(Particle* p1, Particle* p2, float stiffness, float distance, bool equality = true) {
+	DistanceConstraint(Particle* p1, Particle* p2, float stiffness, float threshold, float distance, bool equality = true) {
 		this->particles.push_back(p1);
 		this->particles.push_back(p2);
 		this->stiffness = stiffness;
 		this->distance = distance;
 		this->equality = equality;
-		this->threshold = 0.2;
+		this->threshold = threshold;
 	}
 
 	float evaluate() {
