@@ -1,6 +1,7 @@
 #include "physics.h"
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
+#include <stdio.h>
 #include "Constraint.h"
 
 namespace physics {

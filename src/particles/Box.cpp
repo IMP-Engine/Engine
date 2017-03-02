@@ -1,5 +1,9 @@
 #include "Box.h"
 #include "../DistanceConstraint.h"
+#include <algorithm>
+#include <math.h>
+#include <float.h>
+#include <cfloat>
 
 
 Box::Box()
