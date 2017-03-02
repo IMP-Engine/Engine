@@ -30,6 +30,6 @@ public:
 	GLuint particleBuffer;
 
 	void init();
-	void render(mat4 &modelViewProjectionMatrix);
+	void render(mat4 &modelViewProjectionMatrix, mat4 &modelViewMatrix, vec3 &viewSpaceLightPosition, mat4 &projectionMatrix);
 };
 
