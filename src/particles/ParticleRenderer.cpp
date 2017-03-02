@@ -40,7 +40,7 @@ void ParticleRenderer::init()
 
 
 }
-void ParticleRenderer::render(mat4 &modelViewProjectionMatrix)
+void ParticleRenderer::render(mat4 &modelViewProjectionMatrix, mat4 &modelViewMatrix, vec3 &viewSpaceLightPosition, mat4 &projectionMatrix)
 {
 	glUseProgram(particleShader);
 
@@ -49,6 +49,9 @@ void ParticleRenderer::render(mat4 &modelViewProjectionMatrix)
 	glBindBuffer(GL_ARRAY_BUFFER, particleBuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Particle) * ParticleRenderer::particles->size(), ps, GL_STATIC_DRAW);
 	glUniformMatrix4fv(glGetUniformLocation(particleShader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
+	glUniformMatrix4fv(glGetUniformLocation(particleShader, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
+	glUniform3fv(glGetUniformLocation(particleShader, "viewSpaceLightPos"), 1, &viewSpaceLightPosition.x);
+	glUniformMatrix4fv(glGetUniformLocation(particleShader, "projectionMatrix"), 1, false, &projectionMatrix[0].x);
 
 	glDrawArrays(GL_POINTS, 0, particles->size());
 

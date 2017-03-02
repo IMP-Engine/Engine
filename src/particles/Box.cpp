@@ -1,5 +1,9 @@
 #include "Box.h"
-
+#include "../DistanceConstraint.h"
+#include <algorithm>
+#include <math.h>
+#include <float.h>
+#include <cfloat>
 
 
 Box::Box()
@@ -9,13 +13,16 @@ Box::Box()
 
 Box::~Box()
 {
+	for (auto c : this->constraints) {
+		delete c;
+	}
 }
 
 
 
 Box *make_box(BoxConfig * const config) {
 	Box *box = new Box;
-	int num_particles = config->num_particles.x * config->num_particles.y * config->num_particles.z;
+	int num_particles = (int) round(config->num_particles.x * config->num_particles.y * config->num_particles.z);
 
 	//box->particles.resize(num_particles);
 
@@ -32,6 +39,7 @@ Box *make_box(BoxConfig * const config) {
 	box->mass = config->mass;
 	box->num_particles = config->num_particles;
 
+	// Create particles
 	for (int i = 0; i < config->num_particles.x; i++) {
 		for (int j = 0; j < config->num_particles.y; j++) {
 			for (int k = 0; k < config->num_particles.z; k++) {
@@ -49,5 +57,24 @@ Box *make_box(BoxConfig * const config) {
 			}
 		}
 	}
+
+	// Create constraints
+	std::vector<std::pair<int, int>> con;
+	float stiffness = config->stiffness;
+	for (unsigned int i = 0; i < box->particles.size(); i++) {
+		for (unsigned int j = 0; j < box->particles.size(); j++) {
+			if (j != i && glm::distance(box->particles[i].pos, box->particles[j].pos) < FLT_EPSILON+sqrt(dx*dx + dy*dy + dz*dz) 
+				&& std::find(con.begin(), con.end(), std::pair<int,int>(j,i)) == con.end())
+			{
+				con.push_back(std::pair<int, int>(i, j));
+				Constraint* c = new DistanceConstraint(
+					&box->particles[i],
+					&box->particles[j],
+					stiffness, glm::distance(box->particles[i].pos, box->particles[j].pos));
+				box->constraints.push_back(c);
+			}
+		}
+	}
+	
 	return box;
 }

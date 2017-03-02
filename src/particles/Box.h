@@ -3,6 +3,7 @@
 #include <vector>
 #include "BoxConfig.h"
 #include "Particle.h"
+#include "../Constraint.h"
 
 class Box
 {
@@ -14,6 +15,7 @@ public:
 	vec3 num_particles;
 
 	std::vector<Particle> particles;
+	std::vector<Constraint*> constraints;
 };
 
 

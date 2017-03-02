@@ -20,6 +20,7 @@
 #include "particles/ParticleRenderer.h"
 #include "particles/Box.h"
 #include "Scene.h"
+#include "DistanceConstraint.h"
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
@@ -31,24 +32,30 @@
 #define FRAG_SHADER_PATH "../src/shaders/simple.frag"
 #endif
 
-
+#define MAX_FOV 70.0f
+#define MIN_FOV 1.0f
 
 using namespace glm;
 using namespace std;
 
+/*************************************************************************
+********************** Global variables **********************************
+**************************************************************************/
 
 // Global variables
 #define MAX_FOV 70.0f
 #define MIN_FOV 1.0f
 
 
+// Application
 GLFWwindow* window;
-GLint mvp_location, vpos_location, vcol_location;
-ImVec4 clear_color;
+ImVec4 clear_color = ImColor(164, 164, 164);;
+bool vsync = true;
 const GLuint WIDTH = 1280, HEIGHT = 720;
 
+
 // Camera
-vec3 cameraPos = vec3(0.0f, 0.0f, 12.0f);
+vec3 cameraPos = vec3(0.0f, 0.0f, 30.0f);
 vec3 cameraFront = vec3(0.0f, 0.0f, -1.0f);
 vec3 cameraUp = vec3(0.0f, 1.0f, 0.0f);
 GLfloat yaw = -90.0f;
@@ -70,18 +77,28 @@ vec3 downMovement = vec3(0.0f);
 GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
 
+// Box parameters
 Box *box1, *box2;
+ivec3 numparticles = vec3(5, 5, 5);
+vec3 dimension = vec3(1.f, 1.f, 1.f);
+float mass = 30.f;
+float stiffness = 0.5f;
+
+// Scene
 Scene *scene;
 vector<Particle> particles;
+
+// Shaders and rendering 
+GLuint simpleShader;
 ParticleRenderer *particleRenderer;
 
-// Shaders
-GLuint simpleShader, particleShader;
-
-// VAOs
-GLuint particleVao;
+// Light
+const vec3 lightPosition = vec3(50.0f);
 
 
+// Simulation variables and parameters
+bool doPyshics = false;
+int iterations = 5;
 
 
 static void errorCallback(int error, const char* description) {
@@ -222,8 +239,8 @@ void initGL() {
 
     // Shader setup
     simpleShader = glHelper::loadShader(VERT_SHADER_PATH, FRAG_SHADER_PATH);
-    mvp_location = glGetUniformLocation(simpleShader, "MVP");
-    vpos_location = glGetAttribLocation(simpleShader, "vPos");
+    GLuint mvp_location = glGetUniformLocation(simpleShader, "MVP");
+    GLuint vpos_location = glGetAttribLocation(simpleShader, "vPos");
 
 	// Scene setup
 	glGenVertexArrays(1, &scene->vao);
@@ -244,15 +261,55 @@ void initGL() {
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
-    glPointSize(2.f);
-	particleRenderer->init();
+	glEnable(GL_POINT_SPRITE);
+    glPointSize(0.1f);
+	//glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_LOWER_LEFT); // Not sure if needed, keeping meanwhile
 
+	// Not sure which one to use, keeping both meanwhile
+	glEnable(GL_PROGRAM_POINT_SIZE);
+	//glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+
+	//particleRenderer->init();
+
+}
+
+/*
+* Creates a box with given parameters and hooks it up to rendering. Also makes sure that any old box is removed.
+*/
+void setupBox(vec3 dimension, vec3 centerpos, float totmass, vec3 numparticles, float stiffness)
+{
+    delete box1;
+    delete box2;
+	delete particleRenderer;
+	BoxConfig config;
+
+	config.dimensions = dimension;
+	config.center_pos = centerpos;
+	config.mass = totmass;
+	config.phase = 1;
+	config.num_particles = numparticles;
+	config.stiffness = stiffness;
+	box1 = make_box(&config);
+
+    config.center_pos += vec3(0.55f, 1.55f, 0.55f);
+    config.phase = 2;
+
+    box2 = make_box(&config);
+
+
+
+    particles.insert(particles.end(), box1->particles.begin(), box1->particles.end());
+    particles.insert(particles.end(), box2->particles.begin(), box2->particles.end());
+
+
+    particleRenderer = new ParticleRenderer(&particles);
+	particleRenderer->init();
 }
 
 void display() {
     float ratio;
     int width, height;
-    mat4 viewMatrix, modelViewProjectionMatrix, modelViewMatrix;
+    mat4 viewMatrix, modelViewProjectionMatrix, modelViewMatrix, projectionMatrix;
 
     glfwGetFramebufferSize(window, &width, &height);
     //ratio = width / (float)height;
@@ -272,7 +329,10 @@ void display() {
 	float farPlane = 300.0f;
 
 	modelViewMatrix = viewMatrix * modelMatrix;
-	modelViewProjectionMatrix = perspective(fovy, ratio, nearPlane, farPlane) * modelViewMatrix;
+	projectionMatrix = perspective(fovy, ratio, nearPlane, farPlane);
+	modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
+
+	vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
 
     //modelMatrix = translate(modelMatrix, vec3(0.0f, 0.0f, 0.0f));
     //modelMatrix = scale(modelMatrix, vec3(5.0f, 5.0f, 5.0f));
@@ -294,9 +354,10 @@ void display() {
 
     // GUI
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    physics::simulate(&particles, scene, ImGui::GetIO().DeltaTime);
-	particleRenderer->render(modelViewProjectionMatrix);
+	
+	if(doPyshics)
+		physics::simulate(&particles, &box1->constraints, scene, ImGui::GetIO().DeltaTime, iterations);
+	particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
 
     ImGui::Render();
 
@@ -306,7 +367,6 @@ void display() {
 void gui()
 {
     // Consider scapping incase of performance
-    static bool vsync = true;
     glfwSwapInterval(vsync ? 1 : 0);
 
     // Data for plotting frametime
@@ -323,8 +383,21 @@ void gui()
     if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
+	ImGui::Checkbox("Physics", &doPyshics);
+	ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
+	ImGui::SliderInt("Particles x", &numparticles.x, 1, 10);
+	ImGui::SliderInt("Particles y", &numparticles.y, 1, 10);
+	ImGui::SliderInt("Particles z", &numparticles.z, 1, 10);
+	ImGui::SliderFloat("Dimension x", &dimension.x, 0, 10);
+	ImGui::SliderFloat("Dimension y", &dimension.y, 0, 10);
+	ImGui::SliderFloat("Dimension z", &dimension.z, 0, 10);
+	ImGui::SliderFloat("Stiffness", &stiffness, 0, 1);
+	ImGui::SliderFloat("Mass (averaged over particles)", &mass, 0, 10000, "%.3f", 10.f);
+	if (ImGui::Button("reset"))
+		setupBox(dimension, vec3(0.f, 0.f, 0.f), mass, numparticles, stiffness);
     ImGui::End();
 
+	// Remove when all group members feel comfortable with how GUI works and what it can provide
     // Demo window
     if (show_demo_window)
     {
@@ -335,45 +408,15 @@ void gui()
 
 int main(void) {
 
-    if (GLAD_GL_VERSION_4_3) {
-        /* We support at least OpenGL version 4.3 */
-    }
-
-	BoxConfig config;
-
-	config.dimensions =	vec3(1.f, 1.f, 1.f);
-	config.center_pos = vec3(0.f, 0.f, 0.f);
-	config.mass = 10.f;
-	config.phase = 1;
-	config.num_particles = vec3(5,5,5);
-
-    box1 = make_box(&config);
-
-    config.center_pos += vec3(0.55f,1.55f,0.55f);
-    config.phase = 2;
-
-    box2 = make_box(&config);
-
-
     scene = new Scene;
 
-    particles.insert(particles.end(), box1->particles.begin(), box1->particles.end());
-    particles.insert(particles.end(), box2->particles.begin(), box2->particles.end());
-
-
-	particleRenderer = new ParticleRenderer(&particles);
-
-	initGL();
+	setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5), stiffness);
 
 	if (GLAD_GL_VERSION_4_3) {
 		/* We support at least OpenGL version 4.3 */
 	}
 
 	double startTime = glfwGetTime();
-
-	// Showcase of how the box works
-
-	clear_color = ImColor(50, 50, 50);
 
     while (!glfwWindowShouldClose(window))
     {

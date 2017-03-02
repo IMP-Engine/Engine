@@ -26,7 +26,7 @@ public:
 	bool equality;
 	
 	/* 
-	 * Is the constraint fulfilled? Also caches the value evaluated. 
+	 * Is the constraint fulfilled?
 	 * The constraint will not be fulfilled even if the constraint evaluates to zero.
 	 */
 	virtual bool evaluate() = 0;
