@@ -21,7 +21,7 @@ public:
 		vec3 p1 = this->particles[0]->pPos;
 		vec3 p2 = this->particles[1]->pPos;
 		
-		return equality ? 0 : (length(p1 - p2) - distance);
+		return length(p1 - p2) - distance;
 	}
 
 	float evaluateScaleFactor() {

@@ -42,7 +42,7 @@ void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constr
 	{
 		for (Constraint* c : *constraints)
 		{
-			if (c->evaluate() <= 0)
+			if (c->equality)
 			{ 
 				for (std::vector<Particle*>::iterator p = c->particles.begin(); p != c->particles.end(); p++)
 				{
