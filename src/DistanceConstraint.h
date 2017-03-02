@@ -15,6 +15,7 @@ public:
 		this->stiffness = stiffness;
 		this->distance = distance;
 		this->equality = equality;
+		this->threshold = 0.2;
 	}
 
 	float evaluate() {

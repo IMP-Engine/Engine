@@ -44,5 +44,10 @@ public:
 	 * consult derived constraint for more information.
 	 */
 	virtual vec3 evaluateGradient(std::vector<Particle*>::iterator p) = 0;
+
+	/*
+	 * Threshold for when constraint breaks.
+	 */
+	float threshold;
 };
 
