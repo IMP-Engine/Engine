@@ -15,8 +15,9 @@ void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constr
 	* Damp velocities		-- Skip for now -- TODO --
 	* Predict position		x_i^* = x_i + dt * v_i
 	*/
+	const float GRAVITY = 4.0f;
 	for (std::vector<glm::vec3>::size_type i = 0; i != particles->size(); i++) {
-		(*particles)[i].velocity = (*particles)[i].velocity - glm::vec3(0.f, 1.f, 0.f) * (*particles)[i].invmass; // Gravity
+		(*particles)[i].velocity = (*particles)[i].velocity - glm::vec3(0.f, dt * GRAVITY, 0.f) * (*particles)[i].invmass; // Gravity
 		(*particles)[i].pPos = (*particles)[i].pos + dt * (*particles)[i].velocity; // symplectic Euler 
 	}
 
