@@ -5,7 +5,7 @@
 #include <GLFW/glfw3.h>
 #include "glm/glm.hpp"
 #include "../glHelper.h"
-#include "Particle.h";
+#include "Particle.h"
 
 
 
