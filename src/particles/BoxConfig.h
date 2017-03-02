@@ -8,4 +8,5 @@ struct BoxConfig {
 	vec3 center_pos, dimensions;
 	vec3 num_particles;
 	int phase;
+	float stiffness;
 };

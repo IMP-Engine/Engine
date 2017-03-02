@@ -28,20 +28,24 @@
 #define FRAG_SHADER_PATH "../src/shaders/simple.frag"
 #endif
 
-
+#define MAX_FOV 70.0f
+#define MIN_FOV 1.0f
 
 using namespace glm;
 using namespace std;
 
+/*************************************************************************
+********************** Global variables **********************************
+**************************************************************************/
 
-// Global variables
-#define MAX_FOV 70.0f
-#define MIN_FOV 1.0f
+// Application
 GLFWwindow* window;
+ImVec4 clear_color = ImColor(164, 164, 164);;
+bool vsync = true;
+const GLuint WIDTH = 1280, HEIGHT = 720;
+
 GLint mvp_location, vpos_location, vcol_location;
 GLuint cube_ibo; // IndicesBufferObject
-ImVec4 clear_color;
-const GLuint WIDTH = 1280, HEIGHT = 720;
 
 // Camera
 vec3 cameraPos = vec3(0.0f, 0.0f, 30.0f);
@@ -66,19 +70,26 @@ vec3 downMovement = vec3(0.0f);
 GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
 
-Box *box;
+// Shaders and rendering 
+GLuint simpleShader, particleShader;
 ParticleRenderer *particleRenderer;
 
-// Shaders
-GLuint simpleShader, particleShader;
+// Light
+const vec3 lightPosition = vec3(50.0f);
 
 // VAOs
 GLuint simpleVao, particleVao;
 
+// Simulation variables and parameters
 bool doPyshics = false;
 int iterations = 5;
-std::vector<Particle> particles;
-std::vector<Constraint*> constraints;
+
+// Box parameters
+Box *box;
+ivec3 numparticles = vec3(5, 5, 5);
+vec3 dimension = vec3(1.f, 1.f, 1.f);
+float mass = 30.f;
+float stiffness = 0.5f;
 
    float cubeVertices[] = {
    -10.0f, -10.0f,  10.0f,
@@ -295,12 +306,22 @@ void initGL() {
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
-    glPointSize(4.f);
+	glEnable(GL_POINT_SPRITE);
+    glPointSize(0.1f);
+	//glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_LOWER_LEFT); // Not sure if needed, keeping meanwhile
+
+	// Not sure which one to use, keeping both meanwhile
+	glEnable(GL_PROGRAM_POINT_SIZE);
+	//glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+
 	//particleRenderer->init();
 
 }
 
-void setupBox(vec3 dimension, vec3 centerpos, float totmass, vec3 numparticles)
+/*
+* Creates a box with given parameters and hooks it up to rendering. Also makes sure that any old box is removed.
+*/
+void setupBox(vec3 dimension, vec3 centerpos, float totmass, vec3 numparticles, float stiffness)
 {
 	delete box;
 	delete particleRenderer;
@@ -311,7 +332,10 @@ void setupBox(vec3 dimension, vec3 centerpos, float totmass, vec3 numparticles)
 	config.mass = totmass;
 	config.phase = 1;
 	config.num_particles = numparticles;
+	config.stiffness = stiffness;
 	box = make_box(&config);
+
+	std::cout << "Constraints: " << box->constraints.size() << std::endl;
 
 	particleRenderer = new ParticleRenderer(&box->particles);
 	particleRenderer->init();
@@ -320,7 +344,7 @@ void setupBox(vec3 dimension, vec3 centerpos, float totmass, vec3 numparticles)
 void display() {
     float ratio;
     int width, height;
-    mat4 viewMatrix, modelViewProjectionMatrix, modelViewMatrix;
+    mat4 viewMatrix, modelViewProjectionMatrix, modelViewMatrix, projectionMatrix;
 
     glfwGetFramebufferSize(window, &width, &height);
     //ratio = width / (float)height;
@@ -351,7 +375,10 @@ void display() {
 	float farPlane = 300.0f;
 
 	modelViewMatrix = viewMatrix * modelMatrix;
-	modelViewProjectionMatrix = perspective(fovy, ratio, nearPlane, farPlane) * modelViewMatrix;
+	projectionMatrix = perspective(fovy, ratio, nearPlane, farPlane);
+	modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
+
+	vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
 
     //modelMatrix = translate(modelMatrix, vec3(0.0f, 0.0f, 0.0f));
     //modelMatrix = scale(modelMatrix, vec3(5.0f, 5.0f, 5.0f));
@@ -403,7 +430,7 @@ void display() {
 	
 	if(doPyshics)
 		physics::simulate(&box->particles, &box->constraints, ImGui::GetIO().DeltaTime, iterations);
-	particleRenderer->render(modelViewProjectionMatrix);
+	particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
 
     ImGui::Render();
 
@@ -412,12 +439,7 @@ void display() {
 
 void gui()
 {
-
-	static ivec3 numparticles = vec3(5, 5, 5);
-	static vec3 dimension = vec3(1.f, 1.f, 1.f);
-	static float mass = 125.f;
     // Consider scapping incase of performance
-    static bool vsync = true;
     glfwSwapInterval(vsync ? 1 : 0);
 
     // Data for plotting frametime
@@ -435,18 +457,20 @@ void gui()
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
 	ImGui::Checkbox("Physics", &doPyshics);
-	ImGui::SliderInt("Solver Iterations", &iterations, 1, 16);
+	ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
 	ImGui::SliderInt("Particles x", &numparticles.x, 1, 10);
 	ImGui::SliderInt("Particles y", &numparticles.y, 1, 10);
 	ImGui::SliderInt("Particles z", &numparticles.z, 1, 10);
-	ImGui::SliderFloat("Dimension x", &dimension.x, 0, 5);
-	ImGui::SliderFloat("Dimension y", &dimension.y, 0, 5);
-	ImGui::SliderFloat("Dimension z", &dimension.z, 0, 5);
-	ImGui::SliderFloat("Mass (averaged over particles)", &mass, 0, 1000);
+	ImGui::SliderFloat("Dimension x", &dimension.x, 0, 10);
+	ImGui::SliderFloat("Dimension y", &dimension.y, 0, 10);
+	ImGui::SliderFloat("Dimension z", &dimension.z, 0, 10);
+	ImGui::SliderFloat("Stiffness", &stiffness, 0, 1);
+	ImGui::SliderFloat("Mass (averaged over particles)", &mass, 0, 10000, "%.3f", 10.f);
 	if (ImGui::Button("reset"))
-		setupBox(dimension, vec3(0.f, 0.f, 0.f), mass, numparticles);
+		setupBox(dimension, vec3(0.f, 0.f, 0.f), mass, numparticles, stiffness);
     ImGui::End();
 
+	// Remove when all group members feel comfortable with how GUI works and what it can provide
     // Demo window
     if (show_demo_window)
     {
@@ -457,18 +481,13 @@ void gui()
 
 int main(void) {
 	initGL();
-	setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5));
-	
+	setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5), stiffness);
 
 	if (GLAD_GL_VERSION_4_3) {
 		/* We support at least OpenGL version 4.3 */
 	}
 
 	double startTime = glfwGetTime();
-
-	// Showcase of how the box works
-
-	clear_color = ImColor(164, 164, 164);
 
     while (!glfwWindowShouldClose(window))
     {
