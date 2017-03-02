@@ -1,6 +1,7 @@
 #include "physics.h"
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
+#include <stdio.h>
 #include "Constraint.h"
 
 namespace physics {
@@ -75,5 +76,9 @@ void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constr
 			(*particles)[i].velocity.x *= 0.4;
 		}
 	}
-}		
+		// Update velocities according to friction and restituition coefficients
+		/* Skip this for now */
+}
+
+			
 }

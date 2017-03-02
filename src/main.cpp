@@ -16,7 +16,7 @@
 #include "physics.h"
 #include "particles/ParticleRenderer.h"
 #include "particles/Box.h"
-#include "DistanceConstraint.h";
+#include "DistanceConstraint.h"
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
