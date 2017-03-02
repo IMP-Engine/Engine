@@ -16,17 +16,6 @@ bool intersect(vec3 v0, vec3 v1, vec3 v2, vec3 center, float radius, Intersectio
         return false;
     }
 
-    vec3 normNormal = normal / sqrt(e);
-    float distance = dot(A, normNormal);
-
-    if (d < 0) {
-        isect.response = normNormal * (radius - distance);
-    }
-    else {
-        isect.response = normNormal * distance;
-    }
-
-    return true;
 
     float aa = dot(A, A);
     float ab = dot(A, B);
@@ -34,9 +23,22 @@ bool intersect(vec3 v0, vec3 v1, vec3 v2, vec3 center, float radius, Intersectio
     float bb = dot(B, B);
     float bc = dot(B, C);
     float cc = dot(C, C);
-    bool sep2 = (aa > rr) & (ab > aa) & (ac > aa);
-    bool sep3 = (bb > rr) & (ab > bb) & (bc > bb);
-    bool sep4 = (cc > rr) & (ac > cc) & (bc > cc);
+
+    if ((aa > rr) & (ab > aa) & (ac > aa)) 
+    { 
+        return false; 
+    }
+
+    if ((bb > rr) & (ab > bb) & (bc > bb)) 
+    { 
+        return false; 
+    }
+
+    if ((cc > rr) & (ac > cc) & (bc > cc)) 
+    { 
+        return false; 
+    }
+
     vec3 AB = B - A;
     vec3 BC = C - B;
     vec3 CA = A - C;
@@ -52,11 +54,27 @@ bool intersect(vec3 v0, vec3 v1, vec3 v2, vec3 center, float radius, Intersectio
     vec3 QC = C * e1 - Q1;
     vec3 QA = A * e2 - Q2;
     vec3 QB = B * e3 - Q3;
-    bool sep5 = dot(Q1, Q1) > rr * e1 * e1 && dot(Q1, QC) > 0;
-    bool sep6 = dot(Q2, Q2) > rr * e2 * e2 && dot(Q2, QA) > 0;
-    bool sep7 = dot(Q3, Q3) > rr * e3 * e3 && dot(Q3, QB) > 0;
-    bool separated = sep2 | sep3 | sep4 | sep5 | sep6 | sep7;
+    if (dot(Q1, Q1) > rr * e1 * e1 && dot(Q1, QC) > 0) {
+        return false;
+    }
+    if (dot(Q2, Q2) > rr * e2 * e2 && dot(Q2, QA) > 0) {
+        return false;
+    }
+    if (dot(Q3, Q3) > rr * e3 * e3 && dot(Q3, QB) > 0) {
+        return false;
+    }
 
+    // Response
 
-    return false;
+    vec3 normNormal = normal / sqrt(e);
+    float distance = dot(A, normNormal);
+
+    if (d < 0) {
+        isect.response = normNormal * (radius - distance);
+    }
+    else {
+        isect.response = normNormal * distance;
+    }
+
+    return true;
 }
