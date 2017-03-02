@@ -3,6 +3,7 @@
 #include <glm/geometric.hpp>
 #include <stdio.h>
 #include "Constraint.h"
+#include <algorithm>
 
 namespace physics {
 
@@ -34,6 +35,10 @@ void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constr
 		}
 		// ******************************************************************************************************************
 	}
+
+	// Breakable constraints
+	(*constraints).erase(std::remove_if((*constraints).begin(), (*constraints).end(),
+		[](Constraint *c) { return (c->evaluate() > 0.1); }), (*constraints).end());
 
 	/* 
 	 * Stationary iterative linear solver - Gauss-Seidel 
