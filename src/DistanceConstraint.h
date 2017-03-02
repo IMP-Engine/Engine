@@ -18,26 +18,26 @@ public:
 	}
 
 	bool evaluate() {
-		vec3 p1 = this->particles[0]->pos;
-		vec3 p2 = this->particles[1]->pos;
+		vec3 p1 = this->particles[0]->pPos;
+		vec3 p2 = this->particles[1]->pPos;
 		
 		return equality || length(p1 - p2) - distance < 0;
 	}
 
 	float evaluateScaleFactor() {
-		vec3 p1 = this->particles[0]->pos;
-		vec3 p2 = this->particles[1]->pos;
+		vec3 p1 = this->particles[0]->pPos;
+		vec3 p2 = this->particles[1]->pPos;
 
 		return (length(p1 - p2) - distance) / (this->particles[0]->invmass + this->particles[1]->invmass);
 	}
 
 	vec3 evaluateGradient(std::vector<Particle*>::iterator p) {
-		vec3 p1 = this->particles[0]->pos;
-		vec3 p2 = this->particles[1]->pos;
+		vec3 p1 = this->particles[0]->pPos;
+		vec3 p2 = this->particles[1]->pPos;
 
 		vec3 c = (p1 - p2) / length(p1 - p2);
 
-		return (p == this->particles.begin() ? c : -c); // TODO typo? Where should '-' be?
+		return (p == this->particles.begin() ? c : -c);
 	}
 
 };
