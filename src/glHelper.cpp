@@ -27,10 +27,10 @@ namespace glHelper {
 		std::ifstream fs_file(fragmentPath);
 		std::string fragmentSource((std::istreambuf_iterator<char>(fs_file)), std::istreambuf_iterator<char>());
 
-		const char *vs = vertexSource.c_str();
-		const char *fs = fragmentSource.c_str();
+		//const char *vs = vertexSource.c_str();
+		//const char *fs = fragmentSource.c_str();
 
-        // cout << vs << endl << fs << endl;
+        //cout << vs << endl << fs << endl;
 
 		// Create an empty vertex shader handle
 		GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);

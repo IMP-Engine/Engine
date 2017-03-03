@@ -86,7 +86,7 @@ float stiffness = 0.5f;
 
 // Scene
 Scene *scene;
-vector<Particle> particles;
+vector<Particle *> particles;
 
 // Shaders and rendering 
 GLuint simpleShader;
@@ -280,6 +280,8 @@ void setupBox(vec3 dimension, vec3 centerpos, float totmass, vec3 numparticles, 
 {
     delete box1;
     delete box2;
+    particles.clear();
+
 	delete particleRenderer;
 	BoxConfig config;
 
@@ -290,16 +292,17 @@ void setupBox(vec3 dimension, vec3 centerpos, float totmass, vec3 numparticles, 
 	config.num_particles = numparticles;
 	config.stiffness = stiffness;
 	box1 = make_box(&config);
-
+    /*
     config.center_pos += vec3(0.55f, 1.55f, 0.55f);
     config.phase = 2;
 
     box2 = make_box(&config);
+    */
 
 
 
     particles.insert(particles.end(), box1->particles.begin(), box1->particles.end());
-    particles.insert(particles.end(), box2->particles.begin(), box2->particles.end());
+    //particles.insert(particles.end(), box2->particles.begin(), box2->particles.end());
 
 
     particleRenderer = new ParticleRenderer(&particles);
@@ -409,6 +412,8 @@ void gui()
 int main(void) {
 
     scene = new Scene;
+    
+    initGL();
 
 	setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5), stiffness);
 

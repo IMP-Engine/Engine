@@ -34,17 +34,67 @@ void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constr
 		*/
 		// TODO
 		// Temporary collision check and handler for some plane
-		if ((*particles)[i].pPos.y < -10) {
+		/*if ((*particles)[i].pPos.y < -10) {
 			(*particles)[i].pPos.y = -10;
-		}
+		}*/
 		// ******************************************************************************************************************
 	}
 
 	/* 
 	 * Stationary iterative linear solver - Gauss-Seidel 
 	 */
+
 	for (int i = 0; i < iterations; i++)
 	{
+	    // For all particles i
+	    // Generate collision constraints
+	    /* Add constraints from collisions to already given list of constraints */
+        for (unsigned int i = 1; i != particles->size(); i++)
+        {
+            
+            // Check collisions with scene
+            for (unsigned int t = 0; t < scene->indices.size(); t+=3) 
+            {
+
+                vec3 v0 = vec3(scene->vertexes[3 * scene->indices[t]],
+                               scene->vertexes[3 * scene->indices[t] + 1],
+                               scene->vertexes[3 * scene->indices[t] + 2]);
+
+                vec3 v1 = vec3(scene->vertexes[3 * scene->indices[t+1]],
+                               scene->vertexes[3 * scene->indices[t+1] + 1],
+                               scene->vertexes[3 * scene->indices[t+1] + 2]);
+
+                vec3 v2 = vec3(scene->vertexes[3 * scene->indices[t+2]],
+                               scene->vertexes[3 * scene->indices[t+2] + 1],
+                               scene->vertexes[3 * scene->indices[t+2] + 2]);
+
+                Intersection isect;
+                if (intersect(v0, v1, v2, (*particles)[i]->pPos, PARTICLE_RADIUS,isect))
+                {
+                    (*particles)[i]->pPos += isect.response;
+                }
+            }
+
+            // Check collisions with other particles
+            for (unsigned int j = 0; j < i; j++) 
+            {
+                Intersection isect;
+            
+                if ((*particles)[i]->phase != (*particles)[j]->phase && intersect(
+                    (*particles)[i]->pPos, (*particles)[i]->invmass,
+                    (*particles)[j]->pPos, (*particles)[j]->invmass,
+                    isect)
+                ) {
+                    (*particles)[i]->pPos += isect.point;
+                    (*particles)[j]->pPos += isect.response;
+                }
+            }
+            
+
+            (*particles)[i]->pPos = min(max(WORLD_MIN, (*particles)[i]->pPos), WORLD_MAX);
+
+        }
+
 		for (Constraint* c : *constraints)
 		{
 			if (c->evaluate())
@@ -60,51 +110,6 @@ void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constr
 
 
 
-	// For all particles i
-	// Generate collision constraints
-	/* Add constraints from collisions to already given list of constraints */
-    for (unsigned int i = 1; i != particles->size(); i++)
-    {
-
-        for (unsigned int t = 0; t < scene->indices.size(); t+=3) 
-        {
-
-            vec3 v0 = vec3(scene->vertexes[3 * scene->indices[t]],
-                           scene->vertexes[3 * scene->indices[t] + 1],
-                           scene->vertexes[3 * scene->indices[t] + 2]);
-
-            vec3 v1 = vec3(scene->vertexes[3 * scene->indices[t+1]],
-                           scene->vertexes[3 * scene->indices[t+1] + 1],
-                           scene->vertexes[3 * scene->indices[t+1] + 2]);
-
-            vec3 v2 = vec3(scene->vertexes[3 * scene->indices[t+2]],
-                           scene->vertexes[3 * scene->indices[t+2] + 1],
-                           scene->vertexes[3 * scene->indices[t+2] + 2]);
-
-            Intersection isect;
-            if (intersect(v0, v1, v2, (*particles)[i].pPos, PARTICLE_RADIUS,isect))
-            {
-                (*particles)[i].pPos += isect.response;
-            }
-        }
-
-        for (unsigned int j = 0; j < i; j++) 
-        {
-            Intersection isect;
-            
-            if (intersect(
-                (*particles)[i].pPos, (*particles)[i].invmass,
-                (*particles)[j].pPos, (*particles)[j].invmass,
-                isect)
-            ) {
-                (*particles)[i].pPos += isect.point;
-                (*particles)[j].pPos += isect.response;
-            }
-        }
-
-        (*particles)[i].pPos = min(max(WORLD_MIN, (*particles)[i].pPos), WORLD_MAX);
-
-    }
 
 
 

@@ -19,5 +19,5 @@ public:
 };
 
 
-Box *make_box(BoxConfig * const config);
+Box *make_box(BoxConfig *const config);
 
