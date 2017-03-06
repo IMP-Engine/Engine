@@ -397,11 +397,11 @@ void display() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	glBindVertexArray(simpleVao);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
     int size;
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
     glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0); //sizeof(GLushort),
-
+	glBindVertexArray(0);
     /*
     // Draw two cubes
     for(GLuint i = 0; i < 2; i++) {
