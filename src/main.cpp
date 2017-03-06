@@ -16,7 +16,9 @@
 #include "physics.h"
 #include "particles/ParticleRenderer.h"
 #include "particles/Box.h"
-#include "DistanceConstraint.h"
+#include "constraints/DistanceConstraint.h"
+
+#include "constraints\visualizeConstraint.h"
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
@@ -257,6 +259,8 @@ void initGL() {
 	glfwSetScrollCallback(window, scrollCallback);    
 	glfwSetMouseButtonCallback(window, mouseButtonCallback);
 
+	// Constraint visualization setup
+	visualization::initialize();
 
     // Shader setup
     simpleShader = glHelper::loadShader(VERT_SHADER_PATH, FRAG_SHADER_PATH);
@@ -431,6 +435,8 @@ void display() {
 	if(doPyshics)
 		physics::simulate(&box->particles, &box->constraints, ImGui::GetIO().DeltaTime, iterations);
 	particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
+
+	visualization::drawConstraints(&box->constraints);
 
     ImGui::Render();
 

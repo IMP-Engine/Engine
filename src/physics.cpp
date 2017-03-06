@@ -2,7 +2,7 @@
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
 #include <stdio.h>
-#include "Constraint.h"
+#include "constraints/Constraint.h"
 
 namespace physics {
 
