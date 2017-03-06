@@ -63,7 +63,7 @@ Box *make_box(BoxConfig * const config) {
 	float stiffness = config->stiffness;
 	for (int i = 0; i < box->particles.size(); i++) {
 		for (int j = 0; j < box->particles.size(); j++) {
-			if (j != i && glm::distance(box->particles[i].pos, box->particles[j].pos) < FLT_EPSILON+sqrt(dx*dx + dy*dy + dz*dz) 
+			if (j != i && glm::distance(box->particles[i].pos, box->particles[j].pos) <= sqrt(dx*dx + dy*dy + dz*dz) 
 				&& std::find(con.begin(), con.end(), std::pair<int,int>(j,i)) == con.end())
 			{
 				con.push_back(std::pair<int, int>(i, j));
