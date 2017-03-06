@@ -7,5 +7,5 @@
 #include "intersections.h"
 
 namespace physics {
-	void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constraints, Scene *scene, float dt, int iterations);
+	void simulate(std::vector<Particle> &particles, std::vector<Constraint*> &constraints, Scene *scene, float dt, int iterations);
 }

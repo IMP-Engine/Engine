@@ -79,14 +79,14 @@ GLfloat lastFrame = 0.0f;
 
 // Box parameters
 Box *box1, *box2;
-ivec3 numparticles = vec3(5, 5, 5);
+ivec3 numparticles = ivec3(3, 3, 3);
 vec3 dimension = vec3(1.f, 1.f, 1.f);
 float mass = 30.f;
 float stiffness = 0.5f;
 
 // Scene
 Scene *scene;
-vector<Particle *> particles;
+vector<Particle> particles;
 
 // Shaders and rendering 
 GLuint simpleShader;
@@ -276,7 +276,7 @@ void initGL() {
 /*
 * Creates a box with given parameters and hooks it up to rendering. Also makes sure that any old box is removed.
 */
-void setupBox(vec3 dimension, vec3 centerpos, float totmass, vec3 numparticles, float stiffness)
+void setupBox(vec3 dimension, vec3 centerpos, float totmass, ivec3 numParticles, float stiffness)
 {
     delete box1;
     delete box2;
@@ -289,24 +289,23 @@ void setupBox(vec3 dimension, vec3 centerpos, float totmass, vec3 numparticles, 
 	config.center_pos = centerpos;
 	config.mass = totmass;
 	config.phase = 1;
-	config.num_particles = numparticles;
+	config.numParticles = numParticles;
 	config.stiffness = stiffness;
-	box1 = make_box(&config);
-    /*
-    config.center_pos += vec3(0.55f, 1.55f, 0.55f);
-    config.phase = 2;
+	box1 = make_box(&config, particles);
+    
+    //config.center_pos += vec3(0.55f, 1.55f, 0.55f);
+    //config.phase = 2;
 
-    box2 = make_box(&config);
-    */
-
+    //box2 = make_box(&config, particles);
 
 
-    particles.insert(particles.end(), box1->particles.begin(), box1->particles.end());
+
+    //particles.insert(particles.end(), box1->particles.begin(), box1->particles.end());
     //particles.insert(particles.end(), box2->particles.begin(), box2->particles.end());
 
 
     particleRenderer = new ParticleRenderer(&particles);
-	particleRenderer->init();
+    particleRenderer->init();
 }
 
 void display() {
@@ -359,7 +358,7 @@ void display() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	
 	if(doPyshics)
-		physics::simulate(&particles, &box1->constraints, scene, ImGui::GetIO().DeltaTime, iterations);
+		physics::simulate(particles, box1->constraints, scene, ImGui::GetIO().DeltaTime, iterations);
 	particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
 
     ImGui::Render();
@@ -412,10 +411,10 @@ void gui()
 int main(void) {
 
     scene = new Scene;
-    
+    particles.resize(100000);
     initGL();
 
-	setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5), stiffness);
+    setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, ivec3(5, 5, 5), stiffness);
 
 	if (GLAD_GL_VERSION_4_3) {
 		/* We support at least OpenGL version 4.3 */

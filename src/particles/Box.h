@@ -12,12 +12,12 @@ public:
 	~Box();
 	float mass;
 	vec3 dimensions, center_pos;
-	vec3 num_particles;
+	ivec3 numParticles;
 
-	std::vector<Particle> particles;
+	std::vector<Particle*> particles;
 	std::vector<Constraint*> constraints;
 };
 
 
-Box *make_box(BoxConfig *const config);
+Box *make_box(BoxConfig *const config, std::vector<Particle> &particleStorage);
 

@@ -6,7 +6,7 @@ using namespace glm;
 struct BoxConfig {
 	float mass;
 	vec3 center_pos, dimensions;
-	vec3 num_particles;
+	ivec3 numParticles;
 	int phase;
 	float stiffness;
 };
