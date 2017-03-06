@@ -69,12 +69,7 @@ bool intersect(vec3 v0, vec3 v1, vec3 v2, vec3 center, float radius, Intersectio
     vec3 normNormal = normal / sqrt(e);
     float distance = dot(A, normNormal);
 
-    if (d < 0) {
-        isect.response = normNormal * (radius - distance);
-    }
-    else {
-        isect.response = normNormal * distance;
-    }
+    isect.response = normNormal * (radius - distance);
 
     return true;
 }
