@@ -83,6 +83,7 @@ GLuint simpleVao, particleVao;
 // Simulation variables and parameters
 bool doPyshics = false;
 int iterations = 5;
+float pSleeping = 0.001;
 
 // Box parameters
 Box *box;
@@ -466,6 +467,7 @@ void gui()
 	ImGui::SliderFloat("Dimension z", &dimension.z, 0, 10);
 	ImGui::SliderFloat("Stiffness", &stiffness, 0, 1);
 	ImGui::SliderFloat("Mass (averaged over particles)", &mass, 0, 10000, "%.3f", 10.f);
+	ImGui::SliderFloat("Particle Sleeping (squared)", &pSleeping, 0, 1, "%.9f", 10.f);
 	if (ImGui::Button("reset"))
 		setupBox(dimension, vec3(0.f, 0.f, 0.f), mass, numparticles, stiffness);
     ImGui::End();
