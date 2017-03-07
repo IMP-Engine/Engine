@@ -72,6 +72,8 @@ Box *make_box(BoxConfig * const config) {
 					&box->particles[j],
 					stiffness, glm::distance(box->particles[i].pos, box->particles[j].pos));
 				box->constraints.push_back(c);
+                box->particles[i].numBoundConstraints += 1;
+                box->particles[j].numBoundConstraints += 1;
 			}
 		}
 	}
