@@ -2,7 +2,7 @@
 
 in vec2 gl_PointCoord;
 
-in vec3 color;
+flat in vec3 color;
 flat in vec3 centerPos;
 flat in float particleSize;
 out vec4 outColor;
@@ -92,7 +92,7 @@ void main() {
 	if (length > 0.5) discard; // Keep the particle round
 
 	vec3 normal = normalize(vec3(pointCoord, 0.5-length));
-	vec3 fragPos = centerPos + (particleSize) * vec3(normal.x, -normal.y, -normal.z);
+	vec3 fragPos = centerPos + (particleSize/300) * vec3(normal.x, -normal.y, -normal.z);
 	float diffuse = max(0.0, dot(normalize(viewSpaceLightPos - fragPos), normal));
 
 	outColor = vec4((0.2 + diffuse) * color, 1.0);
