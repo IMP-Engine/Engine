@@ -84,6 +84,7 @@ GLuint simpleVao, particleVao;
 // Simulation variables and parameters
 bool doPyshics = false;
 int iterations = 5;
+bool showPerformance = false;
 
 // Box parameters
 Box *box;
@@ -343,6 +344,9 @@ void setupBox(vec3 dimension, vec3 centerpos, float totmass, vec3 numparticles, 
 }
 
 void display() {
+
+	int id = performance::startTimer("Reset and draw scene");
+
     float ratio;
     int width, height;
     mat4 viewMatrix, modelViewProjectionMatrix, modelViewMatrix, projectionMatrix;
@@ -399,6 +403,8 @@ void display() {
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
     glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0); //sizeof(GLushort),
 
+	performance::stopTimer(id);
+
     /*
     // Draw two cubes
     for(GLuint i = 0; i < 2; i++) {
@@ -429,10 +435,18 @@ void display() {
     // GUI
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	
+	id = performance::startTimer("Physics");
 	if(doPyshics)
 		physics::simulate(&box->particles, &box->constraints, ImGui::GetIO().DeltaTime, iterations);
-	particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
+	performance::stopTimer(id);
 
+	id = performance::startTimer("Render particles");
+	particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
+	performance::stopTimer(id);
+
+	// Since we may want to measure performance of something that happens after the call to gui()
+	// we place this call as late as possible to allow for measuring more things
+	performance::gui(&showPerformance);
     ImGui::Render();
 
     glfwSwapBuffers(window);
@@ -455,6 +469,7 @@ void gui()
     ImGui::ColorEdit3("clear color", (float*)&clear_color);
     ImGui::Checkbox("Vsync", &vsync);
     if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
+	if (ImGui::Button("Performance Window")) showPerformance ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
 	ImGui::Checkbox("Physics", &doPyshics);
@@ -469,8 +484,6 @@ void gui()
 	ImGui::SliderFloat("Mass (averaged over particles)", &mass, 0, 10000, "%.3f", 10.f);
 	if (ImGui::Button("reset"))
 		setupBox(dimension, vec3(0.f, 0.f, 0.f), mass, numparticles, stiffness);
-
-	performance::gui();
 	
 	ImGui::End();
 
@@ -484,7 +497,7 @@ void gui()
 }
 
 int main(void) {
-	performance::initialize(true);
+	performance::initialize();
 	initGL();
 	setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5), stiffness);
 
@@ -496,6 +509,8 @@ int main(void) {
 
     while (!glfwWindowShouldClose(window))
     {
+		int id = performance::startTimer("All but display()");
+
         // Calculate deltatime of current frame
         GLfloat currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
@@ -507,6 +522,8 @@ int main(void) {
         ImGui_ImplGlfwGL3_NewFrame();
 
         gui();
+
+		performance::stopTimer(id);
 
         display();
     }

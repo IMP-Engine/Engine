@@ -3,6 +3,8 @@
 #include <vector>
 #include <iostream>
 #include <stdint.h>
+#include <utility>
+#include "imgui/imgui.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -36,7 +38,7 @@ namespace performance {
 	/*
 		Draws the performance statistics and resets all counter data
 	*/
-	void gui();
+	void gui(bool* show);
 
 #ifdef __unix__
 	/*  

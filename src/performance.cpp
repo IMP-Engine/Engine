@@ -14,6 +14,19 @@
 #endif
 
 /*
+	Overload access such that out of bounds index clamp to last value
+*/
+struct gList : std::vector<uint_fast64_t>
+{
+	int operator[] (int idx) {
+		if (this->size() > idx)
+			return (*(this->_Myfirst() + idx));
+		else
+			return (*(this->_Myfirst() + this->size() - 1));
+	}
+};
+
+/*
 	Store information about one timing entry.
 */
 struct ENTRY {
@@ -46,15 +59,40 @@ LARGE_INTEGER frequency;
 */
 bool printTime = false;
 
+/*
+	List for storing time data used to visualize performance
+*/
+std::vector< gList > graphData(90);
+
+/*
+	List of colors used in graph TODO use ImCol
+*/
+std::vector<ImColor> colors = {
+	ImColor(152, 35, 149),
+	ImColor(0, 135, 203),
+	ImColor(37, 9, 99),
+	ImColor(213, 155, 17),
+	ImColor(142, 8, 14),
+	ImColor(7, 210, 26),
+	ImColor(0.f,0.f,0.f,1.f),
+	ImColor(0.f,0.f,0.f,1.f),
+	ImColor(0.f,0.f,0.f,1.f),
+	ImColor(0.f,0.f,0.f,1.f) };
+
 namespace performance {
 
 	// TODO GPU TIMERS
-	
+
 	void initialize(bool logTime) {
 #ifdef _WIN32
 		QueryPerformanceFrequency(&frequency);
 #endif
 		printTime = logTime;
+		for (uint32_t i = 0; i < graphData.size(); i++)
+		{
+			if (graphData[i].size() == 0)
+				graphData[i].push_back(0.0f);
+		}
 	}
 
 	uint_fast32_t startTimer(std::string name) {
@@ -83,10 +121,110 @@ namespace performance {
 			std::cout << entries[id].name << ":  " << entries[id].elapsed << " us" << std::endl;
 		}
 	}
-	
-	void gui() {
-		// unimplemented
 
+	void gui(bool* show) {
+
+		if (!*show)
+		{
+			current = 0;
+			entries.clear();
+			return;
+		}
+
+		ImGui::SetNextWindowSize(ImVec2(350, 560), ImGuiSetCond_FirstUseEver);
+		if (!ImGui::Begin("Performance Diagnostics", show))
+		{
+			ImGui::End();
+			return;
+		}
+
+		ImDrawList* draw_list = ImGui::GetWindowDrawList();
+		auto a = ImGui::GetIO();
+
+
+		// Allow the amount of data points to change
+		static int graphDataSize = graphData.size();
+		static int last = graphDataSize;
+		ImGui::SliderInt("Number of datapoints", &graphDataSize, 1, 500);
+		if (graphDataSize != last)
+		{
+			graphData.resize(graphDataSize);
+			last = graphDataSize;
+			initialize(printTime);
+		}
+
+		// Add current iteration times to our graphData
+		static int offset = 0;
+		offset = (offset + 1) % graphData.size();
+		graphData[offset].clear();
+		graphData[offset].push_back(0.0f);
+		int_fast64_t accum = 0;
+		for (auto entry : entries)
+		{
+			accum += entry.elapsed;
+			graphData[offset].push_back(accum);
+		}
+
+		// Find maximum value so that we can scale our graph
+		int_fast64_t max = 0;
+		for (int i = 0; i < graphData.size(); i++)
+		{
+			for (int j = 0; j < graphData[i].size(); j++)
+			{
+				max = max > graphData[i][j] ? max : graphData[i][j];
+			}
+		}
+
+		const ImVec2 p = ImGui::GetCursorScreenPos();
+		float wWidth = ImGui::CalcItemWidth();
+		ImVec2 spacing = ImVec2(2.0f, 20.0f);
+		float graphHeight = ImGui::GetContentRegionAvail().y - spacing.y;
+		float dx = (wWidth) / graphData.size();
+		float x = p.x + spacing.x;
+		float y = p.y + spacing.y + graphHeight;
+		float graphRightEdge = p.x + wWidth;
+		float radius = 10.f;
+		float middley = ImGui::GetContentRegionAvail().y / 2.f;
+		float startx = graphRightEdge + (ImGui::GetContentRegionAvail().x - wWidth) / 4.f;
+		float starty = middley - entries.size() * 20.f;
+		float rowHeight = 40.f;
+		float padding = 10.f;
+
+		// Graph frame
+		draw_list->AddRectFilled(ImVec2(x, y), ImVec2(x + (graphData.size() - 1) * dx, y - graphHeight), ImColor(164, 164, 164, 120));
+
+		// Draw graph
+		for (uint32_t i = 0; i < graphData.size() - 1; i++)
+		{
+			for (uint32_t j = 0; j < graphData[i].size() - 1; j++)
+			{
+				draw_list->AddQuadFilled(
+					ImVec2(x, y - (graphData[i][j] / (float)max)*graphHeight),
+					ImVec2(x + dx, y - (graphData[i + 1][j] / (float)max)*graphHeight),
+					ImVec2(x + dx, y - (graphData[i + 1][j + 1] / (float)max)*graphHeight),
+					ImVec2(x, y - (graphData[i][j + 1] / (float)max)*graphHeight),
+					colors[j]
+				);
+			}
+			x += dx;
+		}
+
+		// Text information
+		std::string yMax = "Max: " + std::to_string(max / 1000.0f).substr(0, 5) + " ms";
+		draw_list->AddText(ImVec2(graphRightEdge + 5, p.y + spacing.y), ImColor(255, 255, 255), yMax.c_str());
+		ImGui::Text("Application average: %.3f ms/frame: (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		ImGui::SameLine();
+		ImGui::Text("Last frame: %.3f ms", ImGui::GetIO().DeltaTime * 1000);
+
+		// Create legend
+		for (uint32_t i = 0; i < entries.size(); i++)
+		{
+			draw_list->AddCircleFilled(ImVec2(startx, p.y + spacing.y + starty), radius, colors[i]);
+			draw_list->AddText(ImVec2(startx + radius + padding, p.y + spacing.y + starty - (radius / 2.f) - 2.f), ImColor(255, 255, 255), entries[i].name.c_str());
+			starty += rowHeight;
+		}
+
+		ImGui::End();
 		current = 0;
 		entries.clear();
 	}
