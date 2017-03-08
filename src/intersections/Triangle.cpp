@@ -3,73 +3,63 @@
 
 using namespace glm;
 
-bool intersect(vec3 v0, vec3 v1, vec3 v2, vec3 center, float radius, Intersection &isect) {
-    vec3 A = v0 - center;
-    vec3 B = v1 - center;
-    vec3 C = v2 - center;
+bool intersect(vec3 v0, vec3 v1, vec3 v2, Particle p, float radius, Intersection &isect) {
+
+    // Check intersection of target position and triangle
+
+    // Translate problem so that the particle is at origo
+    vec3 A = v0 - p.pPos;
+    vec3 B = v1 - p.pPos;
+    vec3 C = v2 - p.pPos;
+
+    /*
+     * Step 1: Check if particle intesect with plane.
+     */
     float rr = radius * radius;
     vec3 normal = cross(B - A, C - A);
-    float d = dot(A, normal);
+    float dist = dot(A, normal);
     float e = dot(normal, normal);
-
-    if (d * d > rr * e) {
+    normal /= sqrt(e);
+    // Always end early.
+    if (dist * dist > rr * e) {
         return false;
     }
 
 
     float aa = dot(A, A);
-    float ab = dot(A, B);
-    float ac = dot(A, C);
+
+    /**
+     * Step 2: check if any of the triangle is inside the sphere.
+     */
+
+    // First vertex
+    if (aa < rr) {
+        float distance = dot(A, normal);
+        isect.response = normal * (radius - distance);
+
+        return true;
+    }
+
+    // Second vertex
     float bb = dot(B, B);
-    float bc = dot(B, C);
+    if (bb < rr) {
+        float distance = dot(A, normal);
+        isect.response = normal * (radius - distance);
+
+        return true;
+    }
+
+    // Third vertex
     float cc = dot(C, C);
+    if (cc < rr) {
 
-    if ((aa > rr) & (ab > aa) & (ac > aa)) 
-    { 
-        return false; 
+        float distance = dot(A, normNormal);
+        isect.response = normNormal * (radius - distance);
+
+        return true;
     }
+    
 
-    if ((bb > rr) & (ab > bb) & (bc > bb)) 
-    { 
-        return false; 
-    }
-
-    if ((cc > rr) & (ac > cc) & (bc > cc)) 
-    { 
-        return false; 
-    }
-
-    vec3 AB = B - A;
-    vec3 BC = C - B;
-    vec3 CA = A - C;
-    float d1 = ab - aa;
-    float d2 = bc - bb;
-    float d3 = ac - cc;
-    float e1 = dot(AB, AB);
-    float e2 = dot(BC, BC);
-    float e3 = dot(CA, CA);
-    vec3 Q1 = A * e1 - d1 * AB;
-    vec3 Q2 = B * e2 - d2 * BC;
-    vec3 Q3 = C * e3 - d3 * CA;
-    vec3 QC = C * e1 - Q1;
-    vec3 QA = A * e2 - Q2;
-    vec3 QB = B * e3 - Q3;
-    if (dot(Q1, Q1) > rr * e1 * e1 && dot(Q1, QC) > 0) {
-        return false;
-    }
-    if (dot(Q2, Q2) > rr * e2 * e2 && dot(Q2, QA) > 0) {
-        return false;
-    }
-    if (dot(Q3, Q3) > rr * e3 * e3 && dot(Q3, QB) > 0) {
-        return false;
-    }
-
-    // Response
-
-    vec3 normNormal = normal / sqrt(e);
-    float distance = dot(A, normNormal);
-
-    isect.response = normNormal * (radius - distance);
 
     return true;
 }
