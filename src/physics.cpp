@@ -3,7 +3,7 @@
 #include <glm/geometric.hpp>
 #include <stdio.h>
 #include "Constraint.h"
-#define overRelaxConst 1.1f;
+const float overRelaxConst = 1.5f;
 
 namespace physics {
 
@@ -49,7 +49,7 @@ namespace physics {
                     {
                         // delta p_i = -w_i * s * grad_{p_i} C(p) * stiffness correction 
                         // (*p)->pPos -= (*p)->invmass * c->evaluateScaleFactor() * c->evaluateGradient(p) * (1 - pow(1 - c->stiffness, 1/(float)i));
-                        (*p)->pPos -= (*p)->invmass * c->evaluateScaleFactor() * c->evaluateGradient(p) * (1 - pow(1 - c->stiffness, 1/(float)i)) * 1.0f / (float)(*p)->numBoundConstraints;
+                        (*p)->pPos -= (*p)->invmass * c->evaluateScaleFactor() * c->evaluateGradient(p) * (1 - pow(1 - c->stiffness, 1/(float)i)) * overRelaxConst / (float)(*p)->numBoundConstraints;
                     }
                 }
             }
@@ -65,7 +65,7 @@ namespace physics {
              */
             (*particles)[i].velocity = ((*particles)[i].pPos - (*particles)[i].pos) / dt;
             // rough attempt at particle sleeping implementation in order to make particles stay in one place - most likely needs proper friction to work
-            if (glm::length((*particles)[i].pos - (*particles)[i].pPos) > 0.01)
+            if (glm::length((*particles)[i].pos - (*particles)[i].pPos) > 0.0001)
             {
                 (*particles)[i].pos = (*particles)[i].pPos;
             }
