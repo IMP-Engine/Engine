@@ -7,6 +7,7 @@
 #include <iostream>
 #include "debug.h"
 
+#include "performance.h"
 
 #include "glHelper.h"
 #include <glm/glm.hpp>
@@ -468,7 +469,10 @@ void gui()
 	ImGui::SliderFloat("Mass (averaged over particles)", &mass, 0, 10000, "%.3f", 10.f);
 	if (ImGui::Button("reset"))
 		setupBox(dimension, vec3(0.f, 0.f, 0.f), mass, numparticles, stiffness);
-    ImGui::End();
+
+	performance::gui();
+	
+	ImGui::End();
 
 	// Remove when all group members feel comfortable with how GUI works and what it can provide
     // Demo window
@@ -480,6 +484,7 @@ void gui()
 }
 
 int main(void) {
+	performance::initialize(true);
 	initGL();
 	setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5), stiffness);
 
