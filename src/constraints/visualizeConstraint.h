@@ -18,15 +18,23 @@ namespace visualization {
 	GLuint constraintShader;
 	std::vector<vec3> pos;
 	GLuint pos_buf;
+	bool draw = false;
 
 	void initialize() {
 		constraintShader = glHelper::loadShader(VERT_CONSTRAINT_SHADER_PATH, FRAG_CONSTRAINT_SHADER_PATH);
 		glGenBuffers(1, &pos_buf);
 	}
 
+	void gui() {
+		ImGui::Checkbox("Visualize constraints", &draw);
+	}
+
 	// Currently only handles distance constraints
 	void drawConstraints(std::vector<Constraint*>* constraints, mat4 mvp) {
 		
+		if (!draw)
+			return;
+
 		// Copy positions into separate vector to avoid uploading particles into GPU
 		pos.clear();
 		for (auto c : *constraints)

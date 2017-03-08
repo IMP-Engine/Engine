@@ -85,7 +85,6 @@ GLuint simpleVao, particleVao;
 // Simulation variables and parameters
 bool doPyshics = false;
 int iterations = 5;
-bool drawConstraints = false;
 
 // Box parameters
 Box *box;
@@ -436,8 +435,7 @@ void display() {
 	if (doPyshics)
 		physics::simulate(&box->particles, &box->constraints, ImGui::GetIO().DeltaTime, iterations);
 
-	if (drawConstraints)
-		visualization::drawConstraints(&box->constraints, modelViewProjectionMatrix);
+	visualization::drawConstraints(&box->constraints, modelViewProjectionMatrix);
 
 	particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
 
@@ -465,7 +463,7 @@ void gui()
     if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
-	ImGui::Checkbox("Visualize constraints", &drawConstraints);
+	visualization::gui();
 	ImGui::Checkbox("Physics", &doPyshics);
 	ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
 	ImGui::SliderInt("Particles x", &numparticles.x, 1, 10);
