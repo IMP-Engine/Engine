@@ -1,5 +1,5 @@
 #include "Box.h"
-#include "../DistanceConstraint.h"
+#include "../constraints/DistanceConstraint.h"
 #include <algorithm>
 #include <math.h>
 #include <float.h>
@@ -76,6 +76,7 @@ Box *make_box(BoxConfig * const config) {
     // Create constraints
     std::vector<std::pair<int, int>> con;
     float stiffness = config->stiffness;
+    float distanceThreshold = config->distanceThreshold;
     for (int i = 0; i < box->particles.size(); i++) {
         for (int j = 0; j < box->particles.size(); j++) {
             if (j != i && glm::distance(box->particles[i].pos, box->particles[j].pos) <= sqrt(dx*dx + dy*dy + dz*dz) && std::find(con.begin(), con.end(), std::pair<int,int>(j,i)) == con.end())
@@ -84,7 +85,10 @@ Box *make_box(BoxConfig * const config) {
                 Constraint* c = new DistanceConstraint(
                         &box->particles[i],
                         &box->particles[j],
-                        stiffness, glm::distance(box->particles[i].pos, box->particles[j].pos));
+                        stiffness,
+                        distanceThreshold,
+                        glm::distance(box->particles[i].pos,
+                        box->particles[j].pos));
                 box->constraints.push_back(c);
                 box->particles[i].numBoundConstraints += 1;
                 box->particles[j].numBoundConstraints += 1;

@@ -2,8 +2,9 @@
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
 #include <stdio.h>
-#include "Constraint.h"
 extern float overRelaxConst;
+#include "constraints/Constraint.h"
+#include <algorithm>
 
 namespace physics {
 
@@ -36,6 +37,9 @@ namespace physics {
             // **************************************************************************
         }
 
+        // Breakable constraints
+        (*constraints).erase(std::remove_if((*constraints).begin(), (*constraints).end(), [](Constraint *c) { return (c->evaluate() > c->threshold); }), (*constraints).end());
+
         /* 
          * Stationary iterative linear solver - Gauss-Seidel 
          */
@@ -52,7 +56,6 @@ namespace physics {
                 }
             }
         }
-
 
         for (std::vector<glm::vec3>::size_type i = 0; i != particles->size(); i++) 
         {
@@ -73,7 +76,8 @@ namespace physics {
              * Update velocities according to friction and restituition coefficients
              */
             // Naive friction implementation
-            if ((*particles)[i].pos.y <= -10) {
+            if ((*particles)[i].pos.y <= -10)
+            {
                 (*particles)[i].velocity.z *= 0.4;
                 (*particles)[i].velocity.x *= 0.4;
             }
@@ -81,6 +85,5 @@ namespace physics {
         // Update velocities according to friction and restituition coefficients
         /* Skip this for now */
     }
-
 
 }

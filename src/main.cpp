@@ -16,7 +16,9 @@
 #include "physics.h"
 #include "particles/ParticleRenderer.h"
 #include "particles/Box.h"
-#include "DistanceConstraint.h"
+#include "constraints/DistanceConstraint.h"
+
+#include "constraints/visualizeConstraint.h"
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
@@ -91,6 +93,7 @@ ivec3 numparticles = vec3(5, 5, 5);
 vec3 dimension = vec3(1.f, 1.f, 1.f);
 float mass = 30.f;
 float stiffness = 0.5f;
+float distanceThreshold = 0.2f;
 
 float cubeVertices[] = {
     -10.0f, -10.0f,  10.0f,
@@ -258,6 +261,8 @@ void initGL() {
     glfwSetScrollCallback(window, scrollCallback);    
     glfwSetMouseButtonCallback(window, mouseButtonCallback);
 
+    // Constraint visualization setup
+    visualization::initialize();
 
     // Shader setup
     simpleShader = glHelper::loadShader(VERT_SHADER_PATH, FRAG_SHADER_PATH);
@@ -322,7 +327,7 @@ void initGL() {
 /*
  * Creates a box with given parameters and hooks it up to rendering. Also makes sure that any old box is removed.
  */
-void setupBox(vec3 dimension, vec3 centerpos, float totmass, vec3 numparticles, float stiffness)
+void setupBox(vec3 dimension, vec3 centerpos, float totmass, vec3 numparticles, float stiffness, float distanceThreshold)
 {
     delete box;
     delete particleRenderer;
@@ -334,6 +339,7 @@ void setupBox(vec3 dimension, vec3 centerpos, float totmass, vec3 numparticles, 
     config.phase = 1;
     config.num_particles = numparticles;
     config.stiffness = stiffness;
+    config.distanceThreshold = distanceThreshold;
     box = make_box(&config);
 
     std::cout << "Constraints: " << box->constraints.size() << std::endl;
@@ -394,43 +400,21 @@ void display() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     glBindVertexArray(simpleVao);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
+
     int size;
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
     glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0); //sizeof(GLushort),
-
-    /*
-    // Draw two cubes
-    for(GLuint i = 0; i < 2; i++) {
-    mat4 modelMatrix(1.0f); // Identity matrix
-    modelMatrix = translate(modelMatrix, cubePositions[i]);
-    modelMatrix = scale(modelMatrix, vec3(5.0f, 5.0f, 5.0f));
-
-    float nearPlane = 0.01f;
-    float farPlane = 300.0f;
-
-    modelViewMatrix = viewMatrix * modelMatrix;
-    modelViewProjectionMatrix = perspective(fovy, ratio, nearPlane, farPlane) * modelViewMatrix;
-
-    // Send uniforms to shader
-    glUseProgram(simpleShader);
-    glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
-    glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
-
-    // Draw cube
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
-    int size;
-    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-    glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0); //sizeof(GLushort),
-    }
-    */
+    glBindVertexArray(0);
 
     // GUI
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    if(doPyshics)
+    if (doPyshics)
         physics::simulate(&box->particles, &box->constraints, ImGui::GetIO().DeltaTime, iterations);
+
+    visualization::drawConstraints(&box->constraints, modelViewProjectionMatrix);
+
     particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
 
     ImGui::Render();
@@ -457,6 +441,7 @@ void gui()
     if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
+
     ImGui::Checkbox("Physics", &doPyshics);
     ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
     ImGui::SliderFloat("Over-relax-constant", &overRelaxConst, 1, 5);
@@ -468,8 +453,11 @@ void gui()
     ImGui::SliderFloat("Dimension z", &dimension.z, 0, 10);
     ImGui::SliderFloat("Stiffness", &stiffness, 0, 1);
     ImGui::SliderFloat("Mass (averaged over particles)", &mass, 0, 10000, "%.3f", 10.f);
+    ImGui::SliderFloat("Distance threshold", &distanceThreshold, 0, 1);
     if (ImGui::Button("reset"))
-        setupBox(dimension, vec3(0.f, 0.f, 0.f), mass, numparticles, stiffness);
+    {
+        setupBox(dimension, vec3(0.f, 0.f, 0.f), mass, numparticles, stiffness, distanceThreshold);
+    }
     ImGui::End();
 
     // Remove when all group members feel comfortable with how GUI works and what it can provide
@@ -483,7 +471,7 @@ void gui()
 
 int main(void) {
     initGL();
-    setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5), stiffness);
+    setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5), stiffness, distanceThreshold);
 
     if (GLAD_GL_VERSION_4_3) {
         /* We support at least OpenGL version 4.3 */
