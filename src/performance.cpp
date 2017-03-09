@@ -65,6 +65,11 @@ bool printTime = false;
 std::vector< gList > graphData(90);
 
 /*
+	Maximum value of graphData, used to determine scaling of visualization graph	
+*/
+int_fast64_t max = 0;
+
+/*
 	List of colors used in graph TODO use ImCol
 */
 std::vector<ImColor> colors = {
@@ -122,37 +127,8 @@ namespace performance {
 		}
 	}
 
-	void gui(bool* show) {
-
-		if (!*show)
-		{
-			current = 0;
-			entries.clear();
-			return;
-		}
-
-		ImGui::SetNextWindowSize(ImVec2(350, 560), ImGuiSetCond_FirstUseEver);
-		if (!ImGui::Begin("Performance Diagnostics", show))
-		{
-			ImGui::End();
-			return;
-		}
-
-		ImDrawList* draw_list = ImGui::GetWindowDrawList();
-		auto a = ImGui::GetIO();
-
-
-		// Allow the amount of data points to change
-		static int graphDataSize = graphData.size();
-		static int last = graphDataSize;
-		ImGui::SliderInt("Number of datapoints", &graphDataSize, 1, 500);
-		if (graphDataSize != last)
-		{
-			graphData.resize(graphDataSize);
-			last = graphDataSize;
-			initialize(printTime);
-		}
-
+	void next()
+	{
 		// Add current iteration times to our graphData
 		static int offset = 0;
 		offset = (offset + 1) % graphData.size();
@@ -166,13 +142,43 @@ namespace performance {
 		}
 
 		// Find maximum value so that we can scale our graph
-		int_fast64_t max = 0;
-		for (int i = 0; i < graphData.size(); i++)
+		max = graphData[0][graphData[0].size()];
+		for (int i = 1; i < graphData.size(); i++)
 		{
-			for (int j = 0; j < graphData[i].size(); j++)
-			{
-				max = max > graphData[i][j] ? max : graphData[i][j];
-			}
+			max = max > graphData[i][graphData[i].size()] ? max : graphData[i][graphData[i].size()];
+		}
+
+		current = 0;
+		entries.clear();
+	}
+
+	void gui(bool* show) {
+
+		if (!*show)
+		{
+			return;
+		}
+
+		ImGui::SetNextWindowSize(ImVec2(350, 560), ImGuiSetCond_FirstUseEver);
+		if (!ImGui::Begin("Performance Diagnostics", show))
+		{
+			ImGui::End();
+			return;
+		}
+
+		ImDrawList* draw_list = ImGui::GetWindowDrawList();
+		auto a = ImGui::GetIO();
+
+		// Allow the amount of data points to change
+		static int graphDataSize = graphData.size();
+		static int last = graphDataSize;
+		ImGui::SliderInt("Number of datapoints", &graphDataSize, 1, 500);
+		if (graphDataSize != last)
+		{
+			graphData.resize(graphDataSize);
+			last = graphDataSize;
+			initialize(printTime);
+			max = 0;
 		}
 
 		const ImVec2 p = ImGui::GetCursorScreenPos();
@@ -208,7 +214,7 @@ namespace performance {
 			}
 			x += dx;
 		}
-
+		
 		// Text information
 		std::string yMax = "Max: " + std::to_string(max / 1000.0f).substr(0, 5) + " ms";
 		draw_list->AddText(ImVec2(graphRightEdge + 5, p.y + spacing.y), ImColor(255, 255, 255), yMax.c_str());
@@ -225,8 +231,6 @@ namespace performance {
 		}
 
 		ImGui::End();
-		current = 0;
-		entries.clear();
 	}
 
 #ifdef __unix__

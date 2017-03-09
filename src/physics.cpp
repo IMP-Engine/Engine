@@ -3,13 +3,14 @@
 #include <glm/geometric.hpp>
 #include <stdio.h>
 #include "Constraint.h"
+#include "performance.h"
 
 namespace physics {
 
 void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constraints , float dt, int iterations)
 {
 	/* Based on 2007 PBD, NOT Unified Framework */
-
+	int id = performance::startTimer("Physics");
 	const float GRAVITY = 4.0f;
 	for (std::vector<glm::vec3>::size_type i = 0; i != particles->size(); i++) {
 		/*
@@ -78,6 +79,7 @@ void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constr
 	}
 		// Update velocities according to friction and restituition coefficients
 		/* Skip this for now */
+	performance::stopTimer(id);
 }
 
 			

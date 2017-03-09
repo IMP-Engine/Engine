@@ -36,7 +36,12 @@ namespace performance {
 	void stopTimer(size_t id);
 
 	/*
-		Draws the performance statistics and resets all counter data
+		Reset counters and store timing information for visualization
+	*/
+	void next();
+
+	/*
+		Draws the performance statistics
 	*/
 	void gui(bool* show);
 
