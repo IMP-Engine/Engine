@@ -12,4 +12,4 @@ struct Intersection {
 #endif // !INTERSECTION
 
 
-bool intersect(vec3 v0, vec3 v1, vec3 v2, vec3 center, float radius, Intersection &isect);
+bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isect);

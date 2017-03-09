@@ -48,23 +48,11 @@ void simulate(std::vector<Particle> &particles, std::vector<Constraint*> &constr
     {
             
         // Check collisions with scene
-        for (unsigned int t = 0; t < scene->indices.size(); t+=3) 
+        for (std::vector<Triangle>::iterator t = scene->triangles.begin(); t != scene->triangles.end(); t++)
         {
 
-            vec3 v0 = vec3(scene->vertexes[3 * scene->indices[t]],
-                            scene->vertexes[3 * scene->indices[t] + 1],
-                            scene->vertexes[3 * scene->indices[t] + 2]);
-
-            vec3 v1 = vec3(scene->vertexes[3 * scene->indices[t+1]],
-                            scene->vertexes[3 * scene->indices[t+1] + 1],
-                            scene->vertexes[3 * scene->indices[t+1] + 2]);
-
-            vec3 v2 = vec3(scene->vertexes[3 * scene->indices[t+2]],
-                            scene->vertexes[3 * scene->indices[t+2] + 1],
-                            scene->vertexes[3 * scene->indices[t+2] + 2]);
-
             Intersection isect;
-            if (intersect(v0, v1, v2, particles[i].pPos, PARTICLE_RADIUS,isect))
+            if (intersect((*t), particles[i], PARTICLE_RADIUS,isect))
             {
                 particles[i].pPos += isect.response;
             }

@@ -24,13 +24,6 @@
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
-#ifdef _WIN32
-#define VERT_SHADER_PATH "../../src/shaders/simple.vert"
-#define FRAG_SHADER_PATH "../../src/shaders/simple.frag"
-#elif __unix__
-#define VERT_SHADER_PATH "../src/shaders/simple.vert"
-#define FRAG_SHADER_PATH "../src/shaders/simple.frag"
-#endif
 
 #define MAX_FOV 70.0f
 #define MIN_FOV 1.0f
@@ -89,7 +82,6 @@ Scene *scene;
 vector<Particle> particles;
 
 // Shaders and rendering 
-GLuint simpleShader;
 ParticleRenderer *particleRenderer;
 
 // Light
@@ -236,30 +228,8 @@ void initGL() {
 	glfwSetScrollCallback(window, scrollCallback);    
 	glfwSetMouseButtonCallback(window, mouseButtonCallback);
 
-
-    // Shader setup
-    simpleShader = glHelper::loadShader(VERT_SHADER_PATH, FRAG_SHADER_PATH);
-    GLuint mvp_location = glGetUniformLocation(simpleShader, "MVP");
-    GLuint vpos_location = glGetAttribLocation(simpleShader, "vPos");
-
-	// Scene setup
-	glGenVertexArrays(1, &scene->vao);
-	glBindVertexArray(scene->vao);
-
-	glGenBuffers(1, &scene->vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, scene->vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * scene->vertexes.size(), &(scene->vertexes[0]), GL_STATIC_DRAW);
-
-    glGenBuffers(1, &scene->ibo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, scene->ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLshort) * scene->indices.size(), &(scene->indices[0]), GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(vpos_location);
-    glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-    
-
-    glDisable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
+    scene->init();
+   
 
 	glEnable(GL_POINT_SPRITE);
     glPointSize(0.1f);
@@ -340,22 +310,8 @@ void display() {
     //modelMatrix = scale(modelMatrix, vec3(5.0f, 5.0f, 5.0f));
 
 
-    // Send uniforms to shader
-    glUseProgram(simpleShader);
-    glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
-    glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
-
-    // Draw cube
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-	glBindVertexArray(scene->vao);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, scene->ibo);
-    int size;
-    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-    glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0); //sizeof(GLushort),
-
-    // GUI
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    scene->render(viewMatrix, projectionMatrix);
+    
 	
 	if(doPyshics)
 		physics::simulate(particles, box1->constraints, scene, ImGui::GetIO().DeltaTime, iterations);

@@ -10,9 +10,9 @@ class Triangle
 public:
 	Triangle();
 	~Triangle();
-	vec3 v0;
-	vec3 v1;
-	vec3 v2;
+	vec3 v0, v1, v2;
+    vec3 u, v;
+    vec3 normal;
 	void aabb(vec3 &min, vec3 &max);
 	vec3 center();
 };
