@@ -35,8 +35,8 @@ using namespace glm;
 using namespace std;
 
 /*************************************************************************
-********************** Global variables **********************************
-**************************************************************************/
+ ********************** Global variables **********************************
+ **************************************************************************/
 
 // Application
 GLFWwindow* window;
@@ -83,6 +83,7 @@ GLuint simpleVao, particleVao;
 // Simulation variables and parameters
 bool doPyshics = false;
 int iterations = 5;
+float overRelaxConst = 1.0f;
 
 // Box parameters
 Box *box;
@@ -91,31 +92,31 @@ vec3 dimension = vec3(1.f, 1.f, 1.f);
 float mass = 30.f;
 float stiffness = 0.5f;
 
-   float cubeVertices[] = {
-   -10.0f, -10.0f,  10.0f,
-   10.0f, -10.0f,  10.0f,
-   10.0f,  10.0f,  10.0f,
-   -10.0f,  10.0f,  10.0f,
-
-   -10.0f, -10.0f, -10.0f,
-   10.0f, -10.0f, -10.0f,
-   10.0f,  10.0f, -10.0f,
-   -10.0f,  10.0f, -10.0f,
-/*
-   };
-
 float cubeVertices[] = {
-    -0.5f, -0.5f,  0.5f,
-    0.5f, -0.5f,  0.5f,
-    0.5f,  0.5f,  0.5f,
-    -0.5f,  0.5f,  0.5f,
+    -10.0f, -10.0f,  10.0f,
+    10.0f, -10.0f,  10.0f,
+    10.0f,  10.0f,  10.0f,
+    -10.0f,  10.0f,  10.0f,
 
-    -0.5f, -0.5f, -0.5f,
-    0.5f, -0.5f, -0.5f,
-    0.5f,  0.5f, -0.5f,
-    -0.5f,  0.5f, -0.5f,
-   */
+    -10.0f, -10.0f, -10.0f,
+    10.0f, -10.0f, -10.0f,
+    10.0f,  10.0f, -10.0f,
+    -10.0f,  10.0f, -10.0f,
 };
+
+/*
+   float cubeVertices[] = {
+   -0.5f, -0.5f,  0.5f,
+   0.5f, -0.5f,  0.5f,
+   0.5f,  0.5f,  0.5f,
+   -0.5f,  0.5f,  0.5f,
+
+   -0.5f, -0.5f, -0.5f,
+   0.5f, -0.5f, -0.5f,
+   0.5f,  0.5f, -0.5f,
+   -0.5f,  0.5f, -0.5f,
+   };
+   */
 
 vec3 cubePositions[] = {
     vec3(-3.0f, 0.0f, 0.0f),
@@ -168,7 +169,7 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-		cout << "Press." << endl;
+        cout << "Press." << endl;
         double x, y;
         glfwGetCursorPos(window, &x, &y);
         lastX = x;
@@ -251,11 +252,11 @@ void initGL() {
 
     ImGui_ImplGlfwGL3_Init(window, true); 
 
-	// steal callback and call imgui in our callback
-	glfwSetKeyCallback(window, keyCallback);
-	glfwSetCursorPosCallback(window, mouseCallback);
-	glfwSetScrollCallback(window, scrollCallback);    
-	glfwSetMouseButtonCallback(window, mouseButtonCallback);
+    // steal callback and call imgui in our callback
+    glfwSetKeyCallback(window, keyCallback);
+    glfwSetCursorPosCallback(window, mouseCallback);
+    glfwSetScrollCallback(window, scrollCallback);    
+    glfwSetMouseButtonCallback(window, mouseButtonCallback);
 
 
     // Shader setup
@@ -264,81 +265,81 @@ void initGL() {
     vpos_location = glGetAttribLocation(simpleShader, "vPos");
     vcol_location = glGetAttribLocation(simpleShader, "vCol");
 
-	// Triangle setup
-	GLuint vertex_buffer;
+    // Triangle setup
+    GLuint vertex_buffer;
 
-	glGenVertexArrays(1, &simpleVao);
-	glBindVertexArray(simpleVao);
+    glGenVertexArrays(1, &simpleVao);
+    glBindVertexArray(simpleVao);
 
-	glGenBuffers(1, &vertex_buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+    glGenBuffers(1, &vertex_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
 
-	// Cube setup
-	GLushort cubeIndices[] = {
-		// front
-		0, 1, 2,
-		2, 3, 0,
-		// top
-		1, 5, 6,
-		6, 2, 1,
-		// back
-		7, 6, 5,
-		5, 4, 7,
-		// bottom
-		4, 0, 3,
-		3, 7, 4,
-		// left
-		4, 5, 1,
-		1, 0, 4,
-		// right
-		3, 2, 6,
-		6, 7, 3
-	};
+    // Cube setup
+    GLushort cubeIndices[] = {
+        // front
+        0, 1, 2,
+        2, 3, 0,
+        // top
+        1, 5, 6,
+        6, 2, 1,
+        // back
+        7, 6, 5,
+        5, 4, 7,
+        // bottom
+        4, 0, 3,
+        3, 7, 4,
+        // left
+        4, 5, 1,
+        1, 0, 4,
+        // right
+        3, 2, 6,
+        6, 7, 3
+    };
 
-	glGenBuffers(1, &cube_ibo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeIndices), cubeIndices, GL_STATIC_DRAW);
+    glGenBuffers(1, &cube_ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeIndices), cubeIndices, GL_STATIC_DRAW);
 
-	glEnableVertexAttribArray(vpos_location);
-	glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glEnableVertexAttribArray(vpos_location);
+    glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
-	glEnable(GL_POINT_SPRITE);
+    glEnable(GL_POINT_SPRITE);
     glPointSize(0.1f);
-	//glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_LOWER_LEFT); // Not sure if needed, keeping meanwhile
+    //glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_LOWER_LEFT); // Not sure if needed, keeping meanwhile
 
-	// Not sure which one to use, keeping both meanwhile
-	glEnable(GL_PROGRAM_POINT_SIZE);
-	//glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    // Not sure which one to use, keeping both meanwhile
+    glEnable(GL_PROGRAM_POINT_SIZE);
+    //glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-	//particleRenderer->init();
+    //particleRenderer->init();
 
 }
 
 /*
-* Creates a box with given parameters and hooks it up to rendering. Also makes sure that any old box is removed.
-*/
+ * Creates a box with given parameters and hooks it up to rendering. Also makes sure that any old box is removed.
+ */
 void setupBox(vec3 dimension, vec3 centerpos, float totmass, vec3 numparticles, float stiffness)
 {
-	delete box;
-	delete particleRenderer;
-	BoxConfig config;
+    delete box;
+    delete particleRenderer;
+    BoxConfig config;
 
-	config.dimensions = dimension;
-	config.center_pos = centerpos;
-	config.mass = totmass;
-	config.phase = 1;
-	config.num_particles = numparticles;
-	config.stiffness = stiffness;
-	box = make_box(&config);
+    config.dimensions = dimension;
+    config.center_pos = centerpos;
+    config.mass = totmass;
+    config.phase = 1;
+    config.num_particles = numparticles;
+    config.stiffness = stiffness;
+    box = make_box(&config);
 
-	std::cout << "Constraints: " << box->constraints.size() << std::endl;
+    std::cout << "Constraints: " << box->constraints.size() << std::endl;
 
-	particleRenderer = new ParticleRenderer(&box->particles);
-	particleRenderer->init();
+    particleRenderer = new ParticleRenderer(&box->particles);
+    particleRenderer->init();
 }
 
 void display() {
@@ -358,27 +359,27 @@ void display() {
     //vec3 cameraDirection = normalize(cameraPos - cameraTarget);
     //vec3 cameraRight = normalize(cross(cameraUp, cameraDirection));
 
-	glfwGetFramebufferSize(window, &width, &height);
-	ratio = width / (float)height;
+    glfwGetFramebufferSize(window, &width, &height);
+    ratio = width / (float)height;
 
-	glViewport(0, 0, width, height);
-	glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glViewport(0, 0, width, height);
+    glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	mat4 modelMatrix(1.0f); // Identity matrix
+    mat4 modelMatrix(1.0f); // Identity matrix
 
-	viewMatrix = lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    viewMatrix = lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
-	// Set up a projection matrix
-	float fovy = radians(45.0f);
-	float nearPlane = 0.01f;
-	float farPlane = 300.0f;
+    // Set up a projection matrix
+    float fovy = radians(45.0f);
+    float nearPlane = 0.01f;
+    float farPlane = 300.0f;
 
-	modelViewMatrix = viewMatrix * modelMatrix;
-	projectionMatrix = perspective(fovy, ratio, nearPlane, farPlane);
-	modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
+    modelViewMatrix = viewMatrix * modelMatrix;
+    projectionMatrix = perspective(fovy, ratio, nearPlane, farPlane);
+    modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
 
-	vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
+    vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
 
     //modelMatrix = translate(modelMatrix, vec3(0.0f, 0.0f, 0.0f));
     //modelMatrix = scale(modelMatrix, vec3(5.0f, 5.0f, 5.0f));
@@ -392,7 +393,7 @@ void display() {
     // Draw cube
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	glBindVertexArray(simpleVao);
+    glBindVertexArray(simpleVao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
     int size;
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
@@ -427,10 +428,10 @@ void display() {
 
     // GUI
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	
-	if(doPyshics)
-		physics::simulate(&box->particles, &box->constraints, ImGui::GetIO().DeltaTime, iterations);
-	particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
+
+    if(doPyshics)
+        physics::simulate(&box->particles, &box->constraints, ImGui::GetIO().DeltaTime, iterations);
+    particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
 
     ImGui::Render();
 
@@ -456,21 +457,22 @@ void gui()
     if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
-	ImGui::Checkbox("Physics", &doPyshics);
-	ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
-	ImGui::SliderInt("Particles x", &numparticles.x, 1, 10);
-	ImGui::SliderInt("Particles y", &numparticles.y, 1, 10);
-	ImGui::SliderInt("Particles z", &numparticles.z, 1, 10);
-	ImGui::SliderFloat("Dimension x", &dimension.x, 0, 10);
-	ImGui::SliderFloat("Dimension y", &dimension.y, 0, 10);
-	ImGui::SliderFloat("Dimension z", &dimension.z, 0, 10);
-	ImGui::SliderFloat("Stiffness", &stiffness, 0, 1);
-	ImGui::SliderFloat("Mass (averaged over particles)", &mass, 0, 10000, "%.3f", 10.f);
-	if (ImGui::Button("reset"))
-		setupBox(dimension, vec3(0.f, 0.f, 0.f), mass, numparticles, stiffness);
+    ImGui::Checkbox("Physics", &doPyshics);
+    ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
+    ImGui::SliderFloat("Over-relax-constant", &overRelaxConst, 1, 5);
+    ImGui::SliderInt("Particles x", &numparticles.x, 1, 10);
+    ImGui::SliderInt("Particles y", &numparticles.y, 1, 10);
+    ImGui::SliderInt("Particles z", &numparticles.z, 1, 10);
+    ImGui::SliderFloat("Dimension x", &dimension.x, 0, 10);
+    ImGui::SliderFloat("Dimension y", &dimension.y, 0, 10);
+    ImGui::SliderFloat("Dimension z", &dimension.z, 0, 10);
+    ImGui::SliderFloat("Stiffness", &stiffness, 0, 1);
+    ImGui::SliderFloat("Mass (averaged over particles)", &mass, 0, 10000, "%.3f", 10.f);
+    if (ImGui::Button("reset"))
+        setupBox(dimension, vec3(0.f, 0.f, 0.f), mass, numparticles, stiffness);
     ImGui::End();
 
-	// Remove when all group members feel comfortable with how GUI works and what it can provide
+    // Remove when all group members feel comfortable with how GUI works and what it can provide
     // Demo window
     if (show_demo_window)
     {
@@ -480,14 +482,14 @@ void gui()
 }
 
 int main(void) {
-	initGL();
-	setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5), stiffness);
+    initGL();
+    setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5), stiffness);
 
-	if (GLAD_GL_VERSION_4_3) {
-		/* We support at least OpenGL version 4.3 */
-	}
+    if (GLAD_GL_VERSION_4_3) {
+        /* We support at least OpenGL version 4.3 */
+    }
 
-	double startTime = glfwGetTime();
+    double startTime = glfwGetTime();
 
     while (!glfwWindowShouldClose(window))
     {

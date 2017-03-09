@@ -3,7 +3,7 @@
 #include <glm/geometric.hpp>
 #include <stdio.h>
 #include "Constraint.h"
-const float overRelaxConst = 1.5f;
+extern float overRelaxConst;
 
 namespace physics {
 
@@ -47,8 +47,6 @@ namespace physics {
                 { 
                     for (std::vector<Particle*>::iterator p = c->particles.begin(); p != c->particles.end(); p++)
                     {
-                        // delta p_i = -w_i * s * grad_{p_i} C(p) * stiffness correction 
-                        // (*p)->pPos -= (*p)->invmass * c->evaluateScaleFactor() * c->evaluateGradient(p) * (1 - pow(1 - c->stiffness, 1/(float)i));
                         (*p)->pPos -= (*p)->invmass * c->evaluateScaleFactor() * c->evaluateGradient(p) * (1 - pow(1 - c->stiffness, 1/(float)i)) * overRelaxConst / (float)(*p)->numBoundConstraints;
                     }
                 }

@@ -4,8 +4,6 @@
 #include <math.h>
 #include <float.h>
 #include <cfloat>
-#include <iostream> // used for debugging purposes
-
 
 Box::Box()
 {
@@ -90,28 +88,8 @@ Box *make_box(BoxConfig * const config) {
                 box->constraints.push_back(c);
                 box->particles[i].numBoundConstraints += 1;
                 box->particles[j].numBoundConstraints += 1;
-                // for debugging
-                /*
-                   std::cout << i << " -- " << box->particles[i].numBoundConstraints << std::endl;
-                   std::cout << j << " -- " << box->particles[j].numBoundConstraints << std::endl;
-                   std::cout << "particle: " << i << " posX: " << box->particles[i].pos.x << std::endl;
-                   std::cout << "particle: " << i << " posY: " << box->particles[i].pos.y << std::endl;
-                   std::cout << "particle: " << i << " posZ: " << box->particles[i].pos.z << std::endl;
-                   std::cout << "particle: " << j << " posX: " << box->particles[j].pos.x << std::endl;
-                   std::cout << "particle: " << j << " posY: " << box->particles[j].pos.y << std::endl;
-                   std::cout << "particle: " << j << " posZ: " << box->particles[j].pos.z << std::endl;
-                   */
             }
         }
     }
-    std::cout  << "numParticles: " << box->particles.size() << std::endl;
-    // for debugging
-    /*
-       for (int i = 0; i < box->particles.size(); ++i) {
-    //std::cout << "p: " << i << "\nposX: " << box->particles[i].pos.x << "\nposY: " << box->particles[i].pos.y << "\nposZ: " << box->particles[i].pos.z << std::endl;
-    //std::cout << "p: " << i << " numCons: " << box->particles[i].numBoundConstraints << std::endl;
-    }
-    */
-
     return box;
 }
