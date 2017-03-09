@@ -16,7 +16,9 @@
 #include "physics.h"
 #include "particles/ParticleRenderer.h"
 #include "particles/Box.h"
-#include "DistanceConstraint.h"
+#include "constraints/DistanceConstraint.h"
+
+#include "constraints/visualizeConstraint.h"
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
@@ -258,6 +260,8 @@ void initGL() {
 	glfwSetScrollCallback(window, scrollCallback);    
 	glfwSetMouseButtonCallback(window, mouseButtonCallback);
 
+	// Constraint visualization setup
+	visualization::initialize();
 
     // Shader setup
     simpleShader = glHelper::loadShader(VERT_SHADER_PATH, FRAG_SHADER_PATH);
@@ -395,11 +399,11 @@ void display() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	glBindVertexArray(simpleVao);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
     int size;
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
     glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0); //sizeof(GLushort),
-
+	glBindVertexArray(0);
     /*
     // Draw two cubes
     for(GLuint i = 0; i < 2; i++) {
@@ -430,8 +434,11 @@ void display() {
     // GUI
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	
-	if(doPyshics)
+	if (doPyshics)
 		physics::simulate(&box->particles, &box->constraints, ImGui::GetIO().DeltaTime, iterations);
+
+	visualization::drawConstraints(&box->constraints, modelViewProjectionMatrix);
+
 	particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
 
     ImGui::Render();
@@ -458,6 +465,7 @@ void gui()
     if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
+	visualization::gui();
 	ImGui::Checkbox("Physics", &doPyshics);
 	ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
 	ImGui::SliderInt("Particles x", &numparticles.x, 1, 10);

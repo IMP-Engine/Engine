@@ -38,7 +38,7 @@ void ParticleRenderer::init()
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(phaseAttribLocation, 1, GL_INT, GL_FALSE, sizeof(Particle), (void *)(sizeof(Particle) - sizeof(int)));
 
-
+	glBindVertexArray(0);
 }
 void ParticleRenderer::render(mat4 &modelViewProjectionMatrix, mat4 &modelViewMatrix, vec3 &viewSpaceLightPosition, mat4 &projectionMatrix)
 {
@@ -55,6 +55,7 @@ void ParticleRenderer::render(mat4 &modelViewProjectionMatrix, mat4 &modelViewMa
 
 	glDrawArrays(GL_POINTS, 0, particles->size());
 
+	glBindVertexArray(0);
 	glUseProgram(0);
 
 }

@@ -1,5 +1,5 @@
 #include "Box.h"
-#include "../DistanceConstraint.h"
+#include "../constraints/DistanceConstraint.h"
 #include <algorithm>
 #include <math.h>
 #include <float.h>

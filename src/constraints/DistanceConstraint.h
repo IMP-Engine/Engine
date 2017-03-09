@@ -1,6 +1,6 @@
 #pragma once
 #include "Constraint.h"
-#include "particles/Particle.h"
+#include "../particles/Particle.h"
 #include <glm/geometric.hpp>
 
 class DistanceConstraint :
