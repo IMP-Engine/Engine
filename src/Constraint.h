@@ -29,7 +29,7 @@ public:
 	 * Is the constraint fulfilled?
 	 * The constraint will not be fulfilled even if the constraint evaluates to zero.
 	 */
-	virtual bool evaluate() = 0;
+	virtual float evaluate() = 0;
 	
 	/*
 	 * C(P1,...) / Sum_j w_j |grad_j C(P1,...)|^2 
@@ -44,5 +44,9 @@ public:
 	 * consult derived constraint for more information.
 	 */
 	virtual vec3 evaluateGradient(std::vector<Particle*>::iterator p) = 0;
-};
 
+	/*
+	 * Threshold for when constraint breaks.
+	 */
+	float threshold;
+};
