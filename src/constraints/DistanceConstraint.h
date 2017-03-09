@@ -9,19 +9,20 @@ class DistanceConstraint :
 public:
 	float distance;
 
-	DistanceConstraint(Particle* p1, Particle* p2, float stiffness, float distance, bool equality = true) {
+	DistanceConstraint(Particle* p1, Particle* p2, float stiffness, float threshold, float distance, bool equality = true) {
 		this->particles.push_back(p1);
 		this->particles.push_back(p2);
 		this->stiffness = stiffness;
 		this->distance = distance;
 		this->equality = equality;
+		this->threshold = threshold;
 	}
 
-	bool evaluate() {
+	float evaluate() {
 		vec3 p1 = this->particles[0]->pPos;
 		vec3 p2 = this->particles[1]->pPos;
 		
-		return equality || length(p1 - p2) - distance < 0;
+		return length(p1 - p2) - distance;
 	}
 
 	float evaluateScaleFactor() {

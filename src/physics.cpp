@@ -3,6 +3,8 @@
 #include <glm/geometric.hpp>
 #include <stdio.h>
 #include "constraints/Constraint.h"
+#include <algorithm>
+
 
 namespace physics {
 
@@ -35,6 +37,10 @@ void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constr
 		// ******************************************************************************************************************
 	}
 
+	// Breakable constraints
+	(*constraints).erase(std::remove_if((*constraints).begin(), (*constraints).end(),
+		[](Constraint *c) { return (c->evaluate() > c->threshold); }), (*constraints).end());
+
 	/* 
 	 * Stationary iterative linear solver - Gauss-Seidel 
 	 */
@@ -42,7 +48,7 @@ void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constr
 	{
 		for (Constraint* c : *constraints)
 		{
-			if (c->evaluate())
+			if (c->equality || c->evaluate() < 0)
 			{ 
 				for (std::vector<Particle*>::iterator p = c->particles.begin(); p != c->particles.end(); p++)
 				{
@@ -76,8 +82,6 @@ void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constr
 			(*particles)[i].velocity.x *= 0.4;
 		}
 	}
-		// Update velocities according to friction and restituition coefficients
-		/* Skip this for now */
 }
 
 			

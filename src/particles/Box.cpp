@@ -61,16 +61,17 @@ Box *make_box(BoxConfig * const config) {
 	// Create constraints
 	std::vector<std::pair<int, int>> con;
 	float stiffness = config->stiffness;
+	float distanceThreshold = config->distanceThreshold;
 	for (int i = 0; i < box->particles.size(); i++) {
 		for (int j = 0; j < box->particles.size(); j++) {
-			if (j != i && glm::distance(box->particles[i].pos, box->particles[j].pos) < FLT_EPSILON+sqrt(dx*dx + dy*dy + dz*dz) 
+			if (j != i && glm::distance(box->particles[i].pos, box->particles[j].pos) <= sqrt(dx*dx + dy*dy + dz*dz) 
 				&& std::find(con.begin(), con.end(), std::pair<int,int>(j,i)) == con.end())
 			{
 				con.push_back(std::pair<int, int>(i, j));
 				Constraint* c = new DistanceConstraint(
 					&box->particles[i],
 					&box->particles[j],
-					stiffness, glm::distance(box->particles[i].pos, box->particles[j].pos));
+					stiffness, distanceThreshold, glm::distance(box->particles[i].pos, box->particles[j].pos));
 				box->constraints.push_back(c);
 			}
 		}
