@@ -18,7 +18,7 @@
 #include "particles/Box.h"
 #include "constraints/DistanceConstraint.h"
 
-#include "constraints\visualizeConstraint.h"
+#include "constraints/visualizeConstraint.h"
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
