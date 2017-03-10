@@ -313,9 +313,10 @@ void initGL() {
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
-    glEnable(GL_POINT_SPRITE);
-    glPointSize(0.1f);
-    //glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_LOWER_LEFT); // Not sure if needed, keeping meanwhile
+	glEnable(GL_POINT_SPRITE);
+  //glPointSize(10.0f);
+	//glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_LOWER_LEFT); // Not sure if needed, keeping meanwhile
+
 
     // Not sure which one to use, keeping both meanwhile
     glEnable(GL_PROGRAM_POINT_SIZE);
