@@ -43,7 +43,7 @@ using namespace std;
 
 // Application
 GLFWwindow* window;
-ImVec4 clear_color = ImColor(164, 164, 164);;
+ImVec4 clear_color = ImColor(255, 255, 255);;
 bool vsync = true;
 const GLuint WIDTH = 1280, HEIGHT = 720;
 
@@ -87,6 +87,7 @@ GLuint simpleVao, particleVao;
 bool doPyshics = false;
 int iterations = 5;
 bool showPerformance = false;
+float pSleeping = 0.001;
 float overRelaxConst = 1.0f;
 
 
@@ -315,9 +316,10 @@ void initGL() {
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
-    glEnable(GL_POINT_SPRITE);
-    glPointSize(0.1f);
-    //glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_LOWER_LEFT); // Not sure if needed, keeping meanwhile
+	glEnable(GL_POINT_SPRITE);
+  //glPointSize(10.0f);
+	//glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_LOWER_LEFT); // Not sure if needed, keeping meanwhile
+
 
     // Not sure which one to use, keeping both meanwhile
     glEnable(GL_PROGRAM_POINT_SIZE);
@@ -456,10 +458,13 @@ void gui()
 	if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
+	  if (ImGui::Button("reset"))
+		  setupBox(dimension, vec3(0.f, 0.f, 0.f), mass, numparticles, stiffness);
     visualization::gui();
     ImGui::Checkbox("Physics", &doPyshics);
     ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
     ImGui::SliderFloat("Over-relax-constant", &overRelaxConst, 1, 5);
+    ImGui::SliderFloat("Particle Sleeping (squared)", &pSleeping, 0, 1, "%.9f", 10.f);
     ImGui::SliderInt("Particles x", &numparticles.x, 1, 10);
     ImGui::SliderInt("Particles y", &numparticles.y, 1, 10);
     ImGui::SliderInt("Particles z", &numparticles.z, 1, 10);

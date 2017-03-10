@@ -1,12 +1,14 @@
 #include "physics.h"
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
+#include <glm/gtx/norm.hpp>
 #include <stdio.h>
 #include "constraints/Constraint.h"
 #include <algorithm>
 #include "performance.h"
 
 extern float overRelaxConst;
+extern float pSleeping;
 
 namespace physics {
 
@@ -40,7 +42,23 @@ void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constr
         }
 
         // Breakable constraints
-        (*constraints).erase(std::remove_if((*constraints).begin(), (*constraints).end(), [](Constraint *c) { return (c->evaluate() > c->threshold); }), (*constraints).end());
+        (*constraints).erase(
+                std::remove_if(
+                    (*constraints).begin(), 
+                    (*constraints).end(),
+                    [](Constraint *c) {
+                    //return (c->evaluate() > c->threshold);
+                    if (c->evaluate() > c->threshold)
+                    {
+                    // Minska constraints i c
+                    for (unsigned int i = 0; i < c->particles.size(); i++) {
+                    c->particles[i]->numBoundConstraints--;
+                    }
+                    return true;
+                    } else { return false; }
+                    }),
+                (*constraints).end()
+                );
 
         /* 
          * Stationary iterative linear solver - Gauss-Seidel 
@@ -68,7 +86,7 @@ void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constr
              */
             (*particles)[i].velocity = ((*particles)[i].pPos - (*particles)[i].pos) / dt;
             // rough attempt at particle sleeping implementation in order to make particles stay in one place - most likely needs proper friction to work
-            if (glm::length((*particles)[i].pos - (*particles)[i].pPos) > 0.0001)
+            if (glm::length2((*particles)[i].pos - (*particles)[i].pPos) > pSleeping)
             {
                 (*particles)[i].pos = (*particles)[i].pPos;
             }

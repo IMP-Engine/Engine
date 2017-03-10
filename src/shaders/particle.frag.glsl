@@ -1,8 +1,9 @@
 #version 430
+#define M_PI 3.14159265358979323846264338327950288 /* pi */
 
 in vec2 gl_PointCoord;
 
-in vec3 color;
+flat in vec3 color;
 flat in vec3 centerPos;
 flat in float particleSize;
 out vec4 outColor;
@@ -87,12 +88,17 @@ bool sphereIntersect(in vec3 center, in float radius, inout Ray r, out vec3 posi
 
 
 void main() {
-	vec2 pointCoord = gl_PointCoord - vec2(0.5);
+	// Get fragments 2D-coordinate on point in [-1, 1]
+	vec2 pointCoord = vec2(2*(gl_PointCoord.x-0.5), 2*(-gl_PointCoord.y+0.5));
+	// Get distance from middle of point to fragment
 	float length = length(pointCoord);
-	if (length > 0.5) discard; // Keep the particle round
+	if (length > 1.0) discard; // Keep the particle round
 
-	vec3 normal = normalize(vec3(pointCoord, 0.5-length));
-	vec3 fragPos = centerPos + (particleSize) * vec3(normal.x, -normal.y, -normal.z);
+	// Get normal of fragment on the imagined sphere
+	vec3 normal = normalize(vec3(pointCoord, cos(length * M_PI / 2)));
+	// Get fragment position in viewspace
+	vec3 fragPos = centerPos + (particleSize/300) * vec3(normal.x, -normal.y, -normal.z);
+	// Calculate direct diffuse lighting
 	float diffuse = max(0.0, dot(normalize(viewSpaceLightPos - fragPos), normal));
 
 	outColor = vec4((0.2 + diffuse) * color, 1.0);
