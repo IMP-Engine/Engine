@@ -85,6 +85,7 @@ GLuint simpleVao, particleVao;
 // Simulation variables and parameters
 bool doPyshics = false;
 int iterations = 5;
+float pSleeping = 0.001;
 float overRelaxConst = 1.0f;
 
 // Box parameters
@@ -441,10 +442,13 @@ void gui()
     if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
+	  if (ImGui::Button("reset"))
+		  setupBox(dimension, vec3(0.f, 0.f, 0.f), mass, numparticles, stiffness);
     visualization::gui();
     ImGui::Checkbox("Physics", &doPyshics);
     ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
     ImGui::SliderFloat("Over-relax-constant", &overRelaxConst, 1, 5);
+    ImGui::SliderFloat("Particle Sleeping (squared)", &pSleeping, 0, 1, "%.9f", 10.f);
     ImGui::SliderInt("Particles x", &numparticles.x, 1, 10);
     ImGui::SliderInt("Particles y", &numparticles.y, 1, 10);
     ImGui::SliderInt("Particles z", &numparticles.z, 1, 10);

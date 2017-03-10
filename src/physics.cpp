@@ -1,10 +1,13 @@
 #include "physics.h"
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
+#include <glm/gtx/norm.hpp>
 #include <stdio.h>
 extern float overRelaxConst;
 #include "constraints/Constraint.h"
 #include <algorithm>
+
+extern float pSleeping;
 
 namespace physics {
 
@@ -82,7 +85,7 @@ namespace physics {
              */
             (*particles)[i].velocity = ((*particles)[i].pPos - (*particles)[i].pos) / dt;
             // rough attempt at particle sleeping implementation in order to make particles stay in one place - most likely needs proper friction to work
-            if (glm::length((*particles)[i].pos - (*particles)[i].pPos) > 0.0001)
+            if (glm::length2((*particles)[i].pos - (*particles)[i].pPos) > pSleeping)
             {
                 (*particles)[i].pos = (*particles)[i].pPos;
             }
