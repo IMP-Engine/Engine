@@ -104,7 +104,7 @@ void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constr
         }
         // Update velocities according to friction and restituition coefficients
         /* Skip this for now */
-
+		performance::stopTimer(id);
     }
-    performance::stopTimer(id);
+
 }

@@ -458,9 +458,7 @@ void gui()
 	if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
-	  if (ImGui::Button("reset"))
-		  setupBox(dimension, vec3(0.f, 0.f, 0.f), mass, numparticles, stiffness);
-    visualization::gui();
+	visualization::gui();
     ImGui::Checkbox("Physics", &doPyshics);
     ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
     ImGui::SliderFloat("Over-relax-constant", &overRelaxConst, 1, 5);
