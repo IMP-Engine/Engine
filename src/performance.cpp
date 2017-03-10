@@ -20,9 +20,9 @@ struct gList : std::vector<uint_fast64_t>
 {
 	int operator[] (int idx) {
 		if (this->size() > idx)
-			return (*(this->_Myfirst() + idx));
+			return (*(this->begin() + idx));
 		else
-			return (*(this->_Myfirst() + this->size() - 1));
+			return (*(this->end()));
 	}
 };
 
