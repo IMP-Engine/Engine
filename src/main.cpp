@@ -42,7 +42,7 @@ using namespace std;
 
 // Application
 GLFWwindow* window;
-ImVec4 clear_color = ImColor(164, 164, 164);;
+ImVec4 clear_color = ImColor(255, 255, 255);;
 bool vsync = true;
 const GLuint WIDTH = 1280, HEIGHT = 720;
 

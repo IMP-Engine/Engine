@@ -14,7 +14,7 @@ flat out float particleSize;
 void main() {
 	particleSize = 0.1;
 	gl_Position = modelViewProjectionMatrix * vec4(position, 1.0);
-    color = vec3(0,0,1);
+    color = vec3(0.89, 0.09, 0.05);
 
 	vec4 fragPos = modelViewMatrix * vec4(position.x, position.y, 0.5, 1);
 	vec4 projCorner = projectionMatrix * vec4(particleSize, particleSize, fragPos.z, fragPos.w);
