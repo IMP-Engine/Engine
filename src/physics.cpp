@@ -38,7 +38,23 @@ namespace physics {
         }
 
         // Breakable constraints
-        (*constraints).erase(std::remove_if((*constraints).begin(), (*constraints).end(), [](Constraint *c) { return (c->evaluate() > c->threshold); }), (*constraints).end());
+        (*constraints).erase(
+                std::remove_if(
+                    (*constraints).begin(), 
+                    (*constraints).end(),
+                    [](Constraint *c) {
+                    //return (c->evaluate() > c->threshold);
+                    if (c->evaluate() > c->threshold)
+                    {
+                    // Minska constraints i c
+                    for (unsigned int i = 0; i < c->particles.size(); i++) {
+                    c->particles[i]->numBoundConstraints--;
+                    }
+                    return true;
+                    } else { return false; }
+                    }),
+                (*constraints).end()
+                );
 
         /* 
          * Stationary iterative linear solver - Gauss-Seidel 
