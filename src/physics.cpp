@@ -2,10 +2,11 @@
 #include <stdio.h>
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
+#include <glm/gtx/norm.hpp>
 #include <stdio.h>
-extern float overRelaxConst;
 #include "constraints/Constraint.h"
 #include <algorithm>
+#include "performance.h"
 
 
 
@@ -13,10 +14,18 @@ extern float overRelaxConst;
 #define WORLD_MIN vec3(-20.f,-20.f,-20.f)
 #define WORLD_MAX vec3( 20.f, 20.f, 20.f)
 #endif // !WORLD_MIN
+
+extern float overRelaxConst;
+extern float pSleeping;
+
 namespace physics {
 
 void simulate(std::vector<Particle> &particles, std::vector<Constraint*> &constraints, Scene *scene, float dt, int iterations)
 {
+
+
+    int id = performance::startTimer("Physics");
+
 	/* Based on 2007 PBD, NOT Unified Framework */
 
 	const float GRAVITY = 4.0f;
@@ -45,9 +54,28 @@ void simulate(std::vector<Particle> &particles, std::vector<Constraint*> &constr
 		// ******************************************************************************************************************
 	}
 
-
-    // Breakable constraints
-    constraints.erase(std::remove_if(constraints.begin(), constraints.end(), [](Constraint *c) { return (c->evaluate() > c->threshold); }), constraints.end());
+        // Breakable constraints
+        constraints.erase(
+                std::remove_if(
+                    constraints.begin(), 
+                    constraints.end(),
+                    [](Constraint *c) {
+                        //return (c->evaluate() > c->threshold);
+                        if (c->evaluate() > c->threshold)
+                        {
+                            // Minska constraints i c
+                            for (unsigned int i = 0; i < c->particles.size(); i++) {
+                                c->particles[i]->numBoundConstraints--;
+                            }
+                            return true;
+                        } 
+                        else 
+                        { 
+                            return false; 
+                        }
+                    }),
+                    constraints.end()
+                );
 
 
 	// For all particles i
@@ -78,9 +106,6 @@ void simulate(std::vector<Particle> &particles, std::vector<Constraint*> &constr
                 particles[j].pPos += isect.response;
             }
         }
-            
-
-
     }
 	/* 
 	 * Stationary iterative linear solver - Gauss-Seidel 
@@ -129,6 +154,7 @@ void simulate(std::vector<Particle> &particles, std::vector<Constraint*> &constr
 		// Update velocities according to friction and restituition coefficients
 		/* Skip this for now */
 	
+	performance::stopTimer(id);
 	
 }
 

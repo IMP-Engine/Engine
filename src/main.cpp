@@ -16,6 +16,7 @@
 #define WORLD_MIN vec3(-20.f,-20.f,-20.f)
 #define WORLD_MAX vec3( 20.f, 20.f, 20.f)
 
+#include "performance.h"
 #include "physics.h"
 #include "particles/ParticleRenderer.h"
 #include "particles/Box.h"
@@ -94,6 +95,8 @@ const vec3 lightPosition = vec3(50.0f);
 // Simulation variables and parameters
 bool doPyshics = false;
 int iterations = 5;
+bool showPerformance = false;
+float pSleeping = 0.001;
 float overRelaxConst = 1.0f;
 
 
@@ -282,6 +285,9 @@ void setupBox(vec3 dimension, vec3 centerpos, float totmass, ivec3 numParticles,
 }
 
 void display() {
+
+	int id = performance::startTimer("Reset and draw scene");
+
     float ratio;
     int width, height;
     mat4 viewMatrix, modelViewProjectionMatrix, modelViewMatrix, projectionMatrix;
@@ -315,16 +321,25 @@ void display() {
 
     scene->render(viewMatrix, projectionMatrix);
     
+	performance::stopTimer(id);
 	
     if (doPyshics)
     {
 		physics::simulate(particles, box1->constraints, scene, ImGui::GetIO().DeltaTime, iterations);
     }
 	
+    id = performance::startTimer("Render particles");
     particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
+	performance::stopTimer(id);
 
     visualization::drawConstraints(&box1->constraints, modelViewProjectionMatrix);
 
+
+
+	// Since we may want to measure performance of something that happens after the call to gui()
+	// we place this call as late as possible to allow for measuring more things
+	performance::gui(&showPerformance);
+    
     ImGui::Render();
 
     glfwSwapBuffers(window);
@@ -347,12 +362,14 @@ void gui()
     ImGui::ColorEdit3("clear color", (float*)&clear_color);
     ImGui::Checkbox("Vsync", &vsync);
     if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
+	if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
-    visualization::gui();
+	visualization::gui();
     ImGui::Checkbox("Physics", &doPyshics);
     ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
     ImGui::SliderFloat("Over-relax-constant", &overRelaxConst, 1, 5);
+    ImGui::SliderFloat("Particle Sleeping (squared)", &pSleeping, 0, 1, "%.9f", 10.f);
     ImGui::SliderInt("Particles x", &numparticles.x, 1, 10);
     ImGui::SliderInt("Particles y", &numparticles.y, 1, 10);
     ImGui::SliderInt("Particles z", &numparticles.z, 1, 10);
@@ -368,6 +385,7 @@ void gui()
     }
     ImGui::End();
 
+
     // Remove when all group members feel comfortable with how GUI works and what it can provide
     // Demo window
     if (show_demo_window)
@@ -381,8 +399,12 @@ int main(void) {
 
     scene = new Scene;
     particles.resize(200000);
+
+    performance::initialize();
+
     initGL();
     setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5), stiffness, distanceThreshold);
+
 
     if (GLAD_GL_VERSION_4_3) {
         /* We support at least OpenGL version 4.3 */
@@ -392,6 +414,8 @@ int main(void) {
 
     while (!glfwWindowShouldClose(window))
     {
+		int id = performance::startTimer("All but display()");
+
         // Calculate deltatime of current frame
         GLfloat currentFrame = (GLfloat)glfwGetTime();
         deltaTime = currentFrame - lastFrame;
@@ -404,7 +428,10 @@ int main(void) {
 
         gui();
 
+		performance::stopTimer(id);
+
         display();
+		performance::next();
     }
 
     // Cleanup
