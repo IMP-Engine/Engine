@@ -9,17 +9,6 @@ out vec4 outColor;
 
 uniform vec3 viewSpaceLightPos;
 
-struct Ray 
-{
-	vec3 o, d;
-	float maxt;
-} ray;
-
-float lengthSquared(in vec3 v) {
-	return dot(v,v);
-}
-
-
 void main() {
 	vec2 pointCoord = gl_PointCoord - vec2(0.5);
 	float length = length(pointCoord);

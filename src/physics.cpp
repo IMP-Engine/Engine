@@ -2,6 +2,10 @@
 #include <stdio.h>
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
+#include <stdio.h>
+extern float overRelaxConst;
+#include "constraints/Constraint.h"
+#include <algorithm>
 
 
 
@@ -41,16 +45,19 @@ void simulate(std::vector<Particle> &particles, std::vector<Constraint*> &constr
 		// ******************************************************************************************************************
 	}
 
+
+    // Breakable constraints
+    constraints.erase(std::remove_if(constraints.begin(), constraints.end(), [](Constraint *c) { return (c->evaluate() > c->threshold); }), constraints.end());
+
+
 	// For all particles i
 	// Generate collision constraints
 	/* Add constraints from collisions to already given list of constraints */
     for (unsigned int i = 0; i != particles.size(); i++)
     {
-            
         // Check collisions with scene
         for (std::vector<Triangle>::iterator t = scene->triangles.begin(); t != scene->triangles.end(); t++)
         {
-
             Intersection isect;
             if (intersect((*t), particles[i], PARTICLE_RADIUS,isect))
             {
@@ -62,7 +69,6 @@ void simulate(std::vector<Particle> &particles, std::vector<Constraint*> &constr
         for (unsigned int j = 0; j < i; j++) 
         {
             Intersection isect;
-            
             if (particles[i].phase != particles[j].phase && intersect(
                 particles[i].pPos, particles[i].invmass,
                 particles[j].pPos, particles[j].invmass,
@@ -82,7 +88,6 @@ void simulate(std::vector<Particle> &particles, std::vector<Constraint*> &constr
 
 	for (int i = 0; i < iterations; i++)
 	{
-
 		for (Constraint *c : constraints)
 		{
 			if (c->evaluate())
@@ -90,21 +95,11 @@ void simulate(std::vector<Particle> &particles, std::vector<Constraint*> &constr
 				for (std::vector<Particle*>::iterator p = c->particles.begin(); p != c->particles.end(); p++)
 				{
 					// delta p_i = -w_i * s * grad_{p_i} C(p) * stiffness correction 
-					(*p)->pPos -= (*p)->invmass * c->evaluateScaleFactor() * c->evaluateGradient(p) * (1 - pow(1 - c->stiffness, 1/(float)i));
-				}
+                    (*p)->pPos -= (*p)->invmass * c->evaluateScaleFactor() * c->evaluateGradient(p) * (1 - pow(1 - c->stiffness, 1 / (float)i)) * overRelaxConst / (float)(*p)->numBoundConstraints;
+                }
 			}
 		}
 	}
-
-
-
-
-
-
-
-	// For all particles i
-	// v_i = (x_i^* - x_i) / dt
-	// x_i = x_i^*
 
 	for (std::vector<glm::vec3>::size_type i = 0; i != particles.size(); i++) 
 	{
@@ -115,8 +110,11 @@ void simulate(std::vector<Particle> &particles, std::vector<Constraint*> &constr
 		*/
 		particles[i].velocity = (particles[i].pPos - particles[i].pos) / dt;
 		// rough attempt at particle sleeping implementation in order to make particles stay in one place - most likely needs proper friction to work
-		if (glm::length(particles[i].pos - particles[i].pPos) > 0.01)
+	
+        if (glm::length(particles[i].pos - particles[i].pPos) > 0.0001)
+        {
 			particles[i].pos = particles[i].pPos;
+        }
 		// ***************************************************************************************************************************
 
 		/*
@@ -134,5 +132,4 @@ void simulate(std::vector<Particle> &particles, std::vector<Constraint*> &constr
 	
 }
 
-			
 }

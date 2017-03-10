@@ -9,4 +9,5 @@ struct BoxConfig {
 	ivec3 numParticles;
 	int phase;
 	float stiffness;
+	float distanceThreshold;
 };

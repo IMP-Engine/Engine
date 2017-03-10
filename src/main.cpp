@@ -20,7 +20,9 @@
 #include "particles/ParticleRenderer.h"
 #include "particles/Box.h"
 #include "Scene.h"
-#include "DistanceConstraint.h"
+
+#include "constraints/DistanceConstraint.h"
+#include "constraints/visualizeConstraint.h"
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
@@ -32,8 +34,8 @@ using namespace glm;
 using namespace std;
 
 /*************************************************************************
-********************** Global variables **********************************
-**************************************************************************/
+ ********************** Global variables **********************************
+ **************************************************************************/
 
 // Global variables
 #define MAX_FOV 70.0f
@@ -42,7 +44,7 @@ using namespace std;
 
 // Application
 GLFWwindow* window;
-ImVec4 clear_color = ImColor(164, 164, 164);;
+ImVec4 clear_color = ImColor(255, 255, 255);;
 bool vsync = true;
 const GLuint WIDTH = 1280, HEIGHT = 720;
 
@@ -76,6 +78,7 @@ ivec3 numparticles = ivec3(3, 3, 3);
 vec3 dimension = vec3(1.f, 1.f, 1.f);
 float mass = 30.f;
 float stiffness = 0.5f;
+float distanceThreshold = 0.2f;
 
 // Scene
 Scene *scene;
@@ -91,6 +94,8 @@ const vec3 lightPosition = vec3(50.0f);
 // Simulation variables and parameters
 bool doPyshics = false;
 int iterations = 5;
+float overRelaxConst = 1.0f;
+
 
 
 static void errorCallback(int error, const char* description) {
@@ -139,7 +144,7 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-		cout << "Press." << endl;
+        cout << "Press." << endl;
         double x, y;
         glfwGetCursorPos(window, &x, &y);
         lastX = (GLfloat)x;
@@ -222,31 +227,33 @@ void initGL() {
 
     ImGui_ImplGlfwGL3_Init(window, true); 
 
-	// steal callback and call imgui in our callback
-	glfwSetKeyCallback(window, keyCallback);
-	glfwSetCursorPosCallback(window, mouseCallback);
-	glfwSetScrollCallback(window, scrollCallback);    
-	glfwSetMouseButtonCallback(window, mouseButtonCallback);
+    // steal callback and call imgui in our callback
+    glfwSetKeyCallback(window, keyCallback);
+    glfwSetCursorPosCallback(window, mouseCallback);
+    glfwSetScrollCallback(window, scrollCallback);    
+    glfwSetMouseButtonCallback(window, mouseButtonCallback);
+
+    // Constraint visualization setup
+    visualization::initialize();
 
     scene->init();
    
 
-	glEnable(GL_POINT_SPRITE);
-    glPointSize(0.1f);
-	//glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_LOWER_LEFT); // Not sure if needed, keeping meanwhile
+    glEnable(GL_POINT_SPRITE);
+    //glPointSize(10.1f);
+    //glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_LOWER_LEFT); // Not sure if needed, keeping meanwhile
 
-	// Not sure which one to use, keeping both meanwhile
-	glEnable(GL_PROGRAM_POINT_SIZE);
-	//glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    // Not sure which one to use, keeping both meanwhile
+    glEnable(GL_PROGRAM_POINT_SIZE);
+    //glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-	//particleRenderer->init();
 
 }
 
 /*
 * Creates a box with given parameters and hooks it up to rendering. Also makes sure that any old box is removed.
 */
-void setupBox(vec3 dimension, vec3 centerpos, float totmass, ivec3 numParticles, float stiffness)
+void setupBox(vec3 dimension, vec3 centerpos, float totmass, ivec3 numParticles, float stiffness, float distanceThreshold)
 {
     delete box1;
     delete box2;
@@ -261,18 +268,14 @@ void setupBox(vec3 dimension, vec3 centerpos, float totmass, ivec3 numParticles,
 	config.phase = 1;
 	config.numParticles = numParticles;
 	config.stiffness = stiffness;
+    config.distanceThreshold = distanceThreshold;
+
 	box1 = make_box(&config, particles);
     
     //config.center_pos += vec3(0.55f, 1.55f, 0.55f);
     //config.phase = 2;
 
     //box2 = make_box(&config, particles);
-
-
-
-    //particles.insert(particles.end(), box1->particles.begin(), box1->particles.end());
-    //particles.insert(particles.end(), box2->particles.begin(), box2->particles.end());
-
 
     particleRenderer = new ParticleRenderer(&particles);
     particleRenderer->init();
@@ -293,18 +296,18 @@ void display() {
 
 	mat4 modelMatrix(1.0f); // Identity matrix
 
-	viewMatrix = lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    viewMatrix = lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
-	// Set up a projection matrix
-	float fovy = radians(45.0f);
-	float nearPlane = 0.01f;
-	float farPlane = 300.0f;
+    // Set up a projection matrix
+    float fovy = radians(45.0f);
+    float nearPlane = 0.01f;
+    float farPlane = 300.0f;
 
-	modelViewMatrix = viewMatrix * modelMatrix;
-	projectionMatrix = perspective(fovy, ratio, nearPlane, farPlane);
-	modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
+    modelViewMatrix = viewMatrix * modelMatrix;
+    projectionMatrix = perspective(fovy, ratio, nearPlane, farPlane);
+    modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
 
-	vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
+    vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
 
     //modelMatrix = translate(modelMatrix, vec3(0.0f, 0.0f, 0.0f));
     //modelMatrix = scale(modelMatrix, vec3(5.0f, 5.0f, 5.0f));
@@ -313,9 +316,14 @@ void display() {
     scene->render(viewMatrix, projectionMatrix);
     
 	
-	if(doPyshics)
+    if (doPyshics)
+    {
 		physics::simulate(particles, box1->constraints, scene, ImGui::GetIO().DeltaTime, iterations);
-	particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
+    }
+	
+    particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
+
+    visualization::drawConstraints(&box1->constraints, modelViewProjectionMatrix);
 
     ImGui::Render();
 
@@ -341,21 +349,26 @@ void gui()
     if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
-	ImGui::Checkbox("Physics", &doPyshics);
-	ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
-	ImGui::SliderInt("Particles x", &numparticles.x, 1, 10);
-	ImGui::SliderInt("Particles y", &numparticles.y, 1, 10);
-	ImGui::SliderInt("Particles z", &numparticles.z, 1, 10);
-	ImGui::SliderFloat("Dimension x", &dimension.x, 0, 10);
-	ImGui::SliderFloat("Dimension y", &dimension.y, 0, 10);
-	ImGui::SliderFloat("Dimension z", &dimension.z, 0, 10);
-	ImGui::SliderFloat("Stiffness", &stiffness, 0, 1);
-	ImGui::SliderFloat("Mass (averaged over particles)", &mass, 0, 10000, "%.3f", 10.f);
-	if (ImGui::Button("reset"))
-		setupBox(dimension, vec3(0.f, 0.f, 0.f), mass, numparticles, stiffness);
+    visualization::gui();
+    ImGui::Checkbox("Physics", &doPyshics);
+    ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
+    ImGui::SliderFloat("Over-relax-constant", &overRelaxConst, 1, 5);
+    ImGui::SliderInt("Particles x", &numparticles.x, 1, 10);
+    ImGui::SliderInt("Particles y", &numparticles.y, 1, 10);
+    ImGui::SliderInt("Particles z", &numparticles.z, 1, 10);
+    ImGui::SliderFloat("Dimension x", &dimension.x, 0, 10);
+    ImGui::SliderFloat("Dimension y", &dimension.y, 0, 10);
+    ImGui::SliderFloat("Dimension z", &dimension.z, 0, 10);
+    ImGui::SliderFloat("Stiffness", &stiffness, 0, 1);
+    ImGui::SliderFloat("Mass (averaged over particles)", &mass, 0, 10000, "%.3f", 10.f);
+    ImGui::SliderFloat("Distance threshold", &distanceThreshold, 0, 1);
+    if (ImGui::Button("reset"))
+    {
+        setupBox(dimension, vec3(0.f, 0.f, 0.f), mass, numparticles, stiffness, distanceThreshold);
+    }
     ImGui::End();
 
-	// Remove when all group members feel comfortable with how GUI works and what it can provide
+    // Remove when all group members feel comfortable with how GUI works and what it can provide
     // Demo window
     if (show_demo_window)
     {
@@ -367,16 +380,15 @@ void gui()
 int main(void) {
 
     scene = new Scene;
-    particles.resize(100000);
+    particles.resize(200000);
     initGL();
+    setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5), stiffness, distanceThreshold);
 
-    setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, ivec3(5, 5, 5), stiffness);
+    if (GLAD_GL_VERSION_4_3) {
+        /* We support at least OpenGL version 4.3 */
+    }
 
-	if (GLAD_GL_VERSION_4_3) {
-		/* We support at least OpenGL version 4.3 */
-	}
-
-	double startTime = glfwGetTime();
+    double startTime = glfwGetTime();
 
     while (!glfwWindowShouldClose(window))
     {

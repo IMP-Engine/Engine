@@ -3,7 +3,7 @@
 #include <vector>
 #include "BoxConfig.h"
 #include "Particle.h"
-#include "../Constraint.h"
+#include "../constraints/Constraint.h"
 
 class Box
 {

@@ -104,9 +104,9 @@ bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isec
         return true;
     }
 
-    float t = (dot(BA, p.pPos) - dot(BA, A)) / dotBABA;
-    vec3 Q = p.pPos - A+t*BA;
-    float d2 = dot(Q, Q);
+    t = (dot(BA, p.pPos) - dot(BA, A)) / dotBABA;
+    Q = p.pPos - A+t*BA;
+    d2 = dot(Q, Q);
 
     if (d2 < rr && (t >= 0 || t <= 1)) {
         isect.response = sqrt(d2) * normalize(Q - p.pPos);
@@ -114,9 +114,9 @@ bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isec
     }
 
     vec3 CB = C - B;
-    float t = (dot(CB, p.pPos) - dot(CB, A)) / dot(CB,CB);
-    vec3 Q = p.pPos - B + t*CB;
-    float d2 = dot(Q, Q);
+    t = (dot(CB, p.pPos) - dot(CB, A)) / dot(CB,CB);
+    Q = p.pPos - B + t*CB;
+    d2 = dot(Q, Q);
 
     if (d2 < rr && (t >= 0 || t <= 1)) {
         isect.response = sqrt(d2) * normalize(Q - p.pPos);
