@@ -22,7 +22,7 @@ struct gList : std::vector<uint_fast64_t>
 		if (this->size() > idx)
 			return (*(this->begin() + idx));
 		else
-			return (*(this->end()));
+			return (*(this->end()-1));
 	}
 };
 
