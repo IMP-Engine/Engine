@@ -8,21 +8,19 @@ bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isec
     // Check intersection of target position and triangle
 
     // Translate problem so that the particle is at origo
-    vec3 A = triangle.v0 - p.pPos;
-    vec3 B = triangle.v1 - p.pPos;
-    vec3 C = triangle.v2 - p.pPos;
+    vec3 A = triangle.v0 - triangle.v1;
+    vec3 B = triangle.v0 - triangle.v2;
+    vec3 C = triangle.v1 - triangle.v2;
     vec3 CA = C - A;
     vec3 BA = B - A;
     /*
      * Step 1: Check if particle intesect with plane.
      */
     float rr = radius * radius;
-    vec3 normal = cross(BA, CA);
-    float dist = dot(A, normal);
-    float e = dot(normal, normal);
-    normal /= sqrt(e);
+    float dist = dot(A, triangle.normal);
+
     // Always end early.
-    if (dist * dist > rr * e) {
+    if (dist * dist > rr) {
         return false;
     }
 
@@ -35,8 +33,8 @@ bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isec
 
     // First vertex
     if (aa < rr) {
-        float distance = dot(A, normal);
-        isect.response = normal * (radius - distance);
+        float distance = dot(A, triangle.normal);
+        isect.response = triangle.normal * (radius - distance);
 
         return true;
     }
@@ -44,8 +42,8 @@ bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isec
     // Second vertex
     float bb = dot(B, B);
     if (bb < rr) {
-        float distance = dot(A, normal);
-        isect.response = normal * (radius - distance);
+        float distance = dot(A, triangle.normal);
+        isect.response = triangle.normal * (radius - distance);
 
         return true;
     }
@@ -54,7 +52,8 @@ bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isec
     float cc = dot(C, C);
     if (cc < rr) {
 
-        float distance = dot(A, normal);
+        float distance = dot(A, triangle.normal);
+        isect.response = triangle.normal * (radius - distance);
 
         return true;
     }
@@ -63,8 +62,8 @@ bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isec
     /**
      * Step 3: Check if projected center of particle is inside triangle
      */
-    float distance = dot(A, normal);
-    vec3 projetedPosition = p.pPos - distance * normal;
+    float distance = dot(A, triangle.normal);
+    vec3 projetedPosition = p.pPos - distance * triangle.normal;
 
     // Baycentric check
 
@@ -86,7 +85,7 @@ bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isec
     // Check if point is in triangle
     if ((u >= 0) && (v >= 0) && (u + v < 1)) {
 
-        isect.response = normal * (radius - distance);
+        isect.response = triangle.normal * (radius - distance);
         return true;
     }
 
