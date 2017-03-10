@@ -3,29 +3,30 @@
 #include <glm/geometric.hpp>
 #include <glm/gtx/norm.hpp>
 #include <stdio.h>
-extern float overRelaxConst;
 #include "constraints/Constraint.h"
 #include <algorithm>
+#include "performance.h"
 
+extern float overRelaxConst;
 extern float pSleeping;
 
 namespace physics {
 
-    void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constraints , float dt, int iterations)
-    {
-        /* Based on 2007 PBD, NOT Unified Framework */
-
-        const float GRAVITY = 4.0f;
-        for (std::vector<glm::vec3>::size_type i = 0; i != particles->size(); i++) {
-            /*
-             * For all particles i
-             * Apply forces			v_i = v_i + dt * f_ext(x_i)
-             * Damp velocities		-- Skip for now -- TODO --
-             * Predict position		x_i^* = x_i + dt * v_i
-             */
-            (*particles)[i].velocity = (*particles)[i].velocity - glm::vec3(0.f, dt * GRAVITY, 0.f) * (*particles)[i].invmass; // Gravity
-            (*particles)[i].pPos = (*particles)[i].pos + dt * (*particles)[i].velocity; // symplectic Euler 
-            // **************************************************************************
+void simulate(std::vector<Particle>* particles, std::vector<Constraint*>* constraints , float dt, int iterations)
+{
+	/* Based on 2007 PBD, NOT Unified Framework */
+	int id = performance::startTimer("Physics");
+	const float GRAVITY = 4.0f;
+	for (std::vector<glm::vec3>::size_type i = 0; i != particles->size(); i++) {
+		/*
+		* For all particles i
+		* Apply forces			v_i = v_i + dt * f_ext(x_i)
+		* Damp velocities		-- Skip for now -- TODO --
+		* Predict position		x_i^* = x_i + dt * v_i
+		*/
+		(*particles)[i].velocity = (*particles)[i].velocity - glm::vec3(0.f, dt * GRAVITY, 0.f) * (*particles)[i].invmass; // Gravity
+		(*particles)[i].pPos = (*particles)[i].pos + dt * (*particles)[i].velocity; // symplectic Euler 
+		// ******************************************************************************************************************
 
             // For all particles i
             // Generate collision constraints
@@ -103,6 +104,7 @@ namespace physics {
         }
         // Update velocities according to friction and restituition coefficients
         /* Skip this for now */
+		performance::stopTimer(id);
     }
 
 }
