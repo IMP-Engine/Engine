@@ -9,5 +9,5 @@ out vec3 color;
 
 void main() {
     gl_Position = modelViewProjectionMatrix * vec4(vPos, 1.0);
-    color = vec3(0.64, 0.64, 0.64); //vCol;
+    color = vec3(0, 0, 0); //vCol;
 }
