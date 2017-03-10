@@ -90,8 +90,8 @@ Box *make_box(BoxConfig * const config) {
                         glm::distance(box->particles[i].pos,
                             box->particles[j].pos));
                 box->constraints.push_back(c);
-                box->particles[i].numBoundConstraints += 1;
-                box->particles[j].numBoundConstraints += 1;
+                box->particles[i].numBoundConstraints++;
+                box->particles[j].numBoundConstraints++;
             }
         }
     }
