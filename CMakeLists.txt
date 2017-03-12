@@ -33,6 +33,9 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 # GLM
 include_directories(external/glm)
 
+#TBB
+add_subdirectory(external/tbb)
+
 # Main code
 add_subdirectory ( src )
 

@@ -7,6 +7,9 @@
 #include <iostream>
 #include "debug.h"
 
+// Example of path
+#include "../tbb/include/tbb/parallel_for.h"
+
 #include "performance.h"
 
 #include "glHelper.h"
