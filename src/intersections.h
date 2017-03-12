@@ -3,12 +3,7 @@
 
 #include "glm/glm.hpp"
 #include "glm/vec3.hpp"
-
-#define INTERSECTION_STRUCT 1
-struct Intersection {
-    glm::vec3 point;
-    glm::vec3 response;
-};
+#include "intersections/Intersection.h"
 
 
 #include "intersections/Triangle.h"

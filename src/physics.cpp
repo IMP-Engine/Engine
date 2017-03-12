@@ -89,7 +89,7 @@ void simulate(std::vector<Particle> &particles, std::vector<Constraint*> &constr
             Intersection isect;
             if (intersect((*t), particles[i], PARTICLE_RADIUS,isect))
             {
-                particles[i].pPos += isect.response;
+                particles[i].pPos += isect.responseGradient * isect.responseDistance;
             }
         }
 
@@ -103,7 +103,7 @@ void simulate(std::vector<Particle> &particles, std::vector<Constraint*> &constr
                 isect)
             ) {
                 particles[i].pPos += isect.point;
-                particles[j].pPos += isect.response;
+                particles[j].pPos += isect.responseGradient * isect.responseDistance;
             }
         }
     }

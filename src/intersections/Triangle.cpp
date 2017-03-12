@@ -7,17 +7,11 @@ bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isec
 
     // Check intersection of target position and triangle
 
-    // Translate problem so that the particle is at origo
-    vec3 A = triangle.v0 - triangle.v1;
-    vec3 B = triangle.v0 - triangle.v2;
-    vec3 C = triangle.v1 - triangle.v2;
-    vec3 CA = C - A;
-    vec3 BA = B - A;
     /*
      * Step 1: Check if particle intesect with plane.
      */
     float rr = radius * radius;
-    float dist = dot(A, triangle.normal);
+    float dist = dot(p.pPos, triangle.normal);
 
     // Always end early.
     if (dist * dist > rr) {
@@ -25,35 +19,42 @@ bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isec
     }
 
 
-    float aa = dot(A, A);
 
+
+    vec3 A = triangle.v1 - triangle.v0;
+    vec3 B = triangle.v2 - triangle.v0;
+    vec3 C = triangle.v2 - triangle.v1;
     /**
-     * Step 2: check if any of the triangle is inside the sphere.
+     * Step 2: check if any of the triangle vertexes is inside the sphere.
      */
 
     // First vertex
+	float aa = dot(triangle.v0 - p.pPos, triangle.v0 - p.pPos);
     if (aa < rr) {
         float distance = dot(A, triangle.normal);
-        isect.response = triangle.normal * (radius - distance);
+		isect.responseGradient = triangle.normal;
+		isect.responseDistance = (radius - distance);
 
         return true;
     }
 
     // Second vertex
-    float bb = dot(B, B);
+	float bb = dot(triangle.v1 - p.pPos, triangle.v1 - p.pPos);
     if (bb < rr) {
         float distance = dot(A, triangle.normal);
-        isect.response = triangle.normal * (radius - distance);
+		isect.responseGradient = triangle.normal;
+		isect.responseDistance = (radius - distance);
 
         return true;
     }
 
     // Third vertex
-    float cc = dot(C, C);
+	float cc = dot(triangle.v2 - p.pPos, triangle.v2 - p.pPos);
     if (cc < rr) {
 
         float distance = dot(A, triangle.normal);
-        isect.response = triangle.normal * (radius - distance);
+		isect.responseGradient = triangle.normal;
+		isect.responseDistance = (radius - distance);
 
         return true;
     }
@@ -71,6 +72,8 @@ bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isec
     vec3 pPrim = projetedPosition - A; // particle position relative to point A
 
     // Compute dot products
+    vec3 CA = C - A;
+    vec3 BA = B - A;
     float dotCACA = dot(CA, CA);
     float dotCABA = dot(CA, BA);
     float dotBABA = dot(BA, BA);
@@ -85,7 +88,8 @@ bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isec
     // Check if point is in triangle
     if ((u >= 0) && (v >= 0) && (u + v < 1)) {
 
-        isect.response = triangle.normal * (radius - distance);
+		isect.responseGradient = triangle.normal;
+		isect.responseDistance = (radius - distance);
         return true;
     }
 
@@ -94,31 +98,38 @@ bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isec
      * Step 4: Check if any edge intersect the sphere
      **/
 
-    float t = (dot(CA, p.pPos) - dot(CA, A)) / dotCACA;
-    vec3 Q = p.pPos - A + t*CA;
-    float d2 = dot(Q,Q);
 
-    if (d2 == rr && (t >= 0 || t <= 1)) {
-        isect.response = vec3(0);
+	// First edge, v0 to v1
+    float t = (dot(A, p.pPos) - dot(A, triangle.v0)) / dot(A,A);
+    vec3 Q = triangle.v0 + t*A;
+	vec3 Qp = p.pPos - Q;
+    float d2 = dot(Qp,Qp);
+
+    if (d2 < rr && (t >= 0 || t <= 1)) {
+		isect.responseDistance = sqrt(d2);
+		isect.responseGradient = normalize(Q - p.pPos);
         return true;
     }
 
-    t = (dot(BA, p.pPos) - dot(BA, A)) / dotBABA;
-    Q = p.pPos - A+t*BA;
-    d2 = dot(Q, Q);
+    t = (dot(B, p.pPos) - dot(B, triangle.v0)) / dot(B,B);
+    Q = triangle.v0 + t*B;
+	Qp = p.pPos - Q;
+    d2 = dot(Qp, Qp);
 
     if (d2 < rr && (t >= 0 || t <= 1)) {
-        isect.response = sqrt(d2) * normalize(Q - p.pPos);
+		isect.responseDistance = sqrt(d2);
+		isect.responseGradient = normalize(Q - p.pPos);
         return true;
     }
 
-    vec3 CB = C - B;
-    t = (dot(CB, p.pPos) - dot(CB, A)) / dot(CB,CB);
-    Q = p.pPos - B + t*CB;
-    d2 = dot(Q, Q);
+    t = (dot(C, p.pPos) - dot(C, triangle.v1)) / dot(C,C);
+    Q = triangle.v1 + t*C;
+	Qp = p.pPos - Q;
+    d2 = dot(Qp, Qp);
 
     if (d2 < rr && (t >= 0 || t <= 1)) {
-        isect.response = sqrt(d2) * normalize(Q - p.pPos);
+		isect.responseDistance = sqrt(d2);
+		isect.responseGradient = normalize(Q - p.pPos);
         return true;
     }
 

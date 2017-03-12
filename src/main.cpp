@@ -25,6 +25,10 @@
 #include "constraints/DistanceConstraint.h"
 #include "constraints/visualizeConstraint.h"
 
+#ifdef _DEBUG
+#include "intersections/tests.h"
+#endif // _DEB
+
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
 
@@ -396,6 +400,12 @@ void gui()
 }
 
 int main(void) {
+#ifdef _DEBUG
+
+    doIntersectionTests();
+
+#endif // _DE
+
 
     scene = new Scene;
     particles.resize(200000);
