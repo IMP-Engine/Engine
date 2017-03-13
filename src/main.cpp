@@ -492,8 +492,8 @@ void gui()
 }
 
 int main(void) {
-	  performance::initialize();
     initGL();
+    performance::initialize(); // Needs to be initialized after GL for GPU timekeeping
     setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5), stiffness, distanceThreshold);
 
 
@@ -520,8 +520,9 @@ int main(void) {
         gui();
 
 		performance::stopTimer(id);
-
+        performance::gpuTimerStart();
         display();
+        performance::gpuTimerStop();
 		performance::next();
     }
 

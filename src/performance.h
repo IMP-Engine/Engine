@@ -22,6 +22,17 @@ namespace performance {
 		Initializes the performance module
 	*/
 	void initialize(bool logTime = false);
+    
+    /*
+    Start a timer for the GPU
+    */
+    void gpuTimerStart();
+
+    /*
+    Stops the GPU timer and returns elapsed milliseconds.
+    */
+    void gpuTimerStop();
+
 
 	/*
 		Start a timer and returns the corresponding id number

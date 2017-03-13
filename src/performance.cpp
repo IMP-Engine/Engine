@@ -1,5 +1,6 @@
 #pragma once
 #include "performance.h"
+#include "glad/glad.h"
 
 #ifdef _WIN32
 
@@ -64,6 +65,35 @@ bool printTime = false;
 */
 std::vector< gList > graphData(90);
 
+
+// **** GPU Timekeeping ********
+//
+//const int QUERY_COUNTERS = 90;
+//
+//GLuint gpuQueryIDStart[2][QUERY_COUNTERS];
+//GLuint gpuQueryIDEnd[2][QUERY_COUNTERS];
+//
+//int g_gpu_timer_counter = 0;
+
+// Keep track of which entry is next to be started for gpu timekeeping.
+//uint_fast32_t gpuCurrent = 0;
+//
+
+GLint64 startTime, stopTime;
+GLuint queryID[2];
+
+/*
+Keep track of all time intervals for a given iteration.
+*/
+std::vector<ENTRY> gpuEntries;
+
+/*
+List for storing time data used to visualize GPU performance
+*/
+gList gpuGraphData;
+
+// **** END GPU Timekeeping ****
+
 /*
 	Maximum value of graphData, used to determine scaling of visualization graph	
 */
@@ -86,12 +116,18 @@ std::vector<ImColor> colors = {
 
 namespace performance {
 
-	// TODO GPU TIMERS
-
 	void initialize(bool logTime) {
 #ifdef _WIN32
 		QueryPerformanceFrequency(&frequency);
 #endif
+        
+        //// generate two queries
+        glGenQueries(2, queryID);
+        // dummy query to prevent OpenGL errors from popping out
+        glQueryCounter(queryID[0], GL_TIMESTAMP);
+        gpuGraphData.push_back(0.0f);
+
+
 		printTime = logTime;
 		for (uint32_t i = 0; i < graphData.size(); i++)
 		{
@@ -99,6 +135,52 @@ namespace performance {
 				graphData[i].push_back(0.0f);
 		}
 	}
+
+    // **** GPU TIMERS ****
+    void gpuTimerStart()
+    {
+        ENTRY entry;
+        getTime(&entry.start);
+        entry.name = "GPU";
+        gpuEntries.push_back(entry);
+
+        glQueryCounter(queryID[0], GL_TIMESTAMP);
+    }
+
+    void gpuTimerStop()
+    {
+        time_struct stop;
+        getTime(&stop);
+
+        glQueryCounter(queryID[1], GL_TIMESTAMP);
+        // wait until the results are available **** This halts the program until rendering is done. Might want to revise this.
+        unsigned int stopTimerAvailable = 0;
+        while (!stopTimerAvailable) {
+            glGetQueryObjectiv(queryID[1],
+                GL_QUERY_RESULT_AVAILABLE,
+                (GLint *)&stopTimerAvailable);
+        }
+
+        // get query results
+        glGetQueryObjectui64v(queryID[0], GL_QUERY_RESULT, (GLuint64 *)&startTime);
+        glGetQueryObjectui64v(queryID[1], GL_QUERY_RESULT, (GLuint64 *)&stopTime);
+
+#ifdef _WIN32
+        GLint64 ticks = stopTime - startTime;
+        ticks *= 1000000;
+        gpuEntries[gpuEntries.size()-1].elapsed = ticks;// / frequency.QuadPart; // Will always be most recent timer (so far)
+#elif __unix__
+        time_struct elapsed;
+        timespec_diff(&entries[id].start, &stop, &elapsed);
+        entries[id].elapsed = (elapsed.tv_sec / 1000000) + (elapsed.tv_nsec * 1000);
+#endif
+        
+
+        //printf("Time spent on the GPU: %f ms\n", (stopTime - startTime) / 1000000.0);
+    }
+
+    // **** END GPU TIMERS ****
+
 
 	uint_fast32_t startTimer(std::string name) {
 		ENTRY entry;
@@ -150,6 +232,15 @@ namespace performance {
 
 		current = 0;
 		entries.clear();
+
+        gpuGraphData.clear();
+        gpuGraphData.push_back(0.0f);
+        accum = 0;
+        for (auto entry : gpuEntries)
+        {
+            accum += entry.elapsed;
+            gpuGraphData.push_back(accum);
+        }
 	}
 
 	void gui(bool* show) {
@@ -184,10 +275,11 @@ namespace performance {
 		const ImVec2 p = ImGui::GetCursorScreenPos();
 		float wWidth = ImGui::CalcItemWidth();
 		ImVec2 spacing = ImVec2(2.0f, 20.0f);
-		float graphHeight = ImGui::GetContentRegionAvail().y - spacing.y;
+		float graphHeight = (ImGui::GetContentRegionAvail().y / 2) - spacing.y;
 		float dx = (wWidth) / graphData.size();
 		float x = p.x + spacing.x;
 		float y = p.y + spacing.y + graphHeight;
+        float gy = y + graphHeight + spacing.y;
 		float graphRightEdge = p.x + wWidth;
 		float radius = 10.f;
 		float middley = ImGui::GetContentRegionAvail().y / 2.f;
@@ -198,6 +290,7 @@ namespace performance {
 
 		// Graph frame
 		draw_list->AddRectFilled(ImVec2(x, y), ImVec2(x + (graphData.size() - 1) * dx, y - graphHeight), ImColor(164, 164, 164, 120));
+        draw_list->AddRectFilled(ImVec2(x, gy), ImVec2(x + (graphData.size() - 1) * dx, gy - graphHeight), ImColor(164, 164, 164, 120)); // GPU
 
 		// Draw graph
 		for (uint32_t i = 0; i < graphData.size() - 1; i++)
@@ -214,6 +307,20 @@ namespace performance {
 			}
 			x += dx;
 		}
+
+        int_fast64_t gpuMax = gpuGraphData[gpuGraphData.size()];
+       x = p.x + spacing.x;
+       for (uint32_t i = 0; i < graphData.size() - 1; i++)
+       {
+           draw_list->AddQuadFilled(
+               ImVec2(x, gy), //- (gpuGraphData[i] / (float)max)*graphHeight),
+               ImVec2(x + dx, gy), // -(gpuGraphData[i + 1] / (float)max)*graphHeight),
+               ImVec2(x + dx, gy - (gpuGraphData[i + 1] / (float)gpuMax)*graphHeight),
+               ImVec2(x, gy - (gpuGraphData[i] / (float)gpuMax)*graphHeight),
+               colors[3]
+           );
+            x += dx;
+        }
 		
 		// Text information
 		std::string yMax = "Max: " + std::to_string(max / 1000.0f).substr(0, 5) + " ms";
