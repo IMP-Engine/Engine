@@ -5,6 +5,8 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw_gl3.h"
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include "debug.h"
 
 // Example of path
@@ -93,6 +95,7 @@ bool showPerformance = false;
 float pSleeping = 0.001;
 float overRelaxConst = 1.0f;
 
+std::vector<Particle> particles;
 
 // Box parameters
 Box *box;
@@ -491,13 +494,64 @@ void gui()
     }
 }
 
+void loadSDF() {
+	std::ifstream loadFile("../../src/models/bunny.sdf");
+	if (!loadFile) 
+	{
+		std::cerr << "Error opening file" << std::endl;
+	}
+	std::string line;
+
+	int imax, jmax, kmax;
+	std::getline(loadFile, line);
+	std::stringstream data(line);
+	data >> imax >> jmax >> kmax;
+
+	vec3 origin;
+	std::getline(loadFile, line);
+	std::stringstream data2(line);
+	data2 >> origin.x >> origin.y >> origin.z;
+
+	float spacing;
+	std::getline(loadFile, line);
+	std::stringstream data3(line);
+	data3 >> spacing;
+	
+	float d = 1.5f*spacing / length(origin);
+
+	for (int i = 0; i < imax; i++)
+	{
+		for (int j = 0; j < jmax; j++)
+		{
+			for (int k = 0; k < kmax; k++)
+			{
+				std::getline(loadFile, line);
+				if (line.substr(0, 1) == std::string("-"))
+				{
+					std::stringstream data(line);
+					Particle p;
+					p.pos.x = k*d;
+					p.pos.y = i*d;
+					p.pos.z = j*d;
+					particles.push_back(p);
+				}
+			}
+		}
+	}
+
+	particleRenderer = new ParticleRenderer(&particles);
+	particleRenderer->init();
+}
+
 int main(void) {
-	  performance::initialize();
+	performance::initialize();
     initGL();
-    setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5), stiffness, distanceThreshold);
+    //setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5), stiffness, distanceThreshold);
 
 	// Test actually creating something from the repo
 	tbb::empty_task a();
+
+	loadSDF();
 
     if (GLAD_GL_VERSION_4_3) {
         /* We support at least OpenGL version 4.3 */
