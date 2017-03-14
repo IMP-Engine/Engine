@@ -14,7 +14,7 @@ void printVec(vec3 v) {
 
 void printResult(string test, Intersection i, bool result, Intersection expectedI, bool expectedResult) {
     cout << "Test: " << test << " ";
-    if (expectedResult == result) {
+    if (expectedResult == result && i == expectedI) {
         cout << "passed!" << endl;
     } else {
         cout << "failed!" << endl;
@@ -52,26 +52,32 @@ void doPlaneSeparateTest() {
 	Particle p;
 	p.pos = vec3(0, 1, 0);
 	p.pPos = vec3(0, 1, 0);
-	bool result = intersect(t, p, TEST_RADIUS, i);
+	p.radius = TEST_RADIUS;
+	bool result = intersect(t, p, i);
 	printResult("PlaneSeparate", i, result, i, false);
 }
 
 void doVertexIntersectionTests() {
 
-	Intersection i;
+	Intersection i, expectedI;
 	Particle p;
 	p.pPos = t.v1 + TEST_OFFSET*(t.v1 - t.v0);
-	bool result = intersect(t, p, TEST_RADIUS, i);
-	printResult("Vertex 1 Intersection", i, result, i, true);
+
+	expectedI.responseDistance = TEST_RADIUS;
+	expectedI.responseGradient = t.normal;
+
+	p.radius = TEST_RADIUS;
+	bool result = intersect(t, p, i);
+	printResult("Vertex 1 Intersection", i, result, expectedI, true);
 
 
 	p.pPos = t.v2 + TEST_OFFSET*(t.v2 - t.v0);
-	result = intersect(t, p, TEST_RADIUS, i);
+	result = intersect(t, p, i);
 	printResult("Vertex 2 Intersection", i, result, i, true);
 
 
 	p.pPos = t.v0 + TEST_OFFSET*(t.v0 - t.v1);
-	result = intersect(t, p, TEST_RADIUS, i);
+	result = intersect(t, p, i);
 	printResult("Vertex 3 Intersection", i, result, i, true);
 }
 
@@ -80,25 +86,32 @@ void doCenterInTriangleTest() {
 	Intersection i;
 	Particle p;
 	p.pPos = vec3(.7f, .7f, 0.5f);
-	bool result = intersect(t, p, TEST_RADIUS, i);
+	p.radius = TEST_RADIUS;
+	bool result = intersect(t, p, i);
 	printResult("Center Inside Intersection", i, result, i, true);
 }
 
 void doEdgeIntersectionTests() {
 
-	Intersection i;
+	Intersection i, expectedI;
 	Particle p;
+	p.radius = TEST_RADIUS;
+
+
+	expectedI.responseDistance = TEST_RADIUS;
+	expectedI.responseGradient = t.normal;
+
 	p.pPos = vec3(.5f,.5f,1.f);
-	bool result = intersect(t, p, TEST_RADIUS, i);
-	printResult("Edge 1 Intersection", i, result, i, true);
+	bool result = intersect(t, p, i);
+	printResult("Edge 1 Intersection", i, result, expectedI, true);
 
 
 	p.pPos = vec3(0.5, .5, -0.3);
-	result = intersect(t, p, TEST_RADIUS, i);
-	printResult("Edge 2 Intersection", i, result, i, true);
+	result = intersect(t, p, i);
+	printResult("Edge 2 Intersection", i, result, expectedI, true);
 
 
 	p.pPos = vec3(1.3, 1.3, 0.5);
-	result = intersect(t, p, TEST_RADIUS, i);
-	printResult("Edge 3 Intersection", i, result, i, true);
+	result = intersect(t, p, i);
+	printResult("Edge 3 Intersection", i, result, expectedI, true);
 }
