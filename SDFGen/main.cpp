@@ -21,7 +21,7 @@
 #include <limits>
 
 int main(int argc, char* argv[]) {
-	std::cout << "hi";
+	
   if(argc != 4) {
     std::cout << "SDFGen - A utility for converting closed oriented triangle meshes into grid-based signed distance fields.\n";
     std::cout << "\nThe output file format is:";
