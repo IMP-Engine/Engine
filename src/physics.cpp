@@ -87,7 +87,7 @@ void simulate(std::vector<Particle> &particles, std::vector<Constraint*> &constr
         for (std::vector<Triangle>::iterator t = scene->triangles.begin(); t != scene->triangles.end(); t++)
         {
             Intersection isect;
-            if (intersect((*t), particles[i], PARTICLE_RADIUS,isect))
+            if (intersect((*t), particles[i],isect))
             {
                 particles[i].pPos += isect.responseGradient * isect.responseDistance;
             }
@@ -97,11 +97,9 @@ void simulate(std::vector<Particle> &particles, std::vector<Constraint*> &constr
         for (unsigned int j = 0; j < i; j++) 
         {
             Intersection isect;
-            if (particles[i].phase != particles[j].phase && intersect(
-                particles[i].pPos, particles[i].invmass,
-                particles[j].pPos, particles[j].invmass,
-                isect)
-            ) {
+            if (particles[i].phase != particles[j].phase 
+				&& intersect(particles[i], particles[j],isect)) 
+			{
                 particles[i].pPos += isect.point;
                 particles[j].pPos += isect.responseGradient * isect.responseDistance;
             }

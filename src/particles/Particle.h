@@ -15,6 +15,7 @@ struct Particle
     float invmass;
     int phase;
     int numBoundConstraints = 0;
+	float radius;
 
     bool operator==(const Particle& p) {
         //return p.pos == this->pos && p.velocity == this->velocity && p.invmass == this->invmass && p.phase == this->phase;

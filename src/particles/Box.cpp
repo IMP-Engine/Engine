@@ -66,6 +66,7 @@ Box *make_box(BoxConfig * const config, std::vector<Particle> &particleStorage) 
                 p.invmass = config->mass / numParticles;
                 p.velocity = vec3(0.f, 0.f, 0.f);
                 p.phase = config->phase;
+				p.radius = min(dx, min(dy, dz)) / 2;
 
                 particleStorage.push_back(p);
                 box->particles.push_back(&particleStorage[particleStorage.size() - 1]);

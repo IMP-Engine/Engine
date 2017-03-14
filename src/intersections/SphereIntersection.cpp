@@ -1,16 +1,18 @@
 #include "SphereIntersection.h"
 
 
-bool intersect(vec3 &c1, float invMass1, vec3 &c2, float invMass2, Intersection &i) {
-    vec3 delta = c1 - c2;
+bool intersect(Particle &p1, Particle &p2, Intersection &i) {
+    vec3 delta = p1.pPos - p2.pPos;
     float deltaLength = length(delta);
+	float totalRadius = p1.radius + p2.radius;
 
-    if (deltaLength < PARTICLE_RADIUS_2) 
+
+    if (deltaLength < totalRadius) 
     {
-        float diff = (deltaLength - PARTICLE_RADIUS_2) / (deltaLength * (invMass1 + invMass2));
+        float diff = (deltaLength - totalRadius) / (deltaLength * (p1.invmass + p2.invmass));
 
-        i.point    = -invMass1*delta*diff;
-        i.responseGradient =  invMass2*delta*diff;
+        i.point    = -p1.invmass*delta*diff;
+        i.responseGradient =  p2.invmass*delta*diff;
         return true;
     }
     return false;

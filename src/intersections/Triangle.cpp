@@ -3,15 +3,15 @@
 
 using namespace glm;
 
-bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isect) {
+bool intersect(Triangle &triangle, Particle &p, Intersection &isect) {
 
     // Check intersection of target position and triangle
 
     /*
      * Step 1: Check if particle intesect with plane.
      */
-    float rr = radius * radius;
-    float dist = dot(p.pPos, triangle.normal);
+    float rr = p.radius * p.radius;
+    float dist = dot(p.pPos-triangle.v0, triangle.normal);
 
     // Always end early.
     if (dist * dist > rr) {
@@ -19,6 +19,8 @@ bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isec
     }
 
 
+	isect.responseGradient = triangle.normal;
+	isect.responseDistance = p.radius - dist;
 
 
     vec3 A = triangle.v1 - triangle.v0;
@@ -30,32 +32,22 @@ bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isec
 
     // First vertex
 	float aa = dot(triangle.v0 - p.pPos, triangle.v0 - p.pPos);
-    if (aa < rr) {
-        float distance = dot(A, triangle.normal);
-		isect.responseGradient = triangle.normal;
-		isect.responseDistance = (radius - distance);
-
+    if (aa < rr) 
+	{
         return true;
     }
 
     // Second vertex
 	float bb = dot(triangle.v1 - p.pPos, triangle.v1 - p.pPos);
-    if (bb < rr) {
-        float distance = dot(A, triangle.normal);
-		isect.responseGradient = triangle.normal;
-		isect.responseDistance = (radius - distance);
-
+    if (bb < rr) 
+	{
         return true;
     }
 
     // Third vertex
 	float cc = dot(triangle.v2 - p.pPos, triangle.v2 - p.pPos);
-    if (cc < rr) {
-
-        float distance = dot(A, triangle.normal);
-		isect.responseGradient = triangle.normal;
-		isect.responseDistance = (radius - distance);
-
+    if (cc < rr) 
+	{
         return true;
     }
     
@@ -63,8 +55,7 @@ bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isec
     /**
      * Step 3: Check if projected center of particle is inside triangle
      */
-    float distance = dot(A, triangle.normal);
-    vec3 projetedPosition = p.pPos - distance * triangle.normal;
+    vec3 projetedPosition = p.pPos - dist * triangle.normal;
 
     // Baycentric check
 
@@ -86,10 +77,8 @@ bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isec
     float v = (dotCACA * dotBApPrim - dotCABA * dotCApPrim) * invDenom;
 
     // Check if point is in triangle
-    if ((u >= 0) && (v >= 0) && (u + v < 1)) {
-
-		isect.responseGradient = triangle.normal;
-		isect.responseDistance = (radius - distance);
+    if ((u >= 0) && (v >= 0) && (u + v < 1)) 
+	{
         return true;
     }
 
@@ -106,8 +95,6 @@ bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isec
     float d2 = dot(Qp,Qp);
 
     if (d2 < rr && (t >= 0 || t <= 1)) {
-		isect.responseDistance = sqrt(d2);
-		isect.responseGradient = normalize(Q - p.pPos);
         return true;
     }
 
@@ -117,8 +104,6 @@ bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isec
     d2 = dot(Qp, Qp);
 
     if (d2 < rr && (t >= 0 || t <= 1)) {
-		isect.responseDistance = sqrt(d2);
-		isect.responseGradient = normalize(Q - p.pPos);
         return true;
     }
 
@@ -128,8 +113,6 @@ bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isec
     d2 = dot(Qp, Qp);
 
     if (d2 < rr && (t >= 0 || t <= 1)) {
-		isect.responseDistance = sqrt(d2);
-		isect.responseGradient = normalize(Q - p.pPos);
         return true;
     }
 

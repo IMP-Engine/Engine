@@ -7,4 +7,4 @@
 #include "Intersection.h"
 
 
-bool intersect(Triangle &triangle, Particle &p, float radius, Intersection &isect);
+bool intersect(Triangle &triangle, Particle &p, Intersection &isect);
