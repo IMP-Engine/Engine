@@ -20,3 +20,4 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT I
 assign_source_group(${source_list})
 
 target_link_libraries(IMPEngine glfw)
+target_link_libraries(IMPEngine tbb)
