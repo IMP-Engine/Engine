@@ -5,8 +5,6 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw_gl3.h"
 #include <iostream>
-#include <fstream>
-#include <sstream>
 #include "debug.h"
 
 // Example of path
@@ -25,6 +23,7 @@
 #include "constraints/DistanceConstraint.h"
 
 #include "constraints/visualizeConstraint.h"
+#include "models\model.h"
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
@@ -92,10 +91,12 @@ GLuint simpleVao, particleVao;
 bool doPyshics = false;
 int iterations = 5;
 bool showPerformance = false;
+bool showModels = false;
 float pSleeping = 0.001;
 float overRelaxConst = 1.0f;
 
 std::vector<Particle> particles;
+std::vector<Constraint*> constraints;
 
 // Box parameters
 Box *box;
@@ -427,9 +428,9 @@ void display() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	
 	  if(doPyshics)
-		    physics::simulate(&box->particles, &box->constraints, ImGui::GetIO().DeltaTime, iterations);
+		    physics::simulate(&particles, &constraints, ImGui::GetIO().DeltaTime, iterations);
 	
-    visualization::drawConstraints(&box->constraints, modelViewProjectionMatrix);
+    visualization::drawConstraints(&constraints, modelViewProjectionMatrix);
   
 	  id = performance::startTimer("Render particles");
 	  particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
@@ -461,6 +462,7 @@ void gui()
     ImGui::ColorEdit3("clear color", (float*)&clear_color);
     ImGui::Checkbox("Vsync", &vsync);
     if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
+	if (ImGui::Button("Models")) showModels ^= 1;
 	if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
@@ -484,6 +486,7 @@ void gui()
     }
     ImGui::End();
 
+	model::gui(&showModels);
 
     // Remove when all group members feel comfortable with how GUI works and what it can provide
     // Demo window
@@ -494,64 +497,27 @@ void gui()
     }
 }
 
-void loadSDF() {
-	std::ifstream loadFile("../../src/models/bunny.sdf");
-	if (!loadFile) 
-	{
-		std::cerr << "Error opening file" << std::endl;
-	}
-	std::string line;
-
-	int imax, jmax, kmax;
-	std::getline(loadFile, line);
-	std::stringstream data(line);
-	data >> imax >> jmax >> kmax;
-
-	vec3 origin;
-	std::getline(loadFile, line);
-	std::stringstream data2(line);
-	data2 >> origin.x >> origin.y >> origin.z;
-
-	float spacing;
-	std::getline(loadFile, line);
-	std::stringstream data3(line);
-	data3 >> spacing;
-	
-	float d = 1.5f*spacing / length(origin);
-
-	for (int i = 0; i < imax; i++)
-	{
-		for (int j = 0; j < jmax; j++)
-		{
-			for (int k = 0; k < kmax; k++)
-			{
-				std::getline(loadFile, line);
-				if (line.substr(0, 1) == std::string("-"))
-				{
-					std::stringstream data(line);
-					Particle p;
-					p.pos.x = k*d;
-					p.pos.y = i*d;
-					p.pos.z = j*d;
-					particles.push_back(p);
-				}
-			}
-		}
-	}
-
-	particleRenderer = new ParticleRenderer(&particles);
-	particleRenderer->init();
-}
-
 int main(void) {
 	performance::initialize();
     initGL();
-    //setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5), stiffness, distanceThreshold);
+	model::initModels();
+	//setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5), stiffness, distanceThreshold);
 
 	// Test actually creating something from the repo
 	tbb::empty_task a();
 
-	loadSDF();
+	model::modelConfig conf;
+	conf.centerPos = vec3(0.f);
+	conf.distanceThreshold = distanceThreshold;
+	conf.invmass = 0.1;
+	conf.phase = 0;
+	conf.scale = vec3(20.f);
+	conf.stiffness = stiffness;
+
+	model::loadModel("sphere.sdf", &particles, &constraints, conf);
+
+	particleRenderer = new ParticleRenderer(&particles);
+	particleRenderer->init();
 
     if (GLAD_GL_VERSION_4_3) {
         /* We support at least OpenGL version 4.3 */
