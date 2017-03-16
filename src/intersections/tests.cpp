@@ -85,8 +85,8 @@ void doVertexIntersectionTests() {
 void doCenterInTriangleTest() {
 	Intersection i;
 	Particle p;
-	p.pPos = vec3(.7f, .7f, 0.5f);
-	p.radius = TEST_RADIUS;
+	p.pPos = vec3(.7f, .8f, 0.5f);
+	p.radius = 0.2f;
 	bool result = intersect(t, p, i);
 	printResult("Center Inside Intersection", i, result, i, true);
 }

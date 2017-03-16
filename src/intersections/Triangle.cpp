@@ -58,13 +58,13 @@ bool intersect(Triangle &triangle, Particle &p, Intersection &isect) {
     vec3 projetedPosition = p.pPos - dist * triangle.normal;
 
     // Baycentric check
-
-    // Compute vectors        
-    vec3 pPrim = projetedPosition - A; // particle position relative to point A
+    
+	// particle position relative to v0
+    vec3 pPrim = projetedPosition - triangle.v0; 
 
     // Compute dot products
-    vec3 CA = C - A;
-    vec3 BA = B - A;
+    vec3 CA = triangle.v2 - triangle.v0;
+    vec3 BA = triangle.v1 - triangle.v0;
     float dotCACA = dot(CA, CA);
     float dotCABA = dot(CA, BA);
     float dotBABA = dot(BA, BA);
