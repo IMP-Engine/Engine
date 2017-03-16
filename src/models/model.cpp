@@ -1,13 +1,17 @@
 #include "model.h"
 
-model::modelConfig config;
+model::modelConfig config = {0.1f, vec3(0), 0, 0.5f, 0.5, vec3(1), ivec3(4)};
+std::vector<std::string> predefinedModels{ "Box" };
 std::vector<std::string> models;
-int current = -1;
+int selected = -1;
 
+// Temporary solution. Reconsider when cleaning code/changing way that particles and constraints are handled
 extern std::vector<Particle> particles;
 extern std::vector<Constraint*> constraints;
 
-void model::initModels() {
+void model::loadModelNames() {
+	models.clear();
+	models.insert(models.end(), predefinedModels.begin(), predefinedModels.end());
 	DIR *dir = opendir("../../src/models/");
 	struct dirent *ent;
 	while ((ent = readdir(dir)) != NULL)
@@ -17,9 +21,15 @@ void model::initModels() {
 			models.push_back(filename.substr(0, filename.size() - 4));
 	}
 	closedir(dir);
-	delete ent;
+}
 
-	config.scale = vec3(1);
+// This 
+void model::loadPredefinedModel(std::string model, std::vector<Particle>* particles, std::vector<Constraint*>* constraints, modelConfig config)
+{
+	if (model == "Box")
+	{
+		Box::makeBox(particles, constraints, config);
+	}
 }
 
 // For more information on what *max, origin and spacing is, refer to https://github.com/christopherbatty/SDFGen
@@ -27,12 +37,12 @@ void model::initModels() {
 void model::loadModel(std::string model, std::vector<Particle>* particles, std::vector<Constraint*>* constraints, modelConfig config)
 {
 
-	std::vector<Particle>::size_type size = particles->size();
+	std::vector<Particle>::size_type start = particles->size();
 
-	std::ifstream file("../../src/models/" + model);
+	std::ifstream file("../../src/models/" + model + ".sdf");
 	if (!file)
 	{
-		std::cerr << "Error opening file " << model << std::endl;
+		std::cerr << "Error opening file " << model << ".sdf" << std::endl;
 	}
 
 	std::string line;
@@ -74,7 +84,7 @@ void model::loadModel(std::string model, std::vector<Particle>* particles, std::
 	}
 
 	float maxDist = sqrt(glm::length(d*config.scale));
-	for (std::vector<Particle>::size_type i = size; i < particles->size(); i++) for (std::vector<Particle>::size_type j = i+1; j < particles->size(); j++)
+	for (std::vector<Particle>::size_type i = start; i < particles->size(); i++) for (std::vector<Particle>::size_type j = i+1; j < particles->size(); j++)
 	{
 			if (glm::distance((*particles)[i].pos, (*particles)[j].pos) <= maxDist )
 			{
@@ -108,22 +118,37 @@ void model::gui(bool *show)
 	}
 
 	// Dropdown of all models in this folder
-	ImGui::Combo("Choose model", &current, [](void* a, int b, const char** c) -> bool { *c = ((std::vector<std::string>*)a)->at(b).c_str(); return true; }, &models, models.size());
+	ImGui::Combo("Choose model", &selected, [](void* a, int b, const char** c) -> bool { *c = ((std::vector<std::string>*)a)->at(b).c_str(); return true; }, &models, models.size());
 	
 	ImGui::SameLine();
 	if (ImGui::Button("Load"))
 	{
 		particles.clear();
 		constraints.clear();
-		loadModel(models[current] + ".sdf", &particles, &constraints, config);
+		
+		if (selected >= predefinedModels.size())
+		{
+			loadModel(models[selected], &particles, &constraints, config);
+		}
+		else
+		{
+			loadPredefinedModel(models[selected], &particles, &constraints, config);
+		}
 	}
 	// Below, sliders for deciding grejs
 	ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 	ImGui::DragFloat3("Origin", &config.centerPos.x, 1.f, -(std::numeric_limits<float>::max)(), (std::numeric_limits<float>::max)());
 	ImGui::DragFloat3("Scale", &config.scale.x, 1.f, -(std::numeric_limits<float>::max)(), (std::numeric_limits<float>::max)());
-	ImGui::DragFloat("Invmass", &config.invmass, 0.05f, 0, 1000);
+	ImGui::DragFloat("Invmass", &config.invmass, 0.005f, 0, 1000);
 	ImGui::DragFloat("Distance treshold", &config.distanceThreshold, 0.001f, 0, 10, "%.7f");
-	ImGui::DragFloat("Stiffness", &config.stiffness, 0.01f, 0, 1, "%.4f");
+	ImGui::SliderFloat("Stiffness", &config.stiffness, 0, 1);
+	ImGui::InputInt("Phase", &config.phase);
+	if (selected == 0)
+	{
+		ImGui::SliderInt("Particles x", &config.numParticles.x, 1, 10);
+		ImGui::SliderInt("Particles y", &config.numParticles.y, 1, 10);
+		ImGui::SliderInt("Particles z", &config.numParticles.z, 1, 10);
+	}
 
 	ImGui::End();
 }

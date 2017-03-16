@@ -5,33 +5,32 @@
 #include <sstream>
 #include <fstream>
 #include <limits>
+#include <algorithm>
 
 #include <glm/glm.hpp>
 #include "../imgui/imgui.h"
 
+#include "modelConfig.h"
 #include "../particles/Particle.h"
 #include "../constraints/Constraint.h"
 #include "../constraints/DistanceConstraint.h"
+
+#include "Box.h"
 
 //http://www.softagalleria.net/download/dirent/
 #include "dirent.h"
 
 namespace model {
 
-	// TODO Radius?
-	struct modelConfig {
-		float invmass;            // Particle mass
-		vec3 centerPos;          // Where to place model
-		int phase;                // Particle phase
-		float stiffness;          // Constraint stiffness
-		float distanceThreshold;  // Constraind distance treshold
-		vec3 scale;               // Scale factor that model is scaled by (can be used to rotate)
-	};
-
 	/*
 		Loads modelnames into memory
 	*/
-	void initModels();
+	void loadModelNames();
+
+	/*
+		Loads a non sdf model into particles and adds object specific constraints.
+	*/
+	void loadPredefinedModel(std::string model, std::vector<Particle>* particles, std::vector<Constraint*>* constraints, modelConfig config);
 
 	/*
 		Loads the object located at path into particles and adds simple 
