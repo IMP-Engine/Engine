@@ -105,8 +105,9 @@ const vec3 lightPosition = vec3(50.0f);
 bool doPyshics = false;
 int iterations = 5;
 bool showPerformance = false;
-float pSleeping = 0.001;
+float pSleeping = 0.001f;
 float overRelaxConst = 1.0f;
+float restitutionCoefficient = 1.f; // 1 is Elastic collision
 
 
 
@@ -387,7 +388,8 @@ void gui()
     ImGui::SliderFloat("Dimension z", &dimension.z, 0, 10);
     ImGui::SliderFloat("Stiffness", &stiffness, 0, 1);
     ImGui::SliderFloat("Mass (averaged over particles)", &mass, 0, 10000, "%.3f", 10.f);
-    ImGui::SliderFloat("Distance threshold", &distanceThreshold, 0, 1);
+    ImGui::SliderFloat("Distance threshold", &distanceThreshold, 0.001, 1);
+	ImGui::SliderFloat("Restitution Coeff.", &restitutionCoefficient, 0, 1);
     if (ImGui::Button("reset"))
     {
         setupBox(dimension, vec3(0.f, 0.f, 0.f), mass, numparticles, stiffness, distanceThreshold);

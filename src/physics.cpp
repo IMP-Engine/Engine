@@ -17,6 +17,7 @@
 
 extern float overRelaxConst;
 extern float pSleeping;
+extern float restitutionCoefficient;
 
 namespace physics {
 
@@ -89,7 +90,7 @@ void simulate(std::vector<Particle> &particles, std::vector<Constraint*> &constr
             Intersection isect;
             if (intersect((*t), particles[i],isect))
             {
-                particles[i].pPos += isect.responseGradient * isect.responseDistance;
+                particles[i].pPos += isect.responseGradient * (isect.responseDistance * (1 + restitutionCoefficient));
             }
         }
 

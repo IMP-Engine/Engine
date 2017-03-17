@@ -20,7 +20,7 @@ bool intersect(Triangle &triangle, Particle &p, Intersection &isect) {
 
 
 	isect.responseGradient = triangle.normal;
-	isect.responseDistance = 2*(p.radius - dist);
+	isect.responseDistance = (p.radius - dist);
 
 
     vec3 A = triangle.v1 - triangle.v0;
