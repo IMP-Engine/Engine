@@ -3,7 +3,7 @@
 model::modelConfig config = {0.1f, vec3(0), 0, 0.5f, 0.5, vec3(1), ivec3(4)};
 std::vector<std::string> predefinedModels{ "Box" };
 std::vector<std::string> models;
-int selected = -1;
+int selected = 0;
 
 // Temporary solution. Reconsider when cleaning code/changing way that particles and constraints are handled
 extern std::vector<Particle> particles;
