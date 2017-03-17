@@ -7,6 +7,11 @@
 #include <iostream>
 #include "debug.h"
 
+// Example of path
+#include "../tbb/include/tbb/parallel_for.h"
+
+#include "performance.h"
+
 #include "glHelper.h"
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
@@ -415,6 +420,8 @@ int main(void) {
     initGL();
     setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5), stiffness, distanceThreshold);
 
+	// Test actually creating something from the repo
+	tbb::empty_task a();
 
     if (GLAD_GL_VERSION_4_3) {
         /* We support at least OpenGL version 4.3 */
