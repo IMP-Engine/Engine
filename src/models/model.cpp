@@ -83,7 +83,7 @@ void model::loadModel(std::string model, std::vector<Particle>* particles, std::
 		}
 	}
 
-	float maxDist = sqrt(glm::length(d*config.scale));
+	float maxDist = glm::length(d*config.scale);
 	for (std::vector<Particle>::size_type i = start; i < particles->size(); i++) for (std::vector<Particle>::size_type j = i+1; j < particles->size(); j++)
 	{
 			if (glm::distance((*particles)[i].pos, (*particles)[j].pos) <= maxDist )
