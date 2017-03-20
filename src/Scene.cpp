@@ -62,7 +62,7 @@ Scene::Scene()
         normals.push_back(normalComponents[i]);
     }
 
-    for (int i = 0; i < indices.size();i += 3) {
+    for (unsigned int i = 0; i < indices.size();i += 3) {
         Triangle t = Triangle();
         t.v0 = vec3(vertexes[3 * indices[i]],
                     vertexes[3 * indices[i] + 1],

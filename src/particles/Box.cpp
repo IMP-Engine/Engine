@@ -18,7 +18,7 @@ Box::~Box()
 }
 
 
-Box *make_box(BoxConfig * const config, std::vector<Particle> &particleStorage) {
+Box *make_box(BoxConfig * const config, std::vector<Particle> &particleStorage, std::vector<Constraint *> &constraintStorage) {
     Box *box = new Box;
     int numParticles = config->numParticles.x * config->numParticles.y * config->numParticles.z;
 
@@ -96,6 +96,7 @@ Box *make_box(BoxConfig * const config, std::vector<Particle> &particleStorage) 
                         )
                 );
                 box->constraints.push_back(c);
+				constraintStorage.push_back(c);
                 box->particles[i]->numBoundConstraints++;
                 box->particles[j]->numBoundConstraints++;
             }

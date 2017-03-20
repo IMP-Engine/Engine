@@ -10,16 +10,6 @@ out vec4 outColor;
 
 uniform vec3 viewSpaceLightPos;
 
-struct Ray
-{
-    vec3 o, d;
-    float maxt;
-} ray;
-
-float lengthSquared(in vec3 v) {
-    return dot(v, v);
-}
-
 void main() {
     // Get fragments 2D-coordinate on point in [-1, 1]
     vec2 pointCoord = vec2(2 * (gl_PointCoord.x - 0.5), 2 * (-gl_PointCoord.y + 0.5));

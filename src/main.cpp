@@ -93,6 +93,7 @@ float distanceThreshold = 0.2f;
 // Scene
 Scene *scene;
 vector<Particle> particles;
+vector<Constraint *> constraints;
 
 // Shaders and rendering 
 ParticleRenderer *particleRenderer;
@@ -271,6 +272,7 @@ void setupBox(vec3 dimension, vec3 centerpos, float totmass, ivec3 numParticles,
     delete box1;
     delete box2;
     particles.clear();
+	constraints.clear();
 
 	delete particleRenderer;
 	BoxConfig config;
@@ -283,12 +285,12 @@ void setupBox(vec3 dimension, vec3 centerpos, float totmass, ivec3 numParticles,
 	config.stiffness = stiffness;
     config.distanceThreshold = distanceThreshold;
 
-	box1 = make_box(&config, particles);
+	box1 = make_box(&config, particles, constraints);
     
-    //config.center_pos += vec3(0.55f, 1.55f, 0.55f);
-    //config.phase = 2;
+    config.center_pos += dimension * vec3(0.55f, 1.55f, 0.55f);
+    config.phase = 2;
 
-    //box2 = make_box(&config, particles);
+    box2 = make_box(&config, particles, constraints);
 
     particleRenderer = new ParticleRenderer(&particles);
     particleRenderer->init();
@@ -335,14 +337,14 @@ void display() {
 	
     if (doPyshics)
     {
-		physics::simulate(particles, box1->constraints, scene, ImGui::GetIO().DeltaTime, iterations);
+		physics::simulate(particles, constraints, scene, ImGui::GetIO().DeltaTime, iterations);
     }
 	
     id = performance::startTimer("Render particles");
     particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
 	performance::stopTimer(id);
 
-    visualization::drawConstraints(&box1->constraints, modelViewProjectionMatrix);
+    visualization::drawConstraints(&constraints, modelViewProjectionMatrix);
 
 
 
@@ -415,7 +417,8 @@ int main(void) {
 
 
     scene = new Scene;
-    particles.resize(200000);
+    particles.reserve(200000);
+	constraints.reserve(2000000);
 
     performance::initialize();
 

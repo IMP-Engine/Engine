@@ -19,5 +19,5 @@ public:
 };
 
 
-Box *make_box(BoxConfig *const config, std::vector<Particle> &particleStorage);
+Box *make_box(BoxConfig *const config, std::vector<Particle> &particleStorage, std::vector<Constraint *> &constraintStorage);
 
