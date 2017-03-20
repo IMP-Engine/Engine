@@ -24,11 +24,11 @@
 #include "performance.h"
 #include "physics.h"
 #include "particles/ParticleRenderer.h"
-#include "particles/Box.h"
 #include "Scene.h"
 
 #include "constraints/DistanceConstraint.h"
 #include "constraints/visualizeConstraint.h"
+#include "models/model.h"
 
 #ifdef _DEBUG
 #include "intersections/tests.h"
@@ -82,14 +82,6 @@ vec3 downMovement = vec3(0.0f);
 GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
 
-// Box parameters
-Box *box1, *box2;
-ivec3 numparticles = ivec3(3, 3, 3);
-vec3 dimension = vec3(1.f, 1.f, 1.f);
-float mass = 30.f;
-float stiffness = 0.5f;
-float distanceThreshold = 0.2f;
-
 // Scene
 Scene *scene;
 vector<Particle> particles;
@@ -106,10 +98,13 @@ const vec3 lightPosition = vec3(50.0f);
 bool doPyshics = false;
 int iterations = 5;
 bool showPerformance = false;
-float pSleeping = 0.001f;
+bool showModels = false;
+float pSleeping = 0.0001f;
 float overRelaxConst = 1.0f;
 float restitutionCoefficient = 1.f; // 1 is Elastic collision
 
+std::vector<Particle> particles;
+std::vector<Constraint*> constraints;
 
 
 static void errorCallback(int error, const char* description) {
@@ -264,38 +259,6 @@ void initGL() {
 
 }
 
-/*
-* Creates a box with given parameters and hooks it up to rendering. Also makes sure that any old box is removed.
-*/
-void setupBox(vec3 dimension, vec3 centerpos, float totmass, ivec3 numParticles, float stiffness, float distanceThreshold)
-{
-    delete box1;
-    delete box2;
-    particles.clear();
-	constraints.clear();
-
-	delete particleRenderer;
-	BoxConfig config;
-
-	config.dimensions = dimension;
-	config.center_pos = centerpos;
-	config.mass = totmass;
-	config.phase = 1;
-	config.numParticles = numParticles;
-	config.stiffness = stiffness;
-    config.distanceThreshold = distanceThreshold;
-
-	box1 = make_box(&config, particles, constraints);
-    
-    config.center_pos += dimension * vec3(0.55f, 1.55f, 0.55f);
-    config.phase = 2;
-
-    box2 = make_box(&config, particles, constraints);
-
-    particleRenderer = new ParticleRenderer(&particles);
-    particleRenderer->init();
-}
-
 void display() {
 
 	int id = performance::startTimer("Reset and draw scene");
@@ -326,11 +289,7 @@ void display() {
     modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
 
     vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
-
-    //modelMatrix = translate(modelMatrix, vec3(0.0f, 0.0f, 0.0f));
-    //modelMatrix = scale(modelMatrix, vec3(5.0f, 5.0f, 5.0f));
-
-
+	
     scene->render(viewMatrix, projectionMatrix);
     
 	performance::stopTimer(id);
@@ -351,7 +310,7 @@ void display() {
 	// Since we may want to measure performance of something that happens after the call to gui()
 	// we place this call as late as possible to allow for measuring more things
 	performance::gui(&showPerformance);
-    
+
     ImGui::Render();
 
     glfwSwapBuffers(window);
@@ -374,6 +333,7 @@ void gui()
     ImGui::ColorEdit3("clear color", (float*)&clear_color);
     ImGui::Checkbox("Vsync", &vsync);
     if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
+	if (ImGui::Button("Models")) showModels ^= 1; ImGui::SameLine();
 	if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
@@ -382,22 +342,10 @@ void gui()
     ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
     ImGui::SliderFloat("Over-relax-constant", &overRelaxConst, 1, 5);
     ImGui::SliderFloat("Particle Sleeping (squared)", &pSleeping, 0, 1, "%.9f", 10.f);
-    ImGui::SliderInt("Particles x", &numparticles.x, 1, 10);
-    ImGui::SliderInt("Particles y", &numparticles.y, 1, 10);
-    ImGui::SliderInt("Particles z", &numparticles.z, 1, 10);
-    ImGui::SliderFloat("Dimension x", &dimension.x, 0, 10);
-    ImGui::SliderFloat("Dimension y", &dimension.y, 0, 10);
-    ImGui::SliderFloat("Dimension z", &dimension.z, 0, 10);
-    ImGui::SliderFloat("Stiffness", &stiffness, 0, 1);
-    ImGui::SliderFloat("Mass (averaged over particles)", &mass, 0, 10000, "%.3f", 10.f);
-    ImGui::SliderFloat("Distance threshold", &distanceThreshold, 0.001, 1);
 	ImGui::SliderFloat("Restitution Coeff.", &restitutionCoefficient, 0, 1);
-    if (ImGui::Button("reset"))
-    {
-        setupBox(dimension, vec3(0.f, 0.f, 0.f), mass, numparticles, stiffness, distanceThreshold);
-    }
-    ImGui::End();
+	ImGui::End();
 
+	model::gui(&showModels);
 
     // Remove when all group members feel comfortable with how GUI works and what it can provide
     // Demo window
@@ -413,7 +361,7 @@ int main(void) {
 
     doIntersectionTests();
 
-#endif // _DE
+#endif // _DEBUG
 
 
     scene = new Scene;
@@ -423,10 +371,24 @@ int main(void) {
     performance::initialize();
 
     initGL();
-    setupBox(vec3(1.f, 1.f, 1.f), vec3(0.f, 0.f, 0.f), 125.f, vec3(5, 5, 5), stiffness, distanceThreshold);
+	model::loadModelNames();
 
 	// Test actually creating something from the repo
 	tbb::empty_task a();
+
+	// Load some model to begin with, so that debugging is easier on us
+	model::modelConfig conf;
+	conf.centerPos = vec3(0.f);
+	conf.distanceThreshold = 2;
+	conf.invmass = 0.1;
+	conf.phase = 0;
+	conf.scale = vec3(4.f);
+	conf.stiffness = 0.8f;
+	conf.numParticles = ivec3(4);
+	model::loadPredefinedModel("Box", &particles, &constraints, conf);
+
+	particleRenderer = new ParticleRenderer(&particles);
+	particleRenderer->init();
 
     if (GLAD_GL_VERSION_4_3) {
         /* We support at least OpenGL version 4.3 */
