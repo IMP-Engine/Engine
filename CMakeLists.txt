@@ -33,6 +33,11 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 # GLM
 include_directories(external/glm)
 
+# dirent
+if (WIN32)
+	include_directories(external/dirent)
+endif(WIN32)
+
 #TBB
 add_subdirectory(external/tbb)
 
