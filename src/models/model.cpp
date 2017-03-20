@@ -1,5 +1,11 @@
 #include "model.h"
 
+#ifdef _WIN32
+#define MODEL_FOLDER "../../src/models/"
+#elif __unix__
+#define MODEL_FOLDER "../src/models/"
+#endif 
+
 model::modelConfig config = {0.1f, vec3(0), 0, 0.5f, 0.5, vec3(1), ivec3(4)};
 std::vector<std::string> predefinedModels{ "Box" };
 std::vector<std::string> models;
@@ -12,7 +18,7 @@ extern std::vector<Constraint*> constraints;
 void model::loadModelNames() {
 	models.clear();
 	models.insert(models.end(), predefinedModels.begin(), predefinedModels.end());
-	DIR *dir = opendir("../../src/models/");
+	DIR *dir = opendir(MODEL_FOLDER);
 	struct dirent *ent;
 	while ((ent = readdir(dir)) != NULL)
 	{
@@ -39,7 +45,7 @@ void model::loadModel(std::string model, std::vector<Particle>* particles, std::
 
 	std::vector<Particle>::size_type start = particles->size();
 
-	std::ifstream file("../../src/models/" + model + ".sdf");
+	std::ifstream file(MODEL_FOLDER + model + ".sdf");
 	if (!file)
 	{
 		std::cerr << "Error opening file " << model << ".sdf" << std::endl;
