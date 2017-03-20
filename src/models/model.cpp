@@ -30,7 +30,7 @@ void model::loadModelNames() {
 }
 
 // This 
-void model::loadPredefinedModel(std::string model, std::vector<Particle>* particles, std::vector<Constraint*>* constraints, modelConfig config)
+void model::loadPredefinedModel(std::string model, std::vector<Particle> &particles, std::vector<Constraint*> &constraints, modelConfig config)
 {
 	if (model == "Box")
 	{
@@ -40,10 +40,10 @@ void model::loadPredefinedModel(std::string model, std::vector<Particle>* partic
 
 // For more information on what *max, origin and spacing is, refer to https://github.com/christopherbatty/SDFGen
 // Explanation is found in main.cpp
-void model::loadModel(std::string model, std::vector<Particle>* particles, std::vector<Constraint*>* constraints, modelConfig config)
+void model::loadModel(std::string model, std::vector<Particle> &particles, std::vector<Constraint*> &constraints, modelConfig config)
 {
 
-	std::vector<Particle>::size_type start = particles->size();
+	std::vector<Particle>::size_type start = particles.size();
 
 	std::ifstream file(MODEL_FOLDER + model + ".sdf");
 	if (!file)
@@ -85,24 +85,26 @@ void model::loadModel(std::string model, std::vector<Particle>* particles, std::
 			p.invmass = config.invmass;
 			p.numBoundConstraints = 0;
 			p.phase = config.phase;
-			particles->push_back(p);
+			p.radius = d / 2;
+
+			particles.push_back(p);
 		}
 	}
 
 	float maxDist = glm::length(d*config.scale);
-	for (std::vector<Particle>::size_type i = start; i < particles->size(); i++) for (std::vector<Particle>::size_type j = i+1; j < particles->size(); j++)
+	for (std::vector<Particle>::size_type i = start; i < particles.size(); i++) for (std::vector<Particle>::size_type j = i+1; j < particles.size(); j++)
 	{
-			if (glm::distance((*particles)[i].pos, (*particles)[j].pos) <= maxDist )
+			if (glm::distance(particles[i].pos, particles[j].pos) <= maxDist )
 			{
 				Constraint* c = new DistanceConstraint(
-					&(*particles)[i],
-					&(*particles)[j],
+					&particles[i],
+					&particles[j],
 					config.stiffness,
 					config.distanceThreshold,
-					glm::distance((*particles)[i].pos, (*particles)[j].pos));
-				constraints->push_back(c);
-				(*particles)[i].numBoundConstraints++;
-				(*particles)[j].numBoundConstraints++;
+					glm::distance(particles[i].pos, particles[j].pos));
+				constraints.push_back(c);
+				particles[i].numBoundConstraints++;
+				particles[j].numBoundConstraints++;
 			}
 	}
 }
@@ -132,13 +134,13 @@ void model::gui(bool *show)
 		particles.clear();
 		constraints.clear();
 		
-		if (selected >= predefinedModels.size())
+		if ((unsigned int)selected >= predefinedModels.size())
 		{
-			loadModel(models[selected], &particles, &constraints, config);
+			loadModel(models[selected], particles, constraints, config);
 		}
 		else
 		{
-			loadPredefinedModel(models[selected], &particles, &constraints, config);
+			loadPredefinedModel(models[selected], particles, constraints, config);
 		}
 	}
 	// Below, sliders for deciding grejs

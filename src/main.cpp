@@ -103,9 +103,6 @@ float pSleeping = 0.0001f;
 float overRelaxConst = 1.0f;
 float restitutionCoefficient = 1.f; // 1 is Elastic collision
 
-std::vector<Particle> particles;
-std::vector<Constraint*> constraints;
-
 
 static void errorCallback(int error, const char* description) {
     fprintf(stderr, "Error: %s\n", description);
@@ -380,12 +377,12 @@ int main(void) {
 	model::modelConfig conf;
 	conf.centerPos = vec3(0.f);
 	conf.distanceThreshold = 2;
-	conf.invmass = 0.1;
+	conf.invmass = 0.1f;
 	conf.phase = 0;
 	conf.scale = vec3(4.f);
 	conf.stiffness = 0.8f;
 	conf.numParticles = ivec3(4);
-	model::loadPredefinedModel("Box", &particles, &constraints, conf);
+	model::loadPredefinedModel("Box", particles, constraints, conf);
 
 	particleRenderer = new ParticleRenderer(&particles);
 	particleRenderer->init();

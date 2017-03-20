@@ -2,9 +2,9 @@
 #include "../constraints/DistanceConstraint.h"
 
 
-void Box::makeBox(std::vector<Particle>* particles, std::vector<Constraint*>* constraints, model::modelConfig config) {
+void Box::makeBox(std::vector<Particle> &particles, std::vector<Constraint*> &constraints, model::modelConfig config) {
  
-	std::vector<Particle>::size_type start = particles->size();
+	std::vector<Particle>::size_type start = particles.size();
 
     float dx = 0, dy = 0, dz = 0;
 
@@ -36,8 +36,9 @@ void Box::makeBox(std::vector<Particle>* particles, std::vector<Constraint*>* co
                 p.velocity = vec3(0.f, 0.f, 0.f);
                 p.phase = config.phase;
 				p.numBoundConstraints = 0;
+				p.radius = min(dx, min(dy, dz)) / 2;
 
-                particles->push_back(p);
+                particles.push_back(p);
             }
         }
     }
@@ -47,17 +48,17 @@ void Box::makeBox(std::vector<Particle>* particles, std::vector<Constraint*>* co
     float distanceThreshold = config.distanceThreshold;
 	float maxDist = sqrt(dx*dx + dy*dy + dz*dz);
 
-    for (int i = start; i < particles->size(); i++) for (int j = i+1; j < particles->size(); j++) 
-        if (glm::distance((*particles)[i].pos, (*particles)[j].pos) <= maxDist)
+    for (unsigned int i = start; i < particles.size(); i++) for (unsigned int j = i+1; j < particles.size(); j++) 
+        if (glm::distance(particles[i].pos, particles[j].pos) <= maxDist)
         {
             Constraint* c = new DistanceConstraint(
-				&(*particles)[i],
-				&(*particles)[j],
+				&particles[i],
+				&particles[j],
 				config.stiffness,
 				config.distanceThreshold,
-				glm::distance((*particles)[i].pos, (*particles)[j].pos));
-            constraints->push_back(c);
-            (*particles)[i].numBoundConstraints++;
-            (*particles)[j].numBoundConstraints++;
+				glm::distance(particles[i].pos, particles[j].pos));
+            constraints.push_back(c);
+            particles[i].numBoundConstraints++;
+            particles[j].numBoundConstraints++;
         }
 }
