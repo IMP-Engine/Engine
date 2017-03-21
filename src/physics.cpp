@@ -135,7 +135,7 @@ void simulate(std::vector<Particle> &particles, std::vector<Constraint*> &constr
 		particles[i].velocity = (particles[i].pPos - particles[i].pos) / dt;
 		// rough attempt at particle sleeping implementation in order to make particles stay in one place - most likely needs proper friction to work
 	
-        if (glm::length(particles[i].pos - particles[i].pPos) > 0.0001)
+        if (glm::length(particles[i].pos - particles[i].pPos) > pSleeping)
         {
 			particles[i].pos = particles[i].pPos;
         }
