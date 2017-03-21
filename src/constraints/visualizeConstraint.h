@@ -32,7 +32,7 @@ namespace visualization {
 	// Currently only handles distance constraints
 	void drawConstraints(std::vector<Constraint*>* constraints, mat4 mvp) {
 		
-		if (!draw)
+		if (!draw || !constraints->size())
 			return;
 
 		// Copy positions into separate vector to avoid uploading particles into GPU
