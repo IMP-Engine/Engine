@@ -59,7 +59,7 @@ namespace visualization {
 
 		glDrawArrays(GL_LINES, 0, pos.size());
 		//glDisableVertexAttribArray(0);
-		//glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		
 		glUseProgram(0);
 	}

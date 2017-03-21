@@ -21,7 +21,6 @@ class Scene
 {
 public:
     Scene();
-    ~Scene();
     unsigned int vbo;
     unsigned int vao;
     unsigned int ibo;
@@ -30,13 +29,11 @@ public:
 
     glm::mat4 modelMatrix;
 
-
     std::vector<float> vertexes;
     std::vector<unsigned short> indices;
     std::vector<float> normals;
     std::vector<Triangle> triangles;
     int numTriangles;
-
 
     void render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix);
     void init();

@@ -172,17 +172,9 @@ void initGL() {
     visualization::initialize();
 
     scene->init();
-   
 
-    glEnable(GL_POINT_SPRITE);
-    //glPointSize(10.1f);
-    //glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_LOWER_LEFT); // Not sure if needed, keeping meanwhile
-
-    // Not sure which one to use, keeping both meanwhile
-    glEnable(GL_PROGRAM_POINT_SIZE);
-    //glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-
-
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
 }
 
 void display() {
