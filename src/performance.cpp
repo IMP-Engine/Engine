@@ -18,7 +18,7 @@
 */
 struct gList : std::vector<uint_fast64_t>
 {
-	int operator[] (int idx) {
+	uint_fast64_t operator[] (unsigned int idx) {
 		if (this->size() > idx)
 			return (*(this->begin() + idx));
 		else
@@ -67,7 +67,7 @@ std::vector< gList > graphData(90);
 /*
 	Maximum value of graphData, used to determine scaling of visualization graph	
 */
-int_fast64_t max = 0;
+uint_fast64_t max = 0;
 
 /*
 	List of colors used in graph TODO use ImCol
@@ -96,7 +96,7 @@ namespace performance {
 		for (uint32_t i = 0; i < graphData.size(); i++)
 		{
 			if (graphData[i].size() == 0)
-				graphData[i].push_back(0.0f);
+				graphData[i].push_back(0);
 		}
 	}
 
@@ -133,7 +133,7 @@ namespace performance {
 		static int offset = 0;
 		offset = (offset + 1) % graphData.size();
 		graphData[offset].clear();
-		graphData[offset].push_back(0.0f);
+		graphData[offset].push_back(0);
 		int_fast64_t accum = 0;
 		for (auto entry : entries)
 		{
@@ -143,7 +143,7 @@ namespace performance {
 
 		// Find maximum value so that we can scale our graph
 		max = graphData[0][graphData[0].size()];
-		for (int i = 1; i < graphData.size(); i++)
+		for (unsigned int i = 1; i < graphData.size(); i++)
 		{
 			max = max > graphData[i][graphData[i].size()] ? max : graphData[i][graphData[i].size()];
 		}

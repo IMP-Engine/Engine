@@ -8,6 +8,6 @@
 
 
 namespace Box {
-	void makeBox(std::vector<Particle>* particles, std::vector<Constraint*>* constraints, model::modelConfig config);
+	void makeBox(std::vector<Particle> &particles, std::vector<Constraint*> &constraints, model::modelConfig config);
 }
 
