@@ -11,6 +11,7 @@
 #include "../tbb/include/tbb/parallel_for.h"
 
 #include "performance.h"
+#include "camera.h"
 
 #include "glHelper.h"
 #include <glm/glm.hpp>
@@ -37,8 +38,7 @@
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
 
-#define MAX_FOV 70.0f
-#define MIN_FOV 1.0f
+
 
 using namespace glm;
 using namespace std;
@@ -60,23 +60,10 @@ const GLuint WIDTH = 1280, HEIGHT = 720;
 
 
 // Camera
-vec3 cameraPos = vec3(0.0f, 0.0f, 30.0f);
-vec3 cameraFront = vec3(0.0f, 0.0f, -1.0f);
-vec3 cameraUp = vec3(0.0f, 1.0f, 0.0f);
-GLfloat yaw = -90.0f;
-GLfloat pitch = 0.0f;
-GLfloat lastX = WIDTH / 2;
-GLfloat lastY = HEIGHT / 2;
-GLfloat fovy = 70.0f;
+Camera camera;
+
+// input
 bool keys[1024];
-GLfloat xoffset, yoffset; // not necessarily global if camera movement slide doesn't need it
-#define slideCoefficient 10 // lower = longer slide
-vec3 forwardMovement = vec3(0.0f);
-vec3 backwardMovement = vec3(0.0f);
-vec3 rightMovement = vec3(0.0f);
-vec3 leftMovement = vec3(0.0f);
-vec3 upMovement = vec3(0.0f);
-vec3 downMovement = vec3(0.0f);
 
 // Deltatime
 GLfloat deltaTime = 0.0f;
@@ -121,79 +108,21 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 }
 
 void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        xoffset = (GLfloat)xpos - lastX;
-        yoffset = lastY - (GLfloat)ypos;
-        lastX = (GLfloat)xpos;
-        lastY = (GLfloat)ypos;
-
-        GLfloat sensitivity = 0.1f;
-        xoffset *= sensitivity;
-        yoffset *= sensitivity;
-
-        yaw = mod(yaw + xoffset, (GLfloat)360.0f);
-        pitch += yoffset;
-
-        // Limit pitch within (-90, 90) degrees
-        if (pitch > 89.0f)
-            pitch = 89.0f;
-        if (pitch < -89.0f)
-            pitch = -89.0f;
-
-        vec3 front;
-        front.x = cos(radians(pitch)) * cos(radians(yaw));
-        front.y = sin(radians(pitch));
-        front.z = cos(radians(pitch)) * sin(radians(yaw));
-        cameraFront = normalize(front);
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && !ImGui::GetIO().WantCaptureMouse) {
+		camera.mouseMovement(xpos, ypos);
     }
 }
 
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        cout << "Press." << endl;
         double x, y;
         glfwGetCursorPos(window, &x, &y);
-        lastX = (GLfloat)x;
-        lastY = (GLfloat)y;
+		camera.mouseButton(x, y);
     }
 }
 
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
-    if (fovy >= MIN_FOV && fovy <= MAX_FOV)
-        fovy -= (GLfloat)yoffset;
-    else if (fovy <= MIN_FOV)
-        fovy = MIN_FOV;
-    else 
-        fovy = MAX_FOV;
-}
-
-void doMovement() {
-    GLfloat cameraSpeed = 10.0f * deltaTime;
-    if (keys[GLFW_KEY_W])
-        forwardMovement = cameraSpeed * cameraFront;
-    if (keys[GLFW_KEY_S]) 
-        backwardMovement = - cameraSpeed * cameraFront;
-    if (keys[GLFW_KEY_A])
-        leftMovement = - normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
-    if (keys[GLFW_KEY_D])
-        rightMovement = normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
-    if (keys[GLFW_KEY_SPACE])
-        upMovement = cameraSpeed * cameraUp;
-    if (keys[GLFW_KEY_LEFT_CONTROL])
-        downMovement = - cameraSpeed * cameraUp;
-    cameraPos += forwardMovement;
-    cameraPos += backwardMovement;
-    cameraPos += rightMovement;
-    cameraPos += leftMovement;
-    cameraPos += upMovement;
-    cameraPos += downMovement;
-    // Camera slide after input has finished
-    forwardMovement *= (1.0f - deltaTime * slideCoefficient);
-    backwardMovement *= (1.0f - deltaTime * slideCoefficient);
-    rightMovement *= (1.0f - deltaTime * slideCoefficient);
-    leftMovement *= (1.0f - deltaTime * slideCoefficient);
-    upMovement *= (1.0f - deltaTime * slideCoefficient);
-    downMovement *= (1.0f - deltaTime * slideCoefficient);
+	camera.mouseScroll(yoffset);
 }
 
 void initGL() {
@@ -274,15 +203,13 @@ void display() {
 
 	mat4 modelMatrix(1.0f); // Identity matrix
 
-    viewMatrix = lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-
+	viewMatrix = camera.getViewMatrix();
     // Set up a projection matrix
-    float fovy = radians(45.0f);
     float nearPlane = 0.01f;
     float farPlane = 300.0f;
 
     modelViewMatrix = viewMatrix * modelMatrix;
-    projectionMatrix = perspective(fovy, ratio, nearPlane, farPlane);
+	projectionMatrix = perspective(radians(camera.getFovy()), ratio, nearPlane, farPlane);
     modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
 
     vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
@@ -354,6 +281,7 @@ void gui()
 }
 
 int main(void) {
+
 #ifdef _DEBUG
 
     doIntersectionTests();
@@ -403,7 +331,7 @@ int main(void) {
         lastFrame = currentFrame;
 
         glfwPollEvents();
-        doMovement();
+		camera.move(keys, deltaTime);
 
         ImGui_ImplGlfwGL3_NewFrame();
 
