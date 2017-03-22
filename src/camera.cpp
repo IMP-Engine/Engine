@@ -8,6 +8,7 @@ Camera::Camera(vec3 cameraPos, vec3 cameraUp, vec3 cameraFront, GLfloat yaw, GLf
 	this->yaw = yaw;
 	this->pitch = pitch;
 	this->fovy = fovy;
+	input::subscribeObserver(this);
 }
 
 mat4 Camera::getViewMatrix()
@@ -15,8 +16,13 @@ mat4 Camera::getViewMatrix()
 	return lookAt(this->cameraPos, this->cameraPos + this->cameraFront, this->cameraUp);
 }
 
-void Camera::mouseMovement(GLfloat newx, GLfloat newy)
+void Camera::mouseCallback(GLFWwindow* window, double newx, double newy)
 {
+
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) != GLFW_PRESS) {
+		return;
+	}
+
 	this->xoffset = newx - this->lastX;
 	this->yoffset = this->lastY - newy;
 	this->lastX = newx;
@@ -42,13 +48,18 @@ void Camera::mouseMovement(GLfloat newx, GLfloat newy)
 	this->cameraFront = normalize(front);
 }
 
-void Camera::mouseButton(GLfloat newx, GLfloat newy)
+void Camera::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
-	this->lastX = newx;
-	this->lastY = newy;
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		double x, y;
+		glfwGetCursorPos(window, &x, &y);
+		this->lastX = x;
+		this->lastY = y;
+	}
+	
 }
 
-void Camera::mouseScroll(GLfloat yoffset)
+void Camera::mouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	if (this->fovy >= MIN_FOV && this->fovy <= MAX_FOV)
 		this->fovy -= yoffset;

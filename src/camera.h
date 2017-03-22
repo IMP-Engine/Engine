@@ -2,10 +2,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <GLFW/glfw3.h>
+#include "input.h"
 
 using namespace glm;
 
-class Camera
+class Camera : input::Observer
 {
 public:
 	
@@ -14,27 +15,29 @@ public:
 
 	mat4 getViewMatrix();
 
-	void mouseMovement(GLfloat newx, GLfloat newy);
+	void mouseCallback(GLFWwindow* window, double newx, double newy);
 
-	void mouseButton(GLfloat newx, GLfloat newy);
+	void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 
-	void mouseScroll(GLfloat yoffset);
+	void mouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+
+	void keyCallback(GLFWwindow*, int, int, int, int) {}
 
 	void move(bool keys[], float deltaTime);
 
-	GLfloat getFovy() { return this->fovy; }
+	float getFovy() { return this->fovy; }
 
 private:
 	vec3 cameraPos;
 	vec3 cameraFront;
 	vec3 cameraUp;
-	GLfloat yaw;
-	GLfloat pitch;
-	GLfloat lastX = 0;
-	GLfloat lastY = 0;
-	GLfloat fovy;
-
-	GLfloat xoffset, yoffset; // not necessarily global if camera movement slide doesn't need it
+	float yaw;
+	float pitch;
+	float lastX = 0;
+	float lastY = 0;
+	float fovy;
+	
+	float xoffset, yoffset; // not necessarily global if camera movement slide doesn't need it
 #define slideCoefficient 10 // lower = longer slide
 #define MAX_FOV 70.0f
 #define MIN_FOV 1.0f

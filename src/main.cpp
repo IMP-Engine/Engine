@@ -30,44 +30,32 @@
 #include "constraints/DistanceConstraint.h"
 #include "constraints/visualizeConstraint.h"
 #include "models/model.h"
+#include "input.h"
 
 #ifdef _DEBUG
 #include "intersections/tests.h"
 #endif // _DEB
 
-#define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
-
-
-
 
 using namespace glm;
 using namespace std;
 
-/*************************************************************************
+/**************************************************************************
  ********************** Global variables **********************************
  **************************************************************************/
 
-// Global variables
-#define MAX_FOV 70.0f
-#define MIN_FOV 1.0f
-
-
-// Application
+ // Application
 GLFWwindow* window;
 ImVec4 clear_color = ImColor(255, 255, 255);;
 bool vsync = true;
 const GLuint WIDTH = 1280, HEIGHT = 720;
 
-
 // Camera
 Camera camera;
 
-// input
-bool keys[1024];
-
 // Deltatime
-GLfloat deltaTime = 0.0f;
-GLfloat lastFrame = 0.0f;
+GLdouble deltaTime = 0.0f;
+GLdouble lastFrame = 0.0f;
 
 // Scene
 Scene *scene;
@@ -80,7 +68,6 @@ ParticleRenderer *particleRenderer;
 // Light
 const vec3 lightPosition = vec3(50.0f);
 
-
 // Simulation variables and parameters
 bool doPyshics = false;
 int iterations = 5;
@@ -92,40 +79,10 @@ float restitutionCoefficient = 1.f; // 1 is Elastic collision
 
 
 static void errorCallback(int error, const char* description) {
-    fprintf(stderr, "Error: %s\n", description);
+	std::cerr << "Error: " << description << std::endl;
 }
 
-static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    ImGui_ImplGlfwGL3_KeyCallback(window, key, scancode, action, mods);
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
-    if (key >= 0 && key < 1024) {
-        if (action == GLFW_PRESS)
-            keys[key] = true;
-        else if (action == GLFW_RELEASE)
-            keys[key] = false;
-    }
-}
-
-void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && !ImGui::GetIO().WantCaptureMouse) {
-		camera.mouseMovement(xpos, ypos);
-    }
-}
-
-void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        double x, y;
-        glfwGetCursorPos(window, &x, &y);
-		camera.mouseButton(x, y);
-    }
-}
-
-void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
-	camera.mouseScroll(yoffset);
-}
-
-void initGL() {
+void init() {
     glfwSetErrorCallback(errorCallback);
 
     if (!glfwInit())
@@ -160,21 +117,38 @@ void initGL() {
     debug::setupGLDebugMessages();
 #endif
 
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
+
     ImGui_ImplGlfwGL3_Init(window, true); 
 
-    // steal callback and call imgui in our callback
-    glfwSetKeyCallback(window, keyCallback);
-    glfwSetCursorPosCallback(window, mouseCallback);
-    glfwSetScrollCallback(window, scrollCallback);    
-    glfwSetMouseButtonCallback(window, mouseButtonCallback);
+	input::initialize(window);
 
-    // Constraint visualization setup
     visualization::initialize();
+
+	performance::initialize();
+
+	scene = new Scene;
+	particles.reserve(200000);
+	constraints.reserve(2000000);
 
     scene->init();
 
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
+	model::loadModelNames();
+
+	// Load some model to begin with, so that debugging is easier on us
+	model::modelConfig conf;
+	conf.centerPos = vec3(0.f);
+	conf.distanceThreshold = 2;
+	conf.invmass = 0.8f;
+	conf.phase = 0;
+	conf.scale = vec3(4.f);
+	conf.stiffness = 0.8f;
+	conf.numParticles = ivec3(4);
+	model::loadPredefinedModel("Box", particles, constraints, conf);
+
+	particleRenderer = new ParticleRenderer(&particles);
+	particleRenderer->init();
 }
 
 void display() {
@@ -186,7 +160,6 @@ void display() {
     mat4 viewMatrix, modelViewProjectionMatrix, modelViewMatrix, projectionMatrix;
 
     glfwGetFramebufferSize(window, &width, &height);
-    //ratio = width / (float)height;
     ratio = (GLfloat)WIDTH / (GLfloat)HEIGHT;
 
     glViewport(0, 0, width, height);
@@ -198,7 +171,7 @@ void display() {
 	viewMatrix = camera.getViewMatrix();
     // Set up a projection matrix
     float nearPlane = 0.01f;
-    float farPlane = 300.0f;
+    float farPlane = 1000.0f;
 
     modelViewMatrix = viewMatrix * modelMatrix;
 	projectionMatrix = perspective(radians(camera.getFovy()), ratio, nearPlane, farPlane);
@@ -221,8 +194,6 @@ void display() {
 
     visualization::drawConstraints(&constraints, modelViewProjectionMatrix);
 
-
-
 	// Since we may want to measure performance of something that happens after the call to gui()
 	// we place this call as late as possible to allow for measuring more things
 	performance::gui(&showPerformance);
@@ -237,12 +208,6 @@ void gui()
     // Consider scapping incase of performance
     glfwSwapInterval(vsync ? 1 : 0);
 
-    // Data for plotting frametime
-    static float frameTimes[200] = { 0 };
-    static int offset = 0;
-    frameTimes[offset] = ImGui::GetIO().DeltaTime;
-    offset = (offset + 1) % COUNT_OF(frameTimes);
-
     static bool show_demo_window = false;
 
     ImGui::Begin("IMPEngine");
@@ -252,7 +217,6 @@ void gui()
 	if (ImGui::Button("Models")) showModels ^= 1; ImGui::SameLine();
 	if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-    ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
 	visualization::gui();
     ImGui::Checkbox("Physics", &doPyshics);
     ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
@@ -280,36 +244,7 @@ int main(void) {
 
 #endif // _DEBUG
 
-
-    scene = new Scene;
-    particles.reserve(200000);
-	constraints.reserve(2000000);
-
-    performance::initialize();
-
-    initGL();
-	model::loadModelNames();
-
-	// Test actually creating something from the repo
-	tbb::empty_task a();
-
-	// Load some model to begin with, so that debugging is easier on us
-	model::modelConfig conf;
-	conf.centerPos = vec3(0.f);
-	conf.distanceThreshold = 2;
-	conf.invmass = 0.1f;
-	conf.phase = 0;
-	conf.scale = vec3(4.f);
-	conf.stiffness = 0.8f;
-	conf.numParticles = ivec3(4);
-	model::loadPredefinedModel("Box", particles, constraints, conf);
-
-	particleRenderer = new ParticleRenderer(&particles);
-	particleRenderer->init();
-
-    if (GLAD_GL_VERSION_4_3) {
-        /* We support at least OpenGL version 4.3 */
-    }
+    init();
 
     double startTime = glfwGetTime();
 
@@ -318,12 +253,12 @@ int main(void) {
 		int id = performance::startTimer("All but display()");
 
         // Calculate deltatime of current frame
-        GLfloat currentFrame = (GLfloat)glfwGetTime();
+        GLdouble currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
         glfwPollEvents();
-		camera.move(keys, deltaTime);
+		camera.move(input::getKeys(), deltaTime);
 
         ImGui_ImplGlfwGL3_NewFrame();
 
