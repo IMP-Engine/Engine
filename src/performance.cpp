@@ -1,8 +1,5 @@
 #pragma once
 #include "performance.h"
-#include <math.h> // used for 'pow'
-//remove upon merge
-#include <stdio.h>
 
 #ifdef _WIN32
 
@@ -21,7 +18,7 @@
 */
 struct gList : std::vector<uint_fast64_t>
 {
-	int operator[] (int idx) {
+	uint_fast64_t operator[] (unsigned int idx) {
 		if (this->size() > idx)
 			return (*(this->begin() + idx));
 		else
@@ -70,7 +67,7 @@ std::vector< gList > graphData(90);
 /*
 	Maximum value of graphData, used to determine scaling of visualization graph	
 */
-int_fast64_t max = 0;
+uint_fast64_t max = 0;
 
 /*
 	List of colors used in graph TODO use ImCol
@@ -99,7 +96,7 @@ namespace performance {
 		for (uint32_t i = 0; i < graphData.size(); i++)
 		{
 			if (graphData[i].size() == 0)
-				graphData[i].push_back(0.0f);
+				graphData[i].push_back(0);
 		}
 	}
 
@@ -142,7 +139,7 @@ namespace performance {
         
         // Clear the last value in graphData, and insert the latest one at the end
         graphData[graphData.size() - 1].clear();
-        graphData[graphData.size() - 1].push_back(0.0f);
+        graphData[graphData.size() - 1].push_back(0);
 
         int_fast64_t accum = 0;
         for (auto entry : entries)

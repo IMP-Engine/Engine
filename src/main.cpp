@@ -17,22 +17,25 @@
 #include <glm/gtx/transform.hpp>
 #include <vector>
 
+
+#define WORLD_MIN vec3(-20.f,-20.f,-20.f)
+#define WORLD_MAX vec3( 20.f, 20.f, 20.f)
+
+#include "performance.h"
 #include "physics.h"
 #include "particles/ParticleRenderer.h"
-#include "constraints/DistanceConstraint.h"
+#include "Scene.h"
 
+#include "constraints/DistanceConstraint.h"
 #include "constraints/visualizeConstraint.h"
 #include "models/model.h"
 
+#ifdef _DEBUG
+#include "intersections/tests.h"
+#endif // _DEB
+
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
-#ifdef _WIN32
-#define VERT_SHADER_PATH "../../src/shaders/simple.vert"
-#define FRAG_SHADER_PATH "../../src/shaders/simple.frag"
-#elif __unix__
-#define VERT_SHADER_PATH "../src/shaders/simple.vert"
-#define FRAG_SHADER_PATH "../src/shaders/simple.frag"
-#endif
 
 #define MAX_FOV 70.0f
 #define MIN_FOV 1.0f
@@ -44,14 +47,17 @@ using namespace std;
  ********************** Global variables **********************************
  **************************************************************************/
 
+// Global variables
+#define MAX_FOV 70.0f
+#define MIN_FOV 1.0f
+
+
 // Application
 GLFWwindow* window;
 ImVec4 clear_color = ImColor(255, 255, 255);;
 bool vsync = true;
 const GLuint WIDTH = 1280, HEIGHT = 720;
 
-GLint mvp_location, vpos_location, vcol_location;
-GLuint cube_ibo; // IndicesBufferObject
 
 // Camera
 vec3 cameraPos = vec3(0.0f, 0.0f, 30.0f);
@@ -76,57 +82,27 @@ vec3 downMovement = vec3(0.0f);
 GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
 
+// Scene
+Scene *scene;
+vector<Particle> particles;
+vector<Constraint *> constraints;
+
 // Shaders and rendering 
-GLuint simpleShader, particleShader;
 ParticleRenderer *particleRenderer;
 
 // Light
 const vec3 lightPosition = vec3(50.0f);
 
-// VAOs
-GLuint simpleVao, particleVao;
 
 // Simulation variables and parameters
 bool doPyshics = false;
 int iterations = 5;
 bool showPerformance = false;
 bool showModels = false;
-float pSleeping = 0.0001;
+float pSleeping = 0.0001f;
 float overRelaxConst = 1.0f;
+float restitutionCoefficient = 1.f; // 1 is Elastic collision
 
-std::vector<Particle> particles;
-std::vector<Constraint*> constraints;
-
-float cubeVertices[] = {
-    -10.0f, -10.0f,  10.0f,
-    10.0f, -10.0f,  10.0f,
-    10.0f,  10.0f,  10.0f,
-    -10.0f,  10.0f,  10.0f,
-
-    -10.0f, -10.0f, -10.0f,
-    10.0f, -10.0f, -10.0f,
-    10.0f,  10.0f, -10.0f,
-    -10.0f,  10.0f, -10.0f,
-};
-
-/*
-   float cubeVertices[] = {
-   -0.5f, -0.5f,  0.5f,
-   0.5f, -0.5f,  0.5f,
-   0.5f,  0.5f,  0.5f,
-   -0.5f,  0.5f,  0.5f,
-
-   -0.5f, -0.5f, -0.5f,
-   0.5f, -0.5f, -0.5f,
-   0.5f,  0.5f, -0.5f,
-   -0.5f,  0.5f, -0.5f,
-   };
-   */
-
-vec3 cubePositions[] = {
-    vec3(-3.0f, 0.0f, 0.0f),
-    vec3(3.0f, 0.0f, 0.0f)
-};
 
 static void errorCallback(int error, const char* description) {
     fprintf(stderr, "Error: %s\n", description);
@@ -146,10 +122,10 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 
 void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        xoffset = xpos - lastX;
-        yoffset = lastY - ypos;
-        lastX = xpos;
-        lastY = ypos;
+        xoffset = (GLfloat)xpos - lastX;
+        yoffset = lastY - (GLfloat)ypos;
+        lastX = (GLfloat)xpos;
+        lastY = (GLfloat)ypos;
 
         GLfloat sensitivity = 0.1f;
         xoffset *= sensitivity;
@@ -177,14 +153,14 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
         cout << "Press." << endl;
         double x, y;
         glfwGetCursorPos(window, &x, &y);
-        lastX = x;
-        lastY = y;
+        lastX = (GLfloat)x;
+        lastY = (GLfloat)y;
     }
 }
 
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
     if (fovy >= MIN_FOV && fovy <= MAX_FOV)
-        fovy -= yoffset;
+        fovy -= (GLfloat)yoffset;
     else if (fovy <= MIN_FOV)
         fovy = MIN_FOV;
     else 
@@ -266,64 +242,17 @@ void initGL() {
     // Constraint visualization setup
     visualization::initialize();
 
-    // Shader setup
-    simpleShader = glHelper::loadShader(VERT_SHADER_PATH, FRAG_SHADER_PATH);
-    mvp_location = glGetUniformLocation(simpleShader, "MVP");
-    vpos_location = glGetAttribLocation(simpleShader, "vPos");
-    vcol_location = glGetAttribLocation(simpleShader, "vCol");
+    scene->init();
+   
 
-    // Triangle setup
-    GLuint vertex_buffer;
-
-    glGenVertexArrays(1, &simpleVao);
-    glBindVertexArray(simpleVao);
-
-    glGenBuffers(1, &vertex_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
-
-    // Cube setup
-    GLushort cubeIndices[] = {
-        // front
-        0, 1, 2,
-        2, 3, 0,
-        // top
-        1, 5, 6,
-        6, 2, 1,
-        // back
-        7, 6, 5,
-        5, 4, 7,
-        // bottom
-        4, 0, 3,
-        3, 7, 4,
-        // left
-        4, 5, 1,
-        1, 0, 4,
-        // right
-        3, 2, 6,
-        6, 7, 3
-    };
-
-    glGenBuffers(1, &cube_ibo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeIndices), cubeIndices, GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(vpos_location);
-    glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-    glDisable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
-
-	glEnable(GL_POINT_SPRITE);
-  //glPointSize(10.0f);
-	//glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_LOWER_LEFT); // Not sure if needed, keeping meanwhile
-
+    glEnable(GL_POINT_SPRITE);
+    //glPointSize(10.1f);
+    //glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_LOWER_LEFT); // Not sure if needed, keeping meanwhile
 
     // Not sure which one to use, keeping both meanwhile
     glEnable(GL_PROGRAM_POINT_SIZE);
     //glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-    //particleRenderer->init();
 
 }
 
@@ -343,18 +272,7 @@ void display() {
     glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    //vec3 cameraTarget = vec3(0.0f, 0.0f, 0.0f);
-    //vec3 cameraDirection = normalize(cameraPos - cameraTarget);
-    //vec3 cameraRight = normalize(cross(cameraUp, cameraDirection));
-
-    glfwGetFramebufferSize(window, &width, &height);
-    ratio = width / (float)height;
-
-    glViewport(0, 0, width, height);
-    glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    mat4 modelMatrix(1.0f); // Identity matrix
+	mat4 modelMatrix(1.0f); // Identity matrix
 
     viewMatrix = lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
@@ -368,45 +286,28 @@ void display() {
     modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
 
     vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
-
-    //modelMatrix = translate(modelMatrix, vec3(0.0f, 0.0f, 0.0f));
-    //modelMatrix = scale(modelMatrix, vec3(5.0f, 5.0f, 5.0f));
-
-
-    // Send uniforms to shader
-    glUseProgram(simpleShader);
-    glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
-    glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
-
-    // Draw cube
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-    glBindVertexArray(simpleVao);
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_ibo);
-
+	
+    scene->render(viewMatrix, projectionMatrix);
+    
+	performance::stopTimer(id);
+	
+    if (doPyshics)
+    {
+		physics::simulate(particles, constraints, scene, ImGui::GetIO().DeltaTime, iterations);
+    }
+	
+    id = performance::startTimer("Render particles");
+    particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
 	performance::stopTimer(id);
 
-    int size;
-    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-    glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0); //sizeof(GLushort),
-    glBindVertexArray(0);
-
-    // GUI
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	
-	if(doPyshics)
-		physics::simulate(&particles, &constraints, ImGui::GetIO().DeltaTime, iterations);
-	
     visualization::drawConstraints(&constraints, modelViewProjectionMatrix);
-  
-	id = performance::startTimer("Render particles");
-	particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
-	performance::stopTimer(id);
+
 
 
 	// Since we may want to measure performance of something that happens after the call to gui()
 	// we place this call as late as possible to allow for measuring more things
 	performance::gui(&showPerformance);
+
     ImGui::Render();
 
     glfwSwapBuffers(window);
@@ -438,6 +339,7 @@ void gui()
     ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
     ImGui::SliderFloat("Over-relax-constant", &overRelaxConst, 1, 5);
     ImGui::SliderFloat("Particle Sleeping (squared)", &pSleeping, 0, 1, "%.9f", 10.f);
+	ImGui::SliderFloat("Restitution Coeff.", &restitutionCoefficient, 0, 1);
 	ImGui::End();
 
 	model::gui(&showModels);
@@ -452,7 +354,19 @@ void gui()
 }
 
 int main(void) {
-	performance::initialize();
+#ifdef _DEBUG
+
+    doIntersectionTests();
+
+#endif // _DEBUG
+
+
+    scene = new Scene;
+    particles.reserve(200000);
+	constraints.reserve(2000000);
+
+    performance::initialize();
+
     initGL();
 	model::loadModelNames();
 
@@ -463,12 +377,12 @@ int main(void) {
 	model::modelConfig conf;
 	conf.centerPos = vec3(0.f);
 	conf.distanceThreshold = 2;
-	conf.invmass = 0.1;
+	conf.invmass = 0.1f;
 	conf.phase = 0;
 	conf.scale = vec3(4.f);
 	conf.stiffness = 0.8f;
 	conf.numParticles = ivec3(4);
-	model::loadPredefinedModel("Box", &particles, &constraints, conf);
+	model::loadPredefinedModel("Box", particles, constraints, conf);
 
 	particleRenderer = new ParticleRenderer(&particles);
 	particleRenderer->init();
@@ -484,7 +398,7 @@ int main(void) {
 		int id = performance::startTimer("All but display()");
 
         // Calculate deltatime of current frame
-        GLfloat currentFrame = glfwGetTime();
+        GLfloat currentFrame = (GLfloat)glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
