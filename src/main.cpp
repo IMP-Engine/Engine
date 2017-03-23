@@ -76,6 +76,8 @@ bool showModels = false;
 float pSleeping = 0.0001f;
 float overRelaxConst = 1.0f;
 float restitutionCoefficient = 1.f; // 1 is Elastic collision
+bool useVariableTimestep = true;
+float timestep = 0.01667;
 
 
 static void errorCallback(int error, const char* description) {
@@ -151,7 +153,7 @@ void init() {
 	particleRenderer->init();
 }
 
-void display() {
+void display(double deltaTime) {
 
 	int id = performance::startTimer("Reset and draw scene");
 
@@ -185,7 +187,7 @@ void display() {
 	
     if (doPyshics)
     {
-		physics::simulate(particles, constraints, scene, ImGui::GetIO().DeltaTime, iterations);
+		physics::simulate(particles, constraints, scene, useVariableTimestep ? deltaTime : timestep, iterations);
     }
 	
     id = performance::startTimer("Render particles");
@@ -218,11 +220,17 @@ void gui()
 	if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	visualization::gui();
-    ImGui::Checkbox("Physics", &doPyshics);
+	ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
+	ImGui::Checkbox("Variable timestep", &useVariableTimestep);
     ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
     ImGui::SliderFloat("Over-relax-constant", &overRelaxConst, 1, 5);
     ImGui::SliderFloat("Particle Sleeping (squared)", &pSleeping, 0, 1, "%.9f", 10.f);
 	ImGui::SliderFloat("Restitution Coeff.", &restitutionCoefficient, 0, 1);
+	if (!useVariableTimestep) 
+	{
+		ImGui::SliderFloat("Timestep", &timestep, 0, .05f, "%.5f"); ImGui::SameLine();
+		ImGui::Text((std::to_string(1 / timestep) + " \"FPS\"").c_str());
+	}
 	ImGui::End();
 
 	model::gui(&showModels);
@@ -266,7 +274,7 @@ int main(void) {
 
 		performance::stopTimer(id);
 
-        display();
+        display(deltaTime);
 		performance::next();
     }
 
