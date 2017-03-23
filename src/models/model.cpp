@@ -30,7 +30,7 @@ void model::loadModelNames() {
 }
 
 // This 
-void model::loadPredefinedModel(std::string model, std::vector<Particle> &particles, std::vector<Constraint*> &constraints, modelConfig config)
+void model::loadPredefinedModel(std::string model, ParticleData &particles, std::vector<Constraint*> &constraints, modelConfig config)
 {
 	if (model == "Box")
 	{
@@ -40,7 +40,7 @@ void model::loadPredefinedModel(std::string model, std::vector<Particle> &partic
 
 // For more information on what *max, origin and spacing is, refer to https://github.com/christopherbatty/SDFGen
 // Explanation is found in main.cpp
-void model::loadModel(std::string model, std::vector<Particle> &particles, std::vector<Constraint*> &constraints, modelConfig config)
+void model::loadModel(std::string model, ParticleData &particles, std::vector<Constraint*> &constraints, modelConfig config)
 {
 
 	std::vector<Particle>::size_type start = particles.size();

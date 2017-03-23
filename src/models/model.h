@@ -11,7 +11,7 @@
 #include "../imgui/imgui.h"
 
 #include "modelConfig.h"
-#include "../particles/Particle.h"
+#include "../particles/ParticleData.h"
 #include "../constraints/Constraint.h"
 #include "../constraints/DistanceConstraint.h"
 
@@ -30,13 +30,13 @@ namespace model {
 	/*
 		Loads a non sdf model into particles and adds object specific constraints.
 	*/
-	void loadPredefinedModel(std::string model, std::vector<Particle> &particles, std::vector<Constraint*> &constraints, modelConfig config);
+	void loadPredefinedModel(std::string model, ParticleData &particles, std::vector<Constraint*> &constraints, modelConfig config);
 
 	/*
 		Loads the object located at path into particles and adds simple 
 		distance constraints to (potential) 26 nearest neighbours into constraints.
 	*/
-	void loadModel(std::string name, std::vector<Particle> &particles, std::vector<Constraint*> &constraints, modelConfig c);
+	void loadModel(std::string name, ParticleData &particles, std::vector<Constraint*> &constraints, modelConfig c);
 
 	/*
 		Displays a window where the user can select different type of models.

@@ -36,11 +36,7 @@
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
-
-#define MAX_FOV 70.0f
-#define MIN_FOV 1.0f
-
-using namespace glm;
+//using namespace glm;
 using namespace std;
 
 /*************************************************************************
@@ -63,11 +59,11 @@ const GLuint WIDTH = 1280, HEIGHT = 720;
 vec3 cameraPos = vec3(0.0f, 0.0f, 30.0f);
 vec3 cameraFront = vec3(0.0f, 0.0f, -1.0f);
 vec3 cameraUp = vec3(0.0f, 1.0f, 0.0f);
-GLfloat yaw = -90.0f;
-GLfloat pitch = 0.0f;
-GLfloat lastX = WIDTH / 2;
-GLfloat lastY = HEIGHT / 2;
-GLfloat fovy = 70.0f;
+float yaw = -90.0f;
+float pitch = 0.0f;
+float lastX = WIDTH / 2;
+float lastY = HEIGHT / 2;
+float fovy = 70.0f;
 bool keys[1024];
 GLfloat xoffset, yoffset; // not necessarily global if camera movement slide doesn't need it
 #define slideCoefficient 10 // lower = longer slide
@@ -84,8 +80,7 @@ GLfloat lastFrame = 0.0f;
 
 // Scene
 Scene *scene;
-vector<Particle> particles;
-vector<Constraint *> constraints;
+Physics physicSystem;
 
 // Shaders and rendering 
 ParticleRenderer *particleRenderer;
@@ -293,14 +288,14 @@ void display() {
 	
     if (doPyshics)
     {
-		physics::simulate(particles, constraints, scene, ImGui::GetIO().DeltaTime, iterations);
+		physicSystem.step(scene, ImGui::GetIO().DeltaTime, iterations);
     }
 	
     id = performance::startTimer("Render particles");
     particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
 	performance::stopTimer(id);
 
-    visualization::drawConstraints(&constraints, modelViewProjectionMatrix);
+    visualization::drawConstraints(&physicSystem.constraints, modelViewProjectionMatrix);
 
 
 
@@ -362,8 +357,7 @@ int main(void) {
 
 
     scene = new Scene;
-    particles.reserve(200000);
-	constraints.reserve(2000000);
+    physicSystem = Physics();
 
     performance::initialize();
 
@@ -382,10 +376,10 @@ int main(void) {
 	conf.scale = vec3(4.f);
 	conf.stiffness = 0.8f;
 	conf.numParticles = ivec3(4);
-	model::loadPredefinedModel("Box", particles, constraints, conf);
+	model::loadPredefinedModel("Box", physicSystem.particles, physicSystem.constraints, conf);
 
-	particleRenderer = new ParticleRenderer(&particles);
-	particleRenderer->init();
+	particleRenderer = new ParticleRenderer();
+	particleRenderer->init(physicSystem.particles);
 
     if (GLAD_GL_VERSION_4_3) {
         /* We support at least OpenGL version 4.3 */
