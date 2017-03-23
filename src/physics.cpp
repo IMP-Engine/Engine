@@ -29,7 +29,7 @@ void simulate(std::vector<Particle> &particles, std::vector<Constraint*> &constr
 
 	/* Based on 2007 PBD, NOT Unified Framework */
 
-	const float GRAVITY = 4.0f;
+	const float GRAVITY = 6.0f;
 	for (std::vector<glm::vec3>::size_type i = 0; i != particles.size(); i++) {
 		/*
 		* For all particles i
@@ -37,7 +37,7 @@ void simulate(std::vector<Particle> &particles, std::vector<Constraint*> &constr
 		* Damp velocities		-- Skip for now -- TODO --
 		* Predict position		x_i^* = x_i + dt * v_i
 		*/
-		particles[i].velocity = particles[i].velocity - glm::vec3(0.f, dt * GRAVITY, 0.f) * particles[i].invmass; // Gravity
+		particles[i].velocity = particles[i].velocity - glm::vec3(0.f, dt * GRAVITY, 0.f); // Gravity
 		particles[i].pPos = particles[i].pos + dt * particles[i].velocity; // symplectic Euler 
 		// ******************************************************************************************************************
 
@@ -135,7 +135,7 @@ void simulate(std::vector<Particle> &particles, std::vector<Constraint*> &constr
 		particles[i].velocity = (particles[i].pPos - particles[i].pos) / dt;
 		// rough attempt at particle sleeping implementation in order to make particles stay in one place - most likely needs proper friction to work
 	
-        if (glm::length(particles[i].pos - particles[i].pPos) > 0.0001)
+        if (glm::length(particles[i].pos - particles[i].pPos) > pSleeping)
         {
 			particles[i].pos = particles[i].pPos;
         }

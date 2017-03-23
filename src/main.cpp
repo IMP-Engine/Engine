@@ -11,6 +11,7 @@
 #include "../tbb/include/tbb/parallel_for.h"
 
 #include "performance.h"
+#include "camera.h"
 
 #include "glHelper.h"
 #include <glm/glm.hpp>
@@ -29,58 +30,32 @@
 #include "constraints/DistanceConstraint.h"
 #include "constraints/visualizeConstraint.h"
 #include "models/model.h"
+#include "input.h"
 
 #ifdef _DEBUG
 #include "intersections/tests.h"
 #endif // _DEB
 
-#define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
-
-
-#define MAX_FOV 70.0f
-#define MIN_FOV 1.0f
 
 using namespace glm;
 using namespace std;
 
-/*************************************************************************
+/**************************************************************************
  ********************** Global variables **********************************
  **************************************************************************/
 
-// Global variables
-#define MAX_FOV 70.0f
-#define MIN_FOV 1.0f
-
-
-// Application
+ // Application
 GLFWwindow* window;
 ImVec4 clear_color = ImColor(255, 255, 255);;
 bool vsync = true;
 const GLuint WIDTH = 1280, HEIGHT = 720;
 
-
 // Camera
-vec3 cameraPos = vec3(0.0f, 0.0f, 30.0f);
-vec3 cameraFront = vec3(0.0f, 0.0f, -1.0f);
-vec3 cameraUp = vec3(0.0f, 1.0f, 0.0f);
-GLfloat yaw = -90.0f;
-GLfloat pitch = 0.0f;
-GLfloat lastX = WIDTH / 2;
-GLfloat lastY = HEIGHT / 2;
-GLfloat fovy = 70.0f;
-bool keys[1024];
-GLfloat xoffset, yoffset; // not necessarily global if camera movement slide doesn't need it
-#define slideCoefficient 10 // lower = longer slide
-vec3 forwardMovement = vec3(0.0f);
-vec3 backwardMovement = vec3(0.0f);
-vec3 rightMovement = vec3(0.0f);
-vec3 leftMovement = vec3(0.0f);
-vec3 upMovement = vec3(0.0f);
-vec3 downMovement = vec3(0.0f);
+Camera camera;
 
 // Deltatime
-GLfloat deltaTime = 0.0f;
-GLfloat lastFrame = 0.0f;
+GLdouble deltaTime = 0.0f;
+GLdouble lastFrame = 0.0f;
 
 // Scene
 Scene *scene;
@@ -93,7 +68,6 @@ ParticleRenderer *particleRenderer;
 // Light
 const vec3 lightPosition = vec3(50.0f);
 
-
 // Simulation variables and parameters
 bool doPyshics = false;
 int iterations = 5;
@@ -105,98 +79,10 @@ float restitutionCoefficient = 1.f; // 1 is Elastic collision
 
 
 static void errorCallback(int error, const char* description) {
-    fprintf(stderr, "Error: %s\n", description);
+	std::cerr << "Error: " << description << std::endl;
 }
 
-static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    ImGui_ImplGlfwGL3_KeyCallback(window, key, scancode, action, mods);
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
-    if (key >= 0 && key < 1024) {
-        if (action == GLFW_PRESS)
-            keys[key] = true;
-        else if (action == GLFW_RELEASE)
-            keys[key] = false;
-    }
-}
-
-void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        xoffset = (GLfloat)xpos - lastX;
-        yoffset = lastY - (GLfloat)ypos;
-        lastX = (GLfloat)xpos;
-        lastY = (GLfloat)ypos;
-
-        GLfloat sensitivity = 0.1f;
-        xoffset *= sensitivity;
-        yoffset *= sensitivity;
-
-        yaw = mod(yaw + xoffset, (GLfloat)360.0f);
-        pitch += yoffset;
-
-        // Limit pitch within (-90, 90) degrees
-        if (pitch > 89.0f)
-            pitch = 89.0f;
-        if (pitch < -89.0f)
-            pitch = -89.0f;
-
-        vec3 front;
-        front.x = cos(radians(pitch)) * cos(radians(yaw));
-        front.y = sin(radians(pitch));
-        front.z = cos(radians(pitch)) * sin(radians(yaw));
-        cameraFront = normalize(front);
-    }
-}
-
-void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        cout << "Press." << endl;
-        double x, y;
-        glfwGetCursorPos(window, &x, &y);
-        lastX = (GLfloat)x;
-        lastY = (GLfloat)y;
-    }
-}
-
-void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
-    if (fovy >= MIN_FOV && fovy <= MAX_FOV)
-        fovy -= (GLfloat)yoffset;
-    else if (fovy <= MIN_FOV)
-        fovy = MIN_FOV;
-    else 
-        fovy = MAX_FOV;
-}
-
-void doMovement() {
-    GLfloat cameraSpeed = 10.0f * deltaTime;
-    if (keys[GLFW_KEY_W])
-        forwardMovement = cameraSpeed * cameraFront;
-    if (keys[GLFW_KEY_S]) 
-        backwardMovement = - cameraSpeed * cameraFront;
-    if (keys[GLFW_KEY_A])
-        leftMovement = - normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
-    if (keys[GLFW_KEY_D])
-        rightMovement = normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
-    if (keys[GLFW_KEY_SPACE])
-        upMovement = cameraSpeed * cameraUp;
-    if (keys[GLFW_KEY_LEFT_CONTROL])
-        downMovement = - cameraSpeed * cameraUp;
-    cameraPos += forwardMovement;
-    cameraPos += backwardMovement;
-    cameraPos += rightMovement;
-    cameraPos += leftMovement;
-    cameraPos += upMovement;
-    cameraPos += downMovement;
-    // Camera slide after input has finished
-    forwardMovement *= (1.0f - deltaTime * slideCoefficient);
-    backwardMovement *= (1.0f - deltaTime * slideCoefficient);
-    rightMovement *= (1.0f - deltaTime * slideCoefficient);
-    leftMovement *= (1.0f - deltaTime * slideCoefficient);
-    upMovement *= (1.0f - deltaTime * slideCoefficient);
-    downMovement *= (1.0f - deltaTime * slideCoefficient);
-}
-
-void initGL() {
+void init() {
     glfwSetErrorCallback(errorCallback);
 
     if (!glfwInit())
@@ -231,29 +117,38 @@ void initGL() {
     debug::setupGLDebugMessages();
 #endif
 
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
+
     ImGui_ImplGlfwGL3_Init(window, true); 
 
-    // steal callback and call imgui in our callback
-    glfwSetKeyCallback(window, keyCallback);
-    glfwSetCursorPosCallback(window, mouseCallback);
-    glfwSetScrollCallback(window, scrollCallback);    
-    glfwSetMouseButtonCallback(window, mouseButtonCallback);
+	input::initialize(window);
 
-    // Constraint visualization setup
     visualization::initialize();
 
+	performance::initialize();
+
+	scene = new Scene;
+	particles.reserve(200000);
+	constraints.reserve(2000000);
+
     scene->init();
-   
 
-    glEnable(GL_POINT_SPRITE);
-    //glPointSize(10.1f);
-    //glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_LOWER_LEFT); // Not sure if needed, keeping meanwhile
+	model::loadModelNames();
 
-    // Not sure which one to use, keeping both meanwhile
-    glEnable(GL_PROGRAM_POINT_SIZE);
-    //glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+	// Load some model to begin with, so that debugging is easier on us
+	model::modelConfig conf;
+	conf.centerPos = vec3(0.f);
+	conf.distanceThreshold = 2;
+	conf.invmass = 0.8f;
+	conf.phase = 0;
+	conf.scale = vec3(4.f);
+	conf.stiffness = 0.8f;
+	conf.numParticles = ivec3(4);
+	model::loadPredefinedModel("Box", particles, constraints, conf);
 
-
+	particleRenderer = new ParticleRenderer(&particles);
+	particleRenderer->init();
 }
 
 void display() {
@@ -265,7 +160,6 @@ void display() {
     mat4 viewMatrix, modelViewProjectionMatrix, modelViewMatrix, projectionMatrix;
 
     glfwGetFramebufferSize(window, &width, &height);
-    //ratio = width / (float)height;
     ratio = (GLfloat)WIDTH / (GLfloat)HEIGHT;
 
     glViewport(0, 0, width, height);
@@ -274,15 +168,13 @@ void display() {
 
 	mat4 modelMatrix(1.0f); // Identity matrix
 
-    viewMatrix = lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-
+	viewMatrix = camera.getViewMatrix();
     // Set up a projection matrix
-    float fovy = radians(45.0f);
     float nearPlane = 0.01f;
-    float farPlane = 300.0f;
+    float farPlane = 1000.0f;
 
     modelViewMatrix = viewMatrix * modelMatrix;
-    projectionMatrix = perspective(fovy, ratio, nearPlane, farPlane);
+	projectionMatrix = perspective(radians(camera.getFovy()), ratio, nearPlane, farPlane);
     modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
 
     vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
@@ -302,8 +194,6 @@ void display() {
 
     visualization::drawConstraints(&constraints, modelViewProjectionMatrix);
 
-
-
 	// Since we may want to measure performance of something that happens after the call to gui()
 	// we place this call as late as possible to allow for measuring more things
 	performance::gui(&showPerformance);
@@ -318,12 +208,6 @@ void gui()
     // Consider scapping incase of performance
     glfwSwapInterval(vsync ? 1 : 0);
 
-    // Data for plotting frametime
-    static float frameTimes[200] = { 0 };
-    static int offset = 0;
-    frameTimes[offset] = ImGui::GetIO().DeltaTime;
-    offset = (offset + 1) % COUNT_OF(frameTimes);
-
     static bool show_demo_window = false;
 
     ImGui::Begin("IMPEngine");
@@ -333,7 +217,6 @@ void gui()
 	if (ImGui::Button("Models")) showModels ^= 1; ImGui::SameLine();
 	if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-    ImGui::PlotLines("", frameTimes, COUNT_OF(frameTimes), offset, "Time/Frame [s]", FLT_MIN, FLT_MAX, ImVec2(0, 80));
 	visualization::gui();
     ImGui::Checkbox("Physics", &doPyshics);
     ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
@@ -354,42 +237,14 @@ void gui()
 }
 
 int main(void) {
+
 #ifdef _DEBUG
 
     doIntersectionTests();
 
 #endif // _DEBUG
 
-
-    scene = new Scene;
-    particles.reserve(200000);
-	constraints.reserve(2000000);
-
-    performance::initialize();
-
-    initGL();
-	model::loadModelNames();
-
-	// Test actually creating something from the repo
-	tbb::empty_task a();
-
-	// Load some model to begin with, so that debugging is easier on us
-	model::modelConfig conf;
-	conf.centerPos = vec3(0.f);
-	conf.distanceThreshold = 2;
-	conf.invmass = 0.1f;
-	conf.phase = 0;
-	conf.scale = vec3(4.f);
-	conf.stiffness = 0.8f;
-	conf.numParticles = ivec3(4);
-	model::loadPredefinedModel("Box", particles, constraints, conf);
-
-	particleRenderer = new ParticleRenderer(&particles);
-	particleRenderer->init();
-
-    if (GLAD_GL_VERSION_4_3) {
-        /* We support at least OpenGL version 4.3 */
-    }
+    init();
 
     double startTime = glfwGetTime();
 
@@ -398,12 +253,12 @@ int main(void) {
 		int id = performance::startTimer("All but display()");
 
         // Calculate deltatime of current frame
-        GLfloat currentFrame = (GLfloat)glfwGetTime();
+        GLdouble currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
         glfwPollEvents();
-        doMovement();
+		camera.move(input::getKeys(), deltaTime);
 
         ImGui_ImplGlfwGL3_NewFrame();
 
