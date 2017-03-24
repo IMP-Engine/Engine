@@ -49,6 +49,7 @@ Scene::Scene()
          0.5773f,  0.5773f, -0.5773f,
         -0.5773f,  0.5773f, -0.5773f,
     };
+
     for (int i = 0; i < 24; i++)
     {
         vertexes.push_back(cubeVertices[i]);
@@ -83,20 +84,10 @@ Scene::Scene()
     }
 }
 
-
-Scene::~Scene()
-{
-    delete &vertexes;
-    delete &indices;
-    delete &normals;
-}
-
-
 void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix) {
 
     glm::mat4 modelViewMatrix = viewMatrix * modelMatrix;
     glm::mat4 modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
-
 
     // Send uniforms to shader
     glUseProgram(shader);
@@ -107,15 +98,18 @@ void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     glBindVertexArray(vao);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+   
     int size;
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
     glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0); //sizeof(GLushort),
+
+	glBindVertexArray(0);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void Scene::init() {
+
     // Shader setup
     shader = glHelper::loadShader(VERT_SHADER_PATH, FRAG_SHADER_PATH);
     GLuint mvp_location = glGetUniformLocation(shader, "MVP");
@@ -136,7 +130,7 @@ void Scene::init() {
     glEnableVertexAttribArray(vpos_location);
     glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-
-    glDisable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }

@@ -21,7 +21,7 @@ void Physics::step(Scene *scene, float dt, int iterations)
 
 	/* Based on 2007 PBD, NOT Unified Framework */
 
-	const float GRAVITY = 4.0f;
+	const float GRAVITY = 6.0f;
 	for (std::vector<glm::vec3>::size_type i = 0; i != particles.cardinality; i++) {
 		/*
 		* For all particles i
@@ -29,8 +29,8 @@ void Physics::step(Scene *scene, float dt, int iterations)
 		* Damp velocities		-- Skip for now -- TODO --
 		* Predict position		x_i^* = x_i + dt * v_i
 		*/
-		velocity[i] = velocity[i] - glm::vec3(0.f, dt * GRAVITY, 0.f) * invmass[i]; // Gravity
-		pPosition[i] = position[i] + dt * velocity[i]; // symplectic Euler 
+		velocity[i] = velocity[i] - glm::vec3(0.f, dt * GRAVITY, 0.f); // Gravity
+		pPosition[i] = position[i] + dt * velocity[i]; // symplectic Euler
 		// ******************************************************************************************************************
 
 		// For all particles i
@@ -127,7 +127,7 @@ void Physics::step(Scene *scene, float dt, int iterations)
 		velocity[i] = (pPosition[i] - position[i]) / dt;
 		// rough attempt at particle sleeping implementation in order to make particles stay in one place - most likely needs proper friction to work
 	
-        if (glm::length(position[i] - pPosition[i]) > 0.0001)
+        if (glm::length(position[i] - pPosition[i]) > pSleeping)
         {
 			position[i] = pPosition[i];
         }

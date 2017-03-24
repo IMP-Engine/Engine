@@ -22,7 +22,7 @@ struct gList : std::vector<uint_fast64_t>
 		if (this->size() > idx)
 			return (*(this->begin() + idx));
 		else
-			return (*(this->end()-1));
+			return (this->back());
 	}
 };
 
@@ -119,7 +119,7 @@ namespace performance {
 #elif __unix__
 		time_struct elapsed;
 		timespec_diff(&entries[id].start, &stop, &elapsed);
-		entries[id].elapsed = (elapsed.tv_sec / 1000000) + (elapsed.tv_nsec * 1000);
+		entries[id].elapsed = (elapsed.tv_sec * (long)1000000) + (elapsed.tv_nsec / 1000);
 #endif
 		if (printTime)
 		{
@@ -130,20 +130,27 @@ namespace performance {
 	void next()
 	{
 		// Add current iteration times to our graphData
-		static int offset = 0;
-		offset = (offset + 1) % graphData.size();
-		graphData[offset].clear();
-		graphData[offset].push_back(0);
-		int_fast64_t accum = 0;
-		for (auto entry : entries)
-		{
-			accum += entry.elapsed;
-			graphData[offset].push_back(accum);
-		}
 
-		// Find maximum value so that we can scale our graph
-		max = graphData[0][graphData[0].size()];
-		for (unsigned int i = 1; i < graphData.size(); i++)
+        // Push values old values one step to the left of graphData
+        for (uint32_t i = 0; i < graphData.size() - 1; i++)
+        {
+            graphData[i] = graphData[i + 1];
+        }
+        
+        // Clear the last value in graphData, and insert the latest one at the end
+        graphData[graphData.size() - 1].clear();
+        graphData[graphData.size() - 1].push_back(0);
+
+        int_fast64_t accum = 0;
+        for (auto entry : entries)
+        {
+            accum += entry.elapsed;
+            graphData[graphData.size() - 1].push_back(accum);
+        }
+
+        // Find maximum value so that we can scale our graph
+        max = graphData[0][graphData[0].size()];
+		for (int i = 1; i < graphData.size(); i++)
 		{
 			max = max > graphData[i][graphData[i].size()] ? max : graphData[i][graphData[i].size()];
 		}
