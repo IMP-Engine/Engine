@@ -11,11 +11,12 @@
 void Physics::step(Scene *scene, float dt, int iterations)
 {
     /* Aliases */
-    std::vector<vec3> &position = particles.position;
-    std::vector<vec3> &pPosition = particles.pPosition;
-    std::vector<vec3> &velocity = particles.velocity;
-    std::vector<float> &invmass = particles.invmass;
-    std::vector<int> &phase = particles.phase;
+    std::vector<vec3>  &position  = particles.position;
+    std::vector<vec3>  &pPosition = particles.pPosition;
+    std::vector<vec3>  &velocity  = particles.velocity;
+    std::vector<float> &invmass   = particles.invmass;
+    std::vector<int>   &phase     = particles.phase;
+    std::vector<int>   &numBoundConstraints = particles.numBoundConstraints;
 
     int id = performance::startTimer("Physics");
 
@@ -101,17 +102,29 @@ void Physics::step(Scene *scene, float dt, int iterations)
 	/* 
 	 * Stationary iterative linear solver - Gauss-Seidel 
 	 */
-
 	for (int i = 0; i < iterations; i++)
 	{
-		for (Constraint *c : constraints)
+
+        /**
+         * Distance Constraints 
+         */
+        DistanceConstraintData &distanceConstraints = constraints.distanceConstraints;
+		for (int i = 0; distanceConstraints.cardinality; i++)
 		{
-			if (c->evaluate())
+            
+			if (distanceConstraints.evaluate(i,particles))
 			{ 
-				for (std::vector<Particle*>::iterator p = c->particles.begin(); p != c->particles.end(); p++)
+                std::vector<int> &constraintParticles = distanceConstraints.particles[i];
+				for (int p = 0; p < 2; p++)
 				{
 					// delta p_i = -w_i * s * grad_{p_i} C(p) * stiffness correction 
-                    (*p)->pPos -= (*p)->invmass * c->evaluateScaleFactor() * c->evaluateGradient(p) * (1 - pow(1 - c->stiffness, 1 / (float)i)) * overRelaxConst / (float)(*p)->numBoundConstraints;
+                    pPosition[p] -= 
+                        invmass[p]
+                            * distanceConstraints.scaleFactor(i,particles) 
+                            * distanceConstraints.gradient(i, p, particles) 
+                            * (1 - pow(1 - distanceConstraints.stiffness[i], 1 / (float)i)) 
+                            * overRelaxConst 
+                            / (float)numBoundConstraints[p];
                 }
 			}
 		}

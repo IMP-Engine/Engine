@@ -11,6 +11,17 @@ DistanceConstraintData::~DistanceConstraintData()
 {
 }
 
+float DistanceConstraintData::evaluate(int constraintIndex, ParticleData & particleData)
+{
+    int firstParticleIndex = particles[constraintIndex][0];
+    int secondParticleIndex = particles[constraintIndex][1];
+
+    glm::vec3 p1 = particleData.pPosition[firstParticleIndex];
+    glm::vec3 p2 = particleData.pPosition[secondParticleIndex];
+
+    return length(p1 - p2) - distance[constraintIndex];
+}
+
 glm::vec3 DistanceConstraintData::gradient(int constraintIndex, int particleIndex, ParticleData &particleData)
 {
     int firstParticleIndex  = particles[constraintIndex][0];

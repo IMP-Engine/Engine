@@ -19,6 +19,7 @@ public:
     std::vector<bool>   equality;
     std::vector<float>  threshold;
 
+    float evaluate(int constraintIndex, ParticleData &particleData);
     glm::vec3 gradient(int constraintIndex, int particleIndex, ParticleData &particleData);
     float scaleFactor(int constraintIndex, ParticleData &particleData);
 
