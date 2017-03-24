@@ -38,6 +38,36 @@ void model::loadPredefinedModel(std::string model, std::vector<Particle> &partic
 	}
 }
 
+void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vector<GLushort> &elements)
+{
+    std::ifstream in(MODEL_FOLDER + filename + ".obj", std::ios::in);
+    if (!in)
+    {
+        std::cerr << "Cannot open " << filename << ".obj" << std::endl;
+    }
+
+    std::string line;
+    while (getline(in, line))
+    {
+        if (line.substr(0, 2) == "v ")
+        {
+            std::istringstream s(line.substr(2));
+            glm::vec4 v; s >> v.x; s >> v.y; s >> v.z; v.w = 1.0f;
+            vertices.push_back(v);
+        }
+        else if (line.substr(0, 2) == "f ")
+        {
+            std::istringstream s(line.substr(2));
+            GLushort a, b, c;
+            s >> a; s >> b; s >> c;
+            a--; b--; c--;
+            elements.push_back(a); elements.push_back(b); elements.push_back(c);
+        }
+        //else if (line[0] == '#') {/* ignoring this line */}
+        //else {/* ignoring this line */}
+    }
+}
+
 // For more information on what *max, origin and spacing is, refer to https://github.com/christopherbatty/SDFGen
 // Explanation is found in main.cpp
 void model::loadModel(std::string model, std::vector<Particle> &particles, std::vector<Constraint*> &constraints, modelConfig config)
@@ -107,6 +137,117 @@ void model::loadModel(std::string model, std::vector<Particle> &particles, std::
 				particles[j].numBoundConstraints++;
 			}
 	}
+
+    // Load Mesh
+    std::vector<glm::vec4> vertices;
+    std::vector<glm::vec3> normals;
+    std::vector<GLushort> elements;
+    loadMesh(model, vertices, elements);
+    printf("Size of vertices is: %i", vertices.size());
+    
+    // Find three closest particles and calculate barycentric coordinates for all vertices
+    std::vector<float[3]> bcCoords(vertices.size());
+    std::vector<int[3]> closestParticles(vertices.size());
+
+    for (int i = 0; i < vertices.size(); i++)
+    {
+        closestParticles[i][0] = 0;
+        closestParticles[i][1] = 1;
+        closestParticles[i][2] = 2;
+
+        // Sort wrt. distance from vertex. Looks messy, but should be the fastest way? Max 3 comparisons
+        float distances[3];
+        distances[0] = distance(vec3(vertices[i]), particles[0].pos);
+        float newDist = distance(vec3(vertices[i]), particles[1].pos);
+        if (newDist >= distances[0]) { distances[1] = newDist; }
+        else
+        {
+            distances[1] = distances[0];
+            distances[0] = newDist;
+            closestParticles[i][0] = 1;
+            closestParticles[i][1] = 0;
+        }
+        newDist = distance(vec3(vertices[i]), particles[2].pos);
+        if (newDist >= distances[1]) { distances[2] = newDist; }
+        else 
+        {
+            distances[2] = distances[1];
+            closestParticles[i][2] = closestParticles[i][1];
+            if (newDist >= distances[0])
+            {
+                distances[1] = newDist;
+                closestParticles[i][1] = 2;
+            }
+            else
+            {
+                distances[1] = distances[0];
+                distances[0] = newDist;
+                closestParticles[i][1] = closestParticles[i][0];
+                closestParticles[i][0] = 2;
+            }
+        }
+        
+
+        for (std::vector<Particle>::size_type j = (start + 3); j < particles.size(); j++)
+        {
+            newDist = distance(particles[j].pos, vec3(vertices[i]));
+            if (newDist < distances[2])
+            {
+                if (newDist < distances[1])
+                {
+                    distances[2] = distances[1];
+                    closestParticles[i][2] = closestParticles[i][1];
+                    if (newDist < distances[0])
+                    {
+                        distances[1] = distances[0];
+                        distances[0] = newDist;
+                        closestParticles[i][1] = closestParticles[i][0];
+                        closestParticles[i][0] = j;
+                    }
+                    else
+                    {
+                        distances[1] = newDist;
+                        closestParticles[i][1] = j;
+                    }
+                }
+                else
+                {
+                    distances[2] = newDist;
+                    closestParticles[i][2] = j;
+                }
+            }
+        }
+        //printf("Distances: %f, %f, %f\n", distances[0], distances[1], distances[2]);
+
+        // Calculate Barycentric coordinates
+
+        // Adams BCoords
+        vec3 vertex = vec3(vertices[i]);
+        vec3 CA = particles[closestParticles[i][2]].pos - particles[closestParticles[i][0]].pos;
+        vec3 BA = particles[closestParticles[i][1]].pos - particles[closestParticles[i][0]].pos;
+        vec3 normal = normalize(cross(CA, BA));
+        bcCoords[i][2] = dot(vertex - particles[closestParticles[i][0]].pos, normal); // distance offset along normal
+        vec3 projetedPosition = vertex - bcCoords[i][2] * normal;
+
+        // Baycentric check
+
+        // particle position relative to v0
+        vec3 pPrim = projetedPosition - vertex;
+
+        // Compute dot products
+        float dotCACA = dot(CA, CA);
+        float dotCABA = dot(CA, BA);
+        float dotBABA = dot(BA, BA);
+        float dotCApPrim = dot(CA, pPrim);
+        float dotBApPrim = dot(BA, pPrim);
+
+        // Compute barycentric coordinates
+        float invDenom = 1 / (dotCACA * dotBABA - dotCABA * dotCABA);
+        bcCoords[i][0] = (dotBABA * dotCApPrim - dotCABA * dotBApPrim) * invDenom; // u
+        bcCoords[i][1] = (dotCACA * dotBApPrim - dotCABA * dotCApPrim) * invDenom; // v
+
+        printf("BCC for v[%i]: %f, %f, %f, sum: %f\n", i, bcCoords[i][0], bcCoords[i][1], bcCoords[i][2], (bcCoords[i][0]+bcCoords[i][1]+bcCoords[i][2]));
+    }
 }
 
 
