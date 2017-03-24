@@ -10,7 +10,7 @@
 
 #include "particles/ParticleData.h"
 #include "Scene.h"
-#include "constraints/Constraint.h"
+#include "constraints/ConstraintData.h"
 #include "intersections.h"
 #include "performance.h"
 
@@ -26,7 +26,7 @@ public:
     float restitutionCoefficient;
 
     ParticleData particles;
-    std::vector<Constraint*> constraints;
+    ConstraintData constraints;
 
 	void step(Scene *scene, float dt, int iterations);
 };

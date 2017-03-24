@@ -12,8 +12,6 @@ std::vector<std::string> models;
 int selected = 0;
 
 // Temporary solution. Reconsider when cleaning code/changing way that particles and constraints are handled
-extern std::vector<Particle> particles;
-extern std::vector<Constraint*> constraints;
 
 void model::loadModelNames() {
 	models.clear();
@@ -30,7 +28,7 @@ void model::loadModelNames() {
 }
 
 // This 
-void model::loadPredefinedModel(std::string model, ParticleData &particles, std::vector<Constraint*> &constraints, modelConfig config)
+void model::loadPredefinedModel(std::string model, ParticleData &particles, ConstraintData &constraints, modelConfig config)
 {
 	if (model == "Box")
 	{
@@ -40,10 +38,10 @@ void model::loadPredefinedModel(std::string model, ParticleData &particles, std:
 
 // For more information on what *max, origin and spacing is, refer to https://github.com/christopherbatty/SDFGen
 // Explanation is found in main.cpp
-void model::loadModel(std::string model, ParticleData &particles, std::vector<Constraint*> &constraints, modelConfig config)
+void model::loadModel(std::string model, ParticleData &particles, ConstraintData &constraints, modelConfig config)
 {
 
-	std::vector<Particle>::size_type start = particles.size();
+	std::vector<Particle>::size_type start = particles.cardinality;
 
 	std::ifstream file(MODEL_FOLDER + model + ".sdf");
 	if (!file)
@@ -87,31 +85,40 @@ void model::loadModel(std::string model, ParticleData &particles, std::vector<Co
 			p.phase = config.phase;
 			p.radius = d / 2;
 
-			particles.push_back(p);
+			addParticle(p,particles);
 		}
 	}
 
 	float maxDist = glm::length(d*config.scale);
-	for (std::vector<Particle>::size_type i = start; i < particles.size(); i++) for (std::vector<Particle>::size_type j = i+1; j < particles.size(); j++)
-	{
-			if (glm::distance(particles[i].pos, particles[j].pos) <= maxDist )
-			{
-				Constraint* c = new DistanceConstraint(
-					&particles[i],
-					&particles[j],
-					config.stiffness,
-					config.distanceThreshold,
-					glm::distance(particles[i].pos, particles[j].pos));
-				constraints.push_back(c);
-				particles[i].numBoundConstraints++;
-				particles[j].numBoundConstraints++;
-			}
-	}
+    std::vector<vec3> &position = particles.position;
+    std::vector<int> &numBoundConstraints = particles.numBoundConstraints;
+
+    for (std::vector<Particle>::size_type i = start; i < particles.cardinality; i++) 
+    {
+
+        for (std::vector<Particle>::size_type j = i+1; j < particles.cardinality; j++)
+	    {
+			    if (glm::distance(position[i], position[j]) <= maxDist )
+			    {
+				    addConstraint(
+                        constraints.distanceConstraints,
+					    i,
+					    j,
+					    config.stiffness,
+					    config.distanceThreshold,
+					    glm::distance(position[i], position[j]),
+                        true);
+
+				    numBoundConstraints[i]++;
+				    numBoundConstraints[j]++;
+			    }
+	    }
+    }
 }
 
 
 
-void model::gui(bool *show)
+void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints)
 {
 	if (!*show)
 	{

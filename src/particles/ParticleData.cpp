@@ -20,6 +20,17 @@ ParticleData::~ParticleData()
 }
 
 
+void ParticleData::clear() {
+    position.clear();
+    pPosition.clear();
+    velocity.clear();
+    invmass.clear();
+    phase.clear();
+    numBoundConstraints.clear();
+    radius.clear();
+    cardinality = 0;
+}
+
 void addParticle(Particle &p, ParticleData data) {
     data.position.push_back(p.pos);
     data.pPosition.push_back(p.pPos);

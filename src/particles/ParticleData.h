@@ -20,6 +20,9 @@ public:
     std::vector<int> phase;
     std::vector<int> numBoundConstraints;
     std::vector<float> radius;
+
+
+    void clear();
 };
 
 void addParticle(Particle &p, ParticleData data);

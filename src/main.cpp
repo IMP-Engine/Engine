@@ -190,7 +190,7 @@ void display() {
     particleRenderer->render(physicSystem.particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
 	performance::stopTimer(id);
 
-    visualization::drawConstraints(&physicSystem.constraints, modelViewProjectionMatrix);
+    visualization::drawConstraints(physicSystem.constraints, physicSystem.particles, modelViewProjectionMatrix);
 
 	// Since we may want to measure performance of something that happens after the call to gui()
 	// we place this call as late as possible to allow for measuring more things
@@ -223,7 +223,7 @@ void gui()
 	ImGui::SliderFloat("Restitution Coeff.", &restitutionCoefficient, 0, 1);
 	ImGui::End();
 
-	model::gui(&showModels);
+	model::gui(&showModels, physicSystem.particles, physicSystem.constraints);
 
     // Remove when all group members feel comfortable with how GUI works and what it can provide
     // Demo window

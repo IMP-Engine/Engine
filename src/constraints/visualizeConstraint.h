@@ -30,18 +30,19 @@ namespace visualization {
 	}
 
 	// Currently only handles distance constraints
-	void drawConstraints(std::vector<Constraint*>* constraints, mat4 mvp) {
+	void drawConstraints(ConstraintData &constraints, ParticleData particles, mat4 mvp) {
 		
-		if (!draw || !constraints->size())
+		if (!draw || !constraints.distanceConstraints.cardinality)
 			return;
 
 		// Copy positions into separate vector to avoid uploading particles into GPU
+        std::vector<vec3> &position = particles.position;
 		pos.clear();
-		for (auto c : *constraints)
+		for (int i = 0;i < constraints.distanceConstraints.cardinality; i++)
 		{
-			for(auto p : c->particles)
-			{ 
-				pos.push_back(p->pos);
+			for(auto p : constraints.distanceConstraints.particles[i])
+			{
+                pos.push_back(position[p]);
 			}
 		}
 

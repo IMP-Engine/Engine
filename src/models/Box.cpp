@@ -2,7 +2,7 @@
 #include "../constraints/DistanceConstraint.h"
 
 
-void Box::makeBox(ParticleData &particles, std::vector<Constraint*> &constraints, model::modelConfig config) {
+void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::modelConfig config) {
  
 	unsigned int start = particles.cardinality;
 
@@ -49,21 +49,26 @@ void Box::makeBox(ParticleData &particles, std::vector<Constraint*> &constraints
     float distanceThreshold = config.distanceThreshold;
 	float maxDist = sqrt(dx*dx + dy*dy + dz*dz);
 
+    std::vector<vec3> &position = particles.position;
+    std::vector<int> &numBoundConstraints = particles.numBoundConstraints;
+
     for (unsigned int i = start; i < particles.cardinality; i++) 
     {
         for (unsigned int j = i + 1; j < particles.cardinality; j++) 
         {
             if (glm::distance(particles.position[i], particles.position[j]) <= maxDist)
             {
-                Constraint* c = new DistanceConstraint(
-                    &particles[i],
-                    &particles[j],
+                addConstraint(
+                    constraints.distanceConstraints,
+                    i,
+                    j,
                     config.stiffness,
                     config.distanceThreshold,
-                    glm::distance(particles[i].pos, particles[j].pos));
-                constraints.push_back(c);
-                particles[i].numBoundConstraints++;
-                particles[j].numBoundConstraints++;
+                    glm::distance(position[i], position[j]),
+                    true);
+
+                numBoundConstraints[i]++;
+                numBoundConstraints[j]++;
             }
         }
     }
@@ -76,7 +81,7 @@ void Box::makeBox(ParticleData &particles, std::vector<Constraint*> &constraints
 
 
 
-    vec3 n = config.numParticles;
+    ivec3 n = config.numParticles;
  
 
     int pairs[] = {
@@ -90,14 +95,16 @@ void Box::makeBox(ParticleData &particles, std::vector<Constraint*> &constraints
     {
         int i = pairs[k];
         int j = pairs[k + 1];
-        Constraint* c = new DistanceConstraint(
-            &particles[i],
-            &particles[j],
+        addConstraint(
+            constraints.distanceConstraints,
+            i,
+            j,
             config.stiffness,
             config.distanceThreshold,
-            glm::distance(particles[i].pos, particles[j].pos));
-        constraints.push_back(c);
-        particles[i].numBoundConstraints++;
-        particles[j].numBoundConstraints++;
+            glm::distance(position[i], position[j]),
+            true);
+
+        numBoundConstraints[i]++;
+        numBoundConstraints[j]++;
     }
 }

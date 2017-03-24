@@ -152,5 +152,5 @@ void Physics::step(Scene *scene, float dt, int iterations)
 
 Physics::Physics() 
 {
-    constraints.reserve(2000000);
+    //constraints.reserve(2000000);
 }
