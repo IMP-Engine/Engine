@@ -105,8 +105,8 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
 					    i,
 					    j,
 					    config.stiffness,
-					    config.distanceThreshold,
 					    glm::distance(position[i], position[j]),
+					    config.distanceThreshold,
                         true);
 
 				    numBoundConstraints[i]++;

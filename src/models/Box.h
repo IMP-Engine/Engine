@@ -1,9 +1,8 @@
 #pragma once
 
 #include <vector>
-#include "../particles/Particle.h"
 #include "../particles/ParticleData.h"
-#include "../constraints/Constraint.h"
+#include "../constraints/ConstraintData.h"
 #include "modelConfig.h"
 #include "model.h"
 

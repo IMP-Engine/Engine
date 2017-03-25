@@ -1,5 +1,4 @@
 #include "Box.h"
-#include "../constraints/DistanceConstraint.h"
 
 
 void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::modelConfig config) {
@@ -63,8 +62,8 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::m
                     i,
                     j,
                     config.stiffness,
-                    config.distanceThreshold,
                     glm::distance(position[i], position[j]),
+                    config.distanceThreshold,
                     true);
 
                 numBoundConstraints[i]++;
@@ -100,8 +99,8 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::m
             i,
             j,
             config.stiffness,
-            config.distanceThreshold,
             glm::distance(position[i], position[j]),
+            config.distanceThreshold,
             true);
 
         numBoundConstraints[i]++;
