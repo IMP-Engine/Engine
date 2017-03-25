@@ -3,7 +3,7 @@
 
 using namespace glm;
 
-bool intersect(Triangle &triangle, ParticleData particles, int index, Intersection &isect) {
+bool intersect(Triangle &triangle, ParticleData &particles, int index, Intersection &isect) {
 
     /*
         Aliases

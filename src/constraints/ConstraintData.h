@@ -10,5 +10,6 @@ public:
     DistanceConstraintData distanceConstraints;
 
     void clear();
+    void removeBroken(ParticleData &particleData);
 };
 

@@ -50,7 +50,7 @@ namespace visualization {
 		glUniformMatrix4fv(glGetUniformLocation(constraintShader, "modelViewProjectionMatrix"), 1, false, &mvp[0].x);
 
 		glBindBuffer(GL_ARRAY_BUFFER, pos_buf);
-		glBufferData(GL_ARRAY_BUFFER, pos.size() * sizeof(vec3), &pos.front(), GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, pos.size() * sizeof(vec3), &pos[0], GL_DYNAMIC_DRAW);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 		glEnableVertexAttribArray(0);
 		//glEnable(GL_LINE_SMOOTH);

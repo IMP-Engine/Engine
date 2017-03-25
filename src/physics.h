@@ -18,8 +18,8 @@
 class Physics 
 {
 public:
-    Physics();
-    ~Physics();
+    Physics() {};
+    ~Physics() {};
 
     float overRelaxConst;
     float pSleeping;

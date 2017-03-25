@@ -49,6 +49,7 @@ void Physics::step(Scene *scene, float dt, int iterations)
 	}
 
         // Breakable constraints
+    /*
         constraints.erase(
                 std::remove_if(
                     constraints.begin(), 
@@ -70,6 +71,7 @@ void Physics::step(Scene *scene, float dt, int iterations)
                     }),
                     constraints.end()
                 );
+    */
 
 
 	// For all particles i
@@ -109,7 +111,7 @@ void Physics::step(Scene *scene, float dt, int iterations)
          * Distance Constraints 
          */
         DistanceConstraintData &distanceConstraints = constraints.distanceConstraints;
-		for (int i = 0; distanceConstraints.cardinality; i++)
+		for (int i = 0; i < distanceConstraints.cardinality; i++)
 		{
             
 			if (distanceConstraints.evaluate(i,particles))
@@ -160,10 +162,4 @@ void Physics::step(Scene *scene, float dt, int iterations)
 	
 	performance::stopTimer(id);
 	
-}
-
-
-Physics::Physics() 
-{
-    //constraints.reserve(2000000);
 }

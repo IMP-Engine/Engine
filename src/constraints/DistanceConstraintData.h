@@ -5,6 +5,11 @@
 
 #include "../particles/ParticleData.h"
 
+#ifndef MAX_DISTANCE_CONSTRAINTS
+#define MAX_DISTANCE_CONSTRAINTS 200000
+#endif // !MAX_DISTANCE_CONSTRAINTS
+
+
 class DistanceConstraintData
 {
 public:
@@ -24,8 +29,9 @@ public:
     float scaleFactor(int constraintIndex, ParticleData &particleData);
 
     void clear();
+    void removeBroken(ParticleData &particleData);
 
 };
 
-void addConstraint(DistanceConstraintData data, int firstParticleIndex, int secondParticleIndex, float stiffness, float distance, float threshold, bool equality);
+void addConstraint(DistanceConstraintData &data, int firstParticleIndex, int secondParticleIndex, float stiffness, float distance, float threshold, bool equality);
 

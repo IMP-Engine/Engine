@@ -31,7 +31,7 @@ void ParticleData::clear() {
     cardinality = 0;
 }
 
-void addParticle(Particle &p, ParticleData data) {
+void addParticle(Particle &p, ParticleData &data) {
     data.position.push_back(p.pos);
     data.pPosition.push_back(p.pPos);
     data.velocity.push_back(p.velocity);

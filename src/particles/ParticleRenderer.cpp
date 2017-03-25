@@ -66,7 +66,7 @@ void ParticleRenderer::render(ParticleData &particles, glm::mat4 &modelViewProje
 	glUniformMatrix4fv(glGetUniformLocation(particleShader, "projectionM4atrix"), 1, false, &projectionMatrix[0].x);
 	glUniform3fv(glGetUniformLocation(particleShader, "viewSpaceLightPos"), 1, &viewSpaceLightPosition.x);
 
-	glDrawArrays(GL_POINTS, 0, (*particleCount));
+	glDrawArrays(GL_POINTS, 0, particles.cardinality);
 
 	glBindVertexArray(0);
 	glUseProgram(0);

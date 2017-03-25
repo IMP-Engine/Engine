@@ -4,6 +4,12 @@
 
 DistanceConstraintData::DistanceConstraintData()
 {
+    particles.reserve(MAX_DISTANCE_CONSTRAINTS);
+    stiffness.reserve(MAX_DISTANCE_CONSTRAINTS);
+    threshold.reserve(MAX_DISTANCE_CONSTRAINTS);
+    distance.reserve(MAX_DISTANCE_CONSTRAINTS);
+    equality.reserve(MAX_DISTANCE_CONSTRAINTS);
+    cardinality=0;
 }
 
 
@@ -11,7 +17,7 @@ DistanceConstraintData::~DistanceConstraintData()
 {
 }
 
-float DistanceConstraintData::evaluate(int constraintIndex, ParticleData & particleData)
+float DistanceConstraintData::evaluate(int constraintIndex, ParticleData &particleData)
 {
     int firstParticleIndex = particles[constraintIndex][0];
     int secondParticleIndex = particles[constraintIndex][1];
@@ -58,9 +64,30 @@ void DistanceConstraintData::clear()
     cardinality = 0;
 }
 
+void DistanceConstraintData::removeBroken(ParticleData &particleData)
+{
+
+    for (int i = cardinality-1; i >= 0; i--) {
+        if (evaluate(i, particleData) > threshold[i]) {
+
+            for (unsigned int p = 0; p < particles[i].size(); p++) {
+                particleData.numBoundConstraints[particles[i][p]]--;
+            }
+
+            particles.erase(particles.begin() + i);
+            stiffness.erase(stiffness.begin() + i);
+            distance.erase( distance.begin()  + i);
+            equality.erase( equality.begin()  + i);
+            threshold.erase(threshold.begin() + i);
+            cardinality--;
+        }
+
+    }
+}
 
 
-void addConstraint(DistanceConstraintData data, int firstParticleIndex, int secondParticleIndex, float stiffness, float distance, float threshold, bool equality)
+
+void addConstraint(DistanceConstraintData &data, int firstParticleIndex, int secondParticleIndex, float stiffness, float distance, float threshold, bool equality)
 {
     data.particles.push_back({ firstParticleIndex, secondParticleIndex });
     data.stiffness.push_back(stiffness);

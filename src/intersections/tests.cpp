@@ -36,7 +36,7 @@ void doIntersectionTests() {
 
 
 
-
+    /*
     doPlaneSeparateTest();
 
     doVertexIntersectionTests();
@@ -45,6 +45,7 @@ void doIntersectionTests() {
 
     doEdgeIntersectionTests();
 
+    */
 
 }
 

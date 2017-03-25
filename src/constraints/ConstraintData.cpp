@@ -15,3 +15,8 @@ void ConstraintData::clear()
 {
     distanceConstraints.clear();
 }
+
+void ConstraintData::removeBroken(ParticleData &particleData)
+{
+    distanceConstraints.removeBroken(particleData);
+}

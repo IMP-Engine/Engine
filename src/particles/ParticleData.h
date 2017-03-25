@@ -25,4 +25,4 @@ public:
     void clear();
 };
 
-void addParticle(Particle &p, ParticleData data);
+void addParticle(Particle &p, ParticleData &data);
