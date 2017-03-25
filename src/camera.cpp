@@ -23,10 +23,10 @@ void Camera::mouseCallback(GLFWwindow* window, double newx, double newy)
 		return;
 	}
 
-	this->xoffset = newx - this->lastX;
-	this->yoffset = this->lastY - newy;
-	this->lastX = newx;
-	this->lastY = newy;
+	this->xoffset = (float)newx - this->lastX;
+	this->yoffset = this->lastY - (float)newy;
+	this->lastX = (float)newx;
+	this->lastY = (float)newy;
 
 	GLfloat sensitivity = 0.1f;
 	this->xoffset *= sensitivity;
@@ -53,8 +53,8 @@ void Camera::mouseButtonCallback(GLFWwindow* window, int button, int action, int
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
 		double x, y;
 		glfwGetCursorPos(window, &x, &y);
-		this->lastX = x;
-		this->lastY = y;
+		this->lastX = (float)x;
+		this->lastY = (float)y;
 	}
 	
 }
@@ -62,7 +62,7 @@ void Camera::mouseButtonCallback(GLFWwindow* window, int button, int action, int
 void Camera::mouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	if (this->fovy >= MIN_FOV && this->fovy <= MAX_FOV)
-		this->fovy -= yoffset;
+		this->fovy -= (float)yoffset;
 	else if (this->fovy <= MIN_FOV)
 		this->fovy = MIN_FOV;
 	else
