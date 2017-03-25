@@ -19,8 +19,8 @@ DistanceConstraintData::~DistanceConstraintData()
 
 float DistanceConstraintData::evaluate(int constraintIndex, ParticleData &particleData)
 {
-    int firstParticleIndex = particles[constraintIndex][0];
-    int secondParticleIndex = particles[constraintIndex][1];
+    int firstParticleIndex = particles[constraintIndex].x;
+    int secondParticleIndex = particles[constraintIndex].y;
 
     glm::vec3 p1 = particleData.pPosition[firstParticleIndex];
     glm::vec3 p2 = particleData.pPosition[secondParticleIndex];
@@ -30,21 +30,22 @@ float DistanceConstraintData::evaluate(int constraintIndex, ParticleData &partic
 
 glm::vec3 DistanceConstraintData::gradient(int constraintIndex, int particleIndex, ParticleData &particleData)
 {
-    int firstParticleIndex  = particles[constraintIndex][0];
-    int secondParticleIndex = particles[constraintIndex][1];
+    int firstParticleIndex  = particles[constraintIndex].x;
+    int secondParticleIndex = particles[constraintIndex].y;
 
     glm::vec3 p1 = particleData.pPosition[firstParticleIndex];
     glm::vec3 p2 = particleData.pPosition[secondParticleIndex];
 
-    glm::vec3 c = (p1 - p2) / length(p1 - p2);
+    glm::vec3 c = (p1 - p2);
+    c /= length(c);
 
     return (particleIndex == firstParticleIndex ? c : -c);
 }
 
 float DistanceConstraintData::scaleFactor(int constraintIndex, ParticleData &particleData)
 {
-    int firstParticleIndex = particles[constraintIndex][0];
-    int secondParticleIndex = particles[constraintIndex][1];
+    int firstParticleIndex = particles[constraintIndex].x;
+    int secondParticleIndex = particles[constraintIndex].y;
 
     glm::vec3 p1 = particleData.pPosition[firstParticleIndex];
     glm::vec3 p2 = particleData.pPosition[secondParticleIndex];
@@ -70,7 +71,7 @@ void DistanceConstraintData::removeBroken(ParticleData &particleData)
     for (int i = cardinality-1; i >= 0; i--) {
         if (evaluate(i, particleData) > threshold[i]) {
 
-            for (unsigned int p = 0; p < particles[i].size(); p++) {
+            for (unsigned int p = 0; p < 2; p++) {
                 particleData.numBoundConstraints[particles[i][p]]--;
             }
 

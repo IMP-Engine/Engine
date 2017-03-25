@@ -1,5 +1,4 @@
 #pragma once
-#include "Constraint.h"
 #include "../particles/Particle.h"
 #include <glm/vec3.hpp>
 #include <vector>
@@ -40,10 +39,8 @@ namespace visualization {
 		pos.clear();
 		for (int i = 0;i < constraints.distanceConstraints.cardinality; i++)
 		{
-			for(auto p : constraints.distanceConstraints.particles[i])
-			{
-                pos.push_back(position[p]);
-			}
+            pos.push_back(position[constraints.distanceConstraints.particles[i].x]);
+            pos.push_back(position[constraints.distanceConstraints.particles[i].y]);
 		}
 
 		glUseProgram(constraintShader);
