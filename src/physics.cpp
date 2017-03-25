@@ -111,20 +111,21 @@ void Physics::step(Scene *scene, float dt)
          * Distance Constraints 
          */
         DistanceConstraintData &distanceConstraints = constraints.distanceConstraints;
-		for (int i = 0; i < distanceConstraints.cardinality; i++)
+		for (int constraintIndex = 0; constraintIndex < distanceConstraints.cardinality; constraintIndex++)
 		{
             
-			if (distanceConstraints.evaluate(i,particles))
+			if (distanceConstraints.evaluate(constraintIndex,particles))
 			{ 
-                std::vector<int> &constraintParticles = distanceConstraints.particles[i];
-				for (int p = 0; p < 2; p++)
+                ivec2 &constraintParticles = distanceConstraints.particles[constraintIndex];
+				for (int pIndex = 0; pIndex < 2; pIndex++)
 				{
+                    int p = constraintParticles[pIndex];
 					// delta p_i = -w_i * s * grad_{p_i} C(p) * stiffness correction 
                     pPosition[p] -= 
                         invmass[p]
-                            * distanceConstraints.scaleFactor(i,particles) 
-                            * distanceConstraints.gradient(i, p, particles) 
-                            * (1 - pow(1 - distanceConstraints.stiffness[i], 1 / (float)i)) 
+                            * distanceConstraints.scaleFactor(constraintIndex,particles) 
+                            * distanceConstraints.gradient(constraintIndex, p, particles) 
+                            * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i)) 
                             * overRelaxConst 
                             / (float)numBoundConstraints[p];
                 }
