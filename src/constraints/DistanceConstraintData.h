@@ -32,7 +32,7 @@ public:
     void removeBroken(ParticleData &particleData);
 
 };
-struct DistanceConstraintConfig {
+struct DistanceConstraint {
     int firstParticleIndex;
     int secondParticleIndex;
     float stiffness;
@@ -42,5 +42,5 @@ struct DistanceConstraintConfig {
 };
 
 
-void addConstraint(DistanceConstraintData &data, DistanceConstraintConfig &config);
+void addConstraint(DistanceConstraintData &data, DistanceConstraint &config);
 

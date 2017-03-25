@@ -88,7 +88,7 @@ void DistanceConstraintData::removeBroken(ParticleData &particleData)
 
 
 
-void addConstraint(DistanceConstraintData &data, DistanceConstraintConfig &config)
+void addConstraint(DistanceConstraintData &data, DistanceConstraint &config)
 {
     data.particles.push_back({ config.firstParticleIndex, config.secondParticleIndex });
     data.stiffness.push_back(config.stiffness);

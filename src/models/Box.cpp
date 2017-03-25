@@ -57,15 +57,15 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::m
         {
             if (glm::distance(particles.position[i], particles.position[j]) <= maxDist)
             {
-                DistanceConstraintConfig constraintConfig;
-                constraintConfig.firstParticleIndex  = i;
-                constraintConfig.secondParticleIndex = j;
-                constraintConfig.stiffness = config.stiffness;
-                constraintConfig.distance  = glm::distance(position[i], position[j]);
-                constraintConfig.threshold = config.distanceThreshold;
-                constraintConfig.equality  = true;
+                DistanceConstraint constraint;
+                constraint.firstParticleIndex  = i;
+                constraint.secondParticleIndex = j;
+                constraint.stiffness = config.stiffness;
+                constraint.distance  = glm::distance(position[i], position[j]);
+                constraint.threshold = config.distanceThreshold;
+                constraint.equality  = true;
 
-                addConstraint(constraints.distanceConstraints, constraintConfig);
+                addConstraint(constraints.distanceConstraints, constraint);
 
                 numBoundConstraints[i]++;
                 numBoundConstraints[j]++;
@@ -96,15 +96,15 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::m
         int i = pairs[k];
         int j = pairs[k + 1];
 
-        DistanceConstraintConfig constraintConfig;
-        constraintConfig.firstParticleIndex  = i;
-        constraintConfig.secondParticleIndex = j;
-        constraintConfig.stiffness = config.stiffness;
-        constraintConfig.distance  = glm::distance(position[i], position[j]);
-        constraintConfig.threshold = config.distanceThreshold;
-        constraintConfig.equality  = true;
+        DistanceConstraint constraint;
+        constraint.firstParticleIndex  = i;
+        constraint.secondParticleIndex = j;
+        constraint.stiffness = config.stiffness;
+        constraint.distance  = glm::distance(position[i], position[j]);
+        constraint.threshold = config.distanceThreshold;
+        constraint.equality  = true;
 
-        addConstraint(constraints.distanceConstraints, constraintConfig);
+        addConstraint(constraints.distanceConstraints, constraint);
 
         numBoundConstraints[i]++;
         numBoundConstraints[j]++;
