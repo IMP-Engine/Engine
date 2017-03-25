@@ -27,7 +27,6 @@
 #include "particles/ParticleRenderer.h"
 #include "Scene.h"
 
-#include "constraints/DistanceConstraint.h"
 #include "constraints/visualizeConstraint.h"
 #include "models/model.h"
 #include "input.h"
@@ -69,12 +68,8 @@ const vec3 lightPosition = vec3(50.0f);
 
 // Simulation variables and parameters
 bool doPyshics = false;
-int iterations = 5;
 bool showPerformance = false;
 bool showModels = false;
-float pSleeping = 0.0001f;
-float overRelaxConst = 1.0f;
-float restitutionCoefficient = 1.f; // 1 is Elastic collision
 
 
 static void errorCallback(int error, const char* description) {
@@ -130,6 +125,12 @@ void init() {
 	scene = new Scene;
     physicSystem = Physics();
 
+    physicSystem.iterations = 5;
+    physicSystem.pSleeping = 0.0001f;
+    physicSystem.overRelaxConst = 1.0f;
+    physicSystem.restitutionCoefficient = 1.f; // 1 is Elastic collision
+
+
     scene->init();
 
 	model::loadModelNames();
@@ -183,7 +184,7 @@ void display() {
 	
     if (doPyshics)
     {
-		physicSystem.step(scene, ImGui::GetIO().DeltaTime, iterations);
+        physicSystem.step(scene, ImGui::GetIO().DeltaTime);
     }
 	
     id = performance::startTimer("Render particles");
@@ -217,10 +218,10 @@ void gui()
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	visualization::gui();
     ImGui::Checkbox("Physics", &doPyshics);
-    ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
-    ImGui::SliderFloat("Over-relax-constant", &overRelaxConst, 1, 5);
-    ImGui::SliderFloat("Particle Sleeping (squared)", &pSleeping, 0, 1, "%.9f", 10.f);
-	ImGui::SliderFloat("Restitution Coeff.", &restitutionCoefficient, 0, 1);
+    ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
+    ImGui::SliderFloat("Over-relax-constant", &physicSystem.overRelaxConst, 1, 5);
+    ImGui::SliderFloat("Particle Sleeping (squared)", &physicSystem.pSleeping, 0, 1, "%.9f", 10.f);
+	ImGui::SliderFloat("Restitution Coeff.", &physicSystem.restitutionCoefficient, 0, 1);
 	ImGui::End();
 
 	model::gui(&showModels, physicSystem.particles, physicSystem.constraints);
@@ -256,7 +257,7 @@ int main(void) {
         lastFrame = currentFrame;
 
         glfwPollEvents();
-		camera.move(input::getKeys(), deltaTime);
+		camera.move(input::getKeys(), (float)deltaTime);
 
         ImGui_ImplGlfwGL3_NewFrame();
 

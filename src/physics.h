@@ -25,8 +25,10 @@ public:
     float pSleeping;
     float restitutionCoefficient;
 
+    int iterations;
+
     ParticleData particles;
     ConstraintData constraints;
 
-	void step(Scene *scene, float dt, int iterations);
+	void step(Scene *scene, float dt);
 };

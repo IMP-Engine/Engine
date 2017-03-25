@@ -8,7 +8,7 @@
 
 
 
-void Physics::step(Scene *scene, float dt, int iterations)
+void Physics::step(Scene *scene, float dt)
 {
     /* Aliases */
     std::vector<vec3>  &position  = particles.position;
