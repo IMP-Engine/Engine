@@ -57,14 +57,15 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::m
         {
             if (glm::distance(particles.position[i], particles.position[j]) <= maxDist)
             {
-                addConstraint(
-                    constraints.distanceConstraints,
-                    i,
-                    j,
-                    config.stiffness,
-                    glm::distance(position[i], position[j]),
-                    config.distanceThreshold,
-                    true);
+                DistanceConstraintConfig constraintConfig;
+                constraintConfig.firstParticleIndex  = i;
+                constraintConfig.secondParticleIndex = j;
+                constraintConfig.stiffness = config.stiffness;
+                constraintConfig.distance  = glm::distance(position[i], position[j]);
+                constraintConfig.threshold = config.distanceThreshold;
+                constraintConfig.equality  = true;
+
+                addConstraint(constraints.distanceConstraints, constraintConfig);
 
                 numBoundConstraints[i]++;
                 numBoundConstraints[j]++;
@@ -94,14 +95,16 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::m
     {
         int i = pairs[k];
         int j = pairs[k + 1];
-        addConstraint(
-            constraints.distanceConstraints,
-            i,
-            j,
-            config.stiffness,
-            glm::distance(position[i], position[j]),
-            config.distanceThreshold,
-            true);
+
+        DistanceConstraintConfig constraintConfig;
+        constraintConfig.firstParticleIndex  = i;
+        constraintConfig.secondParticleIndex = j;
+        constraintConfig.stiffness = config.stiffness;
+        constraintConfig.distance  = glm::distance(position[i], position[j]);
+        constraintConfig.threshold = config.distanceThreshold;
+        constraintConfig.equality  = true;
+
+        addConstraint(constraints.distanceConstraints, constraintConfig);
 
         numBoundConstraints[i]++;
         numBoundConstraints[j]++;

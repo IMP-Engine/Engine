@@ -88,12 +88,12 @@ void DistanceConstraintData::removeBroken(ParticleData &particleData)
 
 
 
-void addConstraint(DistanceConstraintData &data, int firstParticleIndex, int secondParticleIndex, float stiffness, float distance, float threshold, bool equality)
+void addConstraint(DistanceConstraintData &data, DistanceConstraintConfig &config)
 {
-    data.particles.push_back({ firstParticleIndex, secondParticleIndex });
-    data.stiffness.push_back(stiffness);
-    data.distance.push_back(distance);
-    data.equality.push_back(equality);
-    data.threshold.push_back(threshold);
+    data.particles.push_back({ config.firstParticleIndex, config.secondParticleIndex });
+    data.stiffness.push_back(config.stiffness);
+    data.distance.push_back(config.distance);
+    data.equality.push_back(config.equality);
+    data.threshold.push_back(config.threshold);
     data.cardinality++;
 }

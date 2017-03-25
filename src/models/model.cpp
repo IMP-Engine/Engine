@@ -100,14 +100,15 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
 	    {
 			    if (glm::distance(position[i], position[j]) <= maxDist )
 			    {
-				    addConstraint(
-                        constraints.distanceConstraints,
-					    i,
-					    j,
-					    config.stiffness,
-					    glm::distance(position[i], position[j]),
-					    config.distanceThreshold,
-                        true);
+                    DistanceConstraintConfig constraintConfig;
+                    constraintConfig.firstParticleIndex = i;
+                    constraintConfig.secondParticleIndex = j;
+                    constraintConfig.stiffness = config.stiffness;
+                    constraintConfig.distance = glm::distance(position[i], position[j]);
+                    constraintConfig.threshold = config.distanceThreshold;
+                    constraintConfig.equality = true;
+
+				    addConstraint(constraints.distanceConstraints, constraintConfig);
 
 				    numBoundConstraints[i]++;
 				    numBoundConstraints[j]++;
