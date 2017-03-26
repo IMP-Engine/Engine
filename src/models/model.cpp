@@ -68,6 +68,21 @@ void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vecto
     }
 }
 
+
+void model::calculateNormals(std::vector<glm::vec3> &normals, std::vector<glm::vec4> &vertices, std::vector<GLushort> &elements) {
+    normals.resize(vertices.size(), glm::vec3(0.0, 0.0, 0.0));
+    for (int i = 0; i < elements.size(); i += 3)
+    {
+        GLushort ia = elements[i];
+        GLushort ib = elements[i + 1];
+        GLushort ic = elements[i + 2];
+        glm::vec3 normal = glm::normalize(glm::cross(
+            glm::vec3(vertices[ib]) - glm::vec3(vertices[ia]),
+            glm::vec3(vertices[ic]) - glm::vec3(vertices[ia])));
+        normals[ia] = normals[ib] = normals[ic] = normal;
+    }
+}
+
 // For more information on what *max, origin and spacing is, refer to https://github.com/christopherbatty/SDFGen
 // Explanation is found in main.cpp
 void model::loadModel(std::string model, std::vector<Particle> &particles, std::vector<Constraint*> &constraints, modelConfig config)
@@ -248,6 +263,9 @@ void model::loadModel(std::string model, std::vector<Particle> &particles, std::
 
         printf("BCC for v[%i]: %f, %f, %f, sum: %f\n", i, bcCoords[i][0], bcCoords[i][1], bcCoords[i][2], (bcCoords[i][0]+bcCoords[i][1]+bcCoords[i][2]));
     }
+
+    calculateNormals(normals, vertices, elements);
+    
 }
 
 
