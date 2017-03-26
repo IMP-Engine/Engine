@@ -66,7 +66,7 @@ vector<Constraint *> constraints;
 ParticleRenderer *particleRenderer;
 
 // Light
-const vec3 lightPosition = vec3(50.0f);
+const vec3 lightPosition = vec3(9.0f);
 
 // Simulation variables and parameters
 bool doPyshics = false;
@@ -177,7 +177,7 @@ void display() {
 	projectionMatrix = perspective(radians(camera.getFovy()), ratio, nearPlane, farPlane);
     modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
 
-    vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
+    vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));//vec4(camera.cameraPos, 1.0));
 	
     scene->render(viewMatrix, projectionMatrix, viewSpaceLightPosition);
     
