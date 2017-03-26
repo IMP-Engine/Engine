@@ -10,47 +10,89 @@ Scene::Scene()
         2, 1, 0,
         2, 0, 3,
         // top
-        2, 5, 1,
-        2, 6, 5,
+        6, 5, 4,
+        6, 4, 7,
         // back
-        4, 5, 6,
-        4, 6, 7,
+        10, 9, 8,
+        10, 8, 11,
         // bottom
-        4, 7, 3,
-        4, 3, 0,
+        14, 13, 12,
+        14, 12, 15,
         // left
-        4, 0, 1,
-        4, 1, 5,
+        18, 17, 16,
+        18, 16, 19,
         // right
-        2, 3, 7,
-        2, 7, 6
+        22, 21, 20,
+        22, 20, 23
     };
 
     float cubeVertices[] = {
-        -10.0f, -10.0f,  10.0f,
-        10.0f, -10.0f,  10.0f,
-        10.0f,  10.0f,  10.0f,
-        -10.0f,  10.0f,  10.0f,
-
-        -10.0f, -10.0f, -10.0f,
-        10.0f, -10.0f, -10.0f,
-        10.0f,  10.0f, -10.0f,
-        -10.0f,  10.0f, -10.0f,
+        // Front
+        -10.0f, -10.0f, 10.0f, // lower left close
+         10.0f, -10.0f, 10.0f, // lower right close
+         10.0f,  10.0f, 10.0f, // upper right close
+        -10.0f,  10.0f, 10.0f, // upper left close
+        // Top
+        -10.0f, 10.0f,  10.0f, // upper left close
+         10.0f, 10.0f,  10.0f, // upper right close
+         10.0f, 10.0f, -10.0f, // upper right borta
+        -10.0f, 10.0f, -10.0f, // upper left borta
+        // Back
+        -10.0f,  10.0f, -10.0f, // upper left borta
+         10.0f,  10.0f, -10.0f, // upper right borta
+         10.0f, -10.0f, -10.0f, // lower right borta
+        -10.0f, -10.0f, -10.0f, // lower left borta
+        // Bottom
+        -10.0f, -10.0f, -10.0f, // lower left borta
+         10.0f, -10.0f, -10.0f, // lower right borta
+         10.0f, -10.0f,  10.0f, // lower right close
+        -10.0f, -10.0f,  10.0f, // lower left close
+        // Left
+        -10.0f, -10.0f, -10.0f, // lower left borta
+        -10.0f, -10.0f,  10.0f, // lower left close
+        -10.0f,  10.0f,  10.0f, // upper left close
+        -10.0f,  10.0f, -10.0f, // upper left borta
+        // Right
+        10.0f, -10.0f,  10.0f, // lower right close
+        10.0f, -10.0f, -10.0f, // lower right borta
+        10.0f,  10.0f, -10.0f, // upper right borta
+        10.0f,  10.0f,  10.0f // upper right close
     };
 
     float normalComponents[] = {
-        -0.5773f, -0.5773f,  0.5773f,
-         0.5773f, -0.5773f,  0.5773f,
-         0.5773f,  0.5773f,  0.5773f,
-        -0.5773f,  0.5773f,  0.5773f,
-
-        -0.5773f, -0.5773f, -0.5773f,
-         0.5773f, -0.5773f, -0.5773f,
-         0.5773f,  0.5773f, -0.5773f,
-        -0.5773f,  0.5773f, -0.5773f,
+        // Front
+        0.0f, 0.0f, -1.0f,
+        0.0f, 0.0f, -1.0f,
+        0.0f, 0.0f, -1.0f,
+        0.0f, 0.0f, -1.0f,
+        // Top
+        0.0f, -1.0f, 0.0f,
+        0.0f, -1.0f, 0.0f,
+        0.0f, -1.0f, 0.0f,
+        0.0f, -1.0f, 0.0f,
+        // Back
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        // Bottom
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        // Left
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        // Right
+        -1.0f, 0.0f, 0.0f,
+        -1.0f, 0.0f, 0.0f,
+        -1.0f, 0.0f, 0.0f,
+        -1.0f, 0.0f, 0.0f
     };
 
-    for (int i = 0; i < 24; i++)
+    for (int i = 0; i < 24*3; i++)
     {
         vertexes.push_back(cubeVertices[i]);
     }
@@ -58,7 +100,7 @@ Scene::Scene()
     {
         indices.push_back(cubeIndices[i]);
     }
-    for (int i = 0; i < 24; i++)
+    for (int i = 0; i < 24*3; i++)
     {
         normals.push_back(normalComponents[i]);
     }
