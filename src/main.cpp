@@ -179,7 +179,7 @@ void display() {
 
     vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
 	
-    scene->render(viewMatrix, projectionMatrix);
+    scene->render(viewMatrix, projectionMatrix, viewSpaceLightPosition);
     
 	performance::stopTimer(id);
 	
