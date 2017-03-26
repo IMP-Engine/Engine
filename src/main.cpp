@@ -62,6 +62,7 @@ Physics physicSystem;
 
 // Shaders and rendering 
 ParticleRenderer *particleRenderer;
+bool renderSurfaces = false;
 
 // Light
 const vec3 lightPosition = vec3(50.0f);
@@ -187,11 +188,19 @@ void display() {
         physicSystem.step(scene, ImGui::GetIO().DeltaTime);
     }
 	
-    id = performance::startTimer("Render particles");
-    particleRenderer->render(physicSystem.particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
-	performance::stopTimer(id);
+    if (renderSurfaces)
+    {
+        id = performance::startTimer("Render surfaces");
 
-    visualization::drawConstraints(physicSystem.constraints, physicSystem.particles, modelViewProjectionMatrix);
+    }
+    else // render particles
+    {
+        id = performance::startTimer("Render particles");
+        particleRenderer->render(physicSystem.particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
+
+        visualization::drawConstraints(physicSystem.constraints, physicSystem.particles, modelViewProjectionMatrix);
+    }
+    performance::stopTimer(id);
 
 	// Since we may want to measure performance of something that happens after the call to gui()
 	// we place this call as late as possible to allow for measuring more things
@@ -218,6 +227,7 @@ void gui()
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	visualization::gui();
     ImGui::Checkbox("Physics", &doPyshics);
+    ImGui::Checkbox("Render surfaces", &renderSurfaces);
     ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
     ImGui::SliderFloat("Over-relax-constant", &physicSystem.overRelaxConst, 1, 5);
     ImGui::SliderFloat("Particle Sleeping (squared)", &physicSystem.pSleeping, 0, 1, "%.9f", 10.f);
