@@ -1,5 +1,4 @@
 #pragma once
-#include "Constraint.h"
 #include "../particles/Particle.h"
 #include <glm/vec3.hpp>
 #include <vector>
@@ -30,26 +29,25 @@ namespace visualization {
 	}
 
 	// Currently only handles distance constraints
-	void drawConstraints(std::vector<Constraint*>* constraints, mat4 mvp) {
+	void drawConstraints(ConstraintData &constraints, ParticleData particles, mat4 mvp) {
 		
-		if (!draw || !constraints->size())
+		if (!draw || !constraints.distanceConstraints.cardinality)
 			return;
 
 		// Copy positions into separate vector to avoid uploading particles into GPU
+        std::vector<vec3> &position = particles.position;
 		pos.clear();
-		for (auto c : *constraints)
+		for (int i = 0;i < constraints.distanceConstraints.cardinality; i++)
 		{
-			for(auto p : c->particles)
-			{ 
-				pos.push_back(p->pos);
-			}
+            pos.push_back(position[constraints.distanceConstraints.particles[i].x]);
+            pos.push_back(position[constraints.distanceConstraints.particles[i].y]);
 		}
 
 		glUseProgram(constraintShader);
 		glUniformMatrix4fv(glGetUniformLocation(constraintShader, "modelViewProjectionMatrix"), 1, false, &mvp[0].x);
 
 		glBindBuffer(GL_ARRAY_BUFFER, pos_buf);
-		glBufferData(GL_ARRAY_BUFFER, pos.size() * sizeof(vec3), &pos.front(), GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, pos.size() * sizeof(vec3), &pos[0], GL_DYNAMIC_DRAW);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 		glEnableVertexAttribArray(0);
 		//glEnable(GL_LINE_SMOOTH);

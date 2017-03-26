@@ -12,8 +12,6 @@ std::vector<std::string> models;
 int selected = 0;
 
 // Temporary solution. Reconsider when cleaning code/changing way that particles and constraints are handled
-extern std::vector<Particle> particles;
-extern std::vector<Constraint*> constraints;
 
 void model::loadModelNames() {
 	models.clear();
@@ -30,7 +28,7 @@ void model::loadModelNames() {
 }
 
 // This 
-void model::loadPredefinedModel(std::string model, std::vector<Particle> &particles, std::vector<Constraint*> &constraints, modelConfig config)
+void model::loadPredefinedModel(std::string model, ParticleData &particles, ConstraintData &constraints, modelConfig config)
 {
 	if (model == "Box")
 	{
@@ -85,10 +83,10 @@ void model::calculateNormals(std::vector<glm::vec3> &normals, std::vector<glm::v
 
 // For more information on what *max, origin and spacing is, refer to https://github.com/christopherbatty/SDFGen
 // Explanation is found in main.cpp
-void model::loadModel(std::string model, std::vector<Particle> &particles, std::vector<Constraint*> &constraints, modelConfig config)
+void model::loadModel(std::string model, ParticleData &particles, ConstraintData &constraints, modelConfig config)
 {
 
-	std::vector<Particle>::size_type start = particles.size();
+	std::vector<Particle>::size_type start = particles.cardinality;
 
 	std::ifstream file(MODEL_FOLDER + model + ".sdf");
 	if (!file)
@@ -132,26 +130,38 @@ void model::loadModel(std::string model, std::vector<Particle> &particles, std::
 			p.phase = config.phase;
 			p.radius = d / 2;
 
-			particles.push_back(p);
+			addParticle(p,particles);
 		}
 	}
 
 	float maxDist = glm::length(d*config.scale);
-	for (std::vector<Particle>::size_type i = start; i < particles.size(); i++) for (std::vector<Particle>::size_type j = i+1; j < particles.size(); j++)
-	{
-			if (glm::distance(particles[i].pos, particles[j].pos) <= maxDist )
-			{
-				Constraint* c = new DistanceConstraint(
-					&particles[i],
-					&particles[j],
-					config.stiffness,
-					config.distanceThreshold,
-					glm::distance(particles[i].pos, particles[j].pos));
-				constraints.push_back(c);
-				particles[i].numBoundConstraints++;
-				particles[j].numBoundConstraints++;
-			}
-	}
+
+    std::vector<vec3> &position = particles.position;
+    std::vector<int> &numBoundConstraints = particles.numBoundConstraints;
+
+    for (std::vector<Particle>::size_type i = start; i < particles.cardinality; i++) 
+    {
+
+        for (std::vector<Particle>::size_type j = i+1; j < particles.cardinality; j++)
+	    {
+			    if (glm::distance(position[i], position[j]) <= maxDist )
+			    {
+                    DistanceConstraint constraint;
+                    constraint.firstParticleIndex = i;
+                    constraint.secondParticleIndex = j;
+                    constraint.stiffness = config.stiffness;
+                    constraint.distance = glm::distance(position[i], position[j]);
+                    constraint.threshold = config.distanceThreshold;
+                    constraint.equality = true;
+
+				    addConstraint(constraints.distanceConstraints, constraint);
+
+				    numBoundConstraints[i]++;
+				    numBoundConstraints[j]++;
+			    }
+	    }
+    }
+
 
     // Load Mesh
     std::vector<glm::vec4> vertices;
@@ -159,7 +169,7 @@ void model::loadModel(std::string model, std::vector<Particle> &particles, std::
     std::vector<GLushort> elements;
     loadMesh(model, vertices, elements);
     printf("Size of vertices is: %i", vertices.size());
-    
+
     // Find three closest particles and calculate barycentric coordinates for all vertices
     std::vector<float[3]> bcCoords(vertices.size());
     std::vector<int[3]> closestParticles(vertices.size());
@@ -172,8 +182,8 @@ void model::loadModel(std::string model, std::vector<Particle> &particles, std::
 
         // Sort wrt. distance from vertex. Looks messy, but should be the fastest way? Max 3 comparisons
         float distances[3];
-        distances[0] = distance(vec3(vertices[i]), particles[0].pos);
-        float newDist = distance(vec3(vertices[i]), particles[1].pos);
+        distances[0] = distance(vec3(vertices[i]), position[0]);
+        float newDist = distance(vec3(vertices[i]), position[1]);
         if (newDist >= distances[0]) { distances[1] = newDist; }
         else
         {
@@ -182,9 +192,9 @@ void model::loadModel(std::string model, std::vector<Particle> &particles, std::
             closestParticles[i][0] = 1;
             closestParticles[i][1] = 0;
         }
-        newDist = distance(vec3(vertices[i]), particles[2].pos);
+        newDist = distance(vec3(vertices[i]), position[2]);
         if (newDist >= distances[1]) { distances[2] = newDist; }
-        else 
+        else
         {
             distances[2] = distances[1];
             closestParticles[i][2] = closestParticles[i][1];
@@ -201,11 +211,11 @@ void model::loadModel(std::string model, std::vector<Particle> &particles, std::
                 closestParticles[i][0] = 2;
             }
         }
-        
 
-        for (std::vector<Particle>::size_type j = (start + 3); j < particles.size(); j++)
+
+        for (std::vector<Particle>::size_type j = (start + 3); j < particles.cardinality; j++)
         {
-            newDist = distance(particles[j].pos, vec3(vertices[i]));
+            newDist = distance(position[j], vec3(vertices[i]));
             if (newDist < distances[2])
             {
                 if (newDist < distances[1])
@@ -238,10 +248,10 @@ void model::loadModel(std::string model, std::vector<Particle> &particles, std::
 
         // Adams BCoords
         vec3 vertex = vec3(vertices[i]);
-        vec3 CA = particles[closestParticles[i][2]].pos - particles[closestParticles[i][0]].pos;
-        vec3 BA = particles[closestParticles[i][1]].pos - particles[closestParticles[i][0]].pos;
+        vec3 CA = position[closestParticles[i][2]] - position[closestParticles[i][0]];
+        vec3 BA = position[closestParticles[i][1]] - position[closestParticles[i][0]];
         vec3 normal = normalize(cross(CA, BA));
-        bcCoords[i][2] = dot(vertex - particles[closestParticles[i][0]].pos, normal); // distance offset along normal
+        bcCoords[i][2] = dot(vertex - position[closestParticles[i][0]], normal); // distance offset along normal
         vec3 projetedPosition = vertex - bcCoords[i][2] * normal;
 
         // Baycentric check
@@ -261,16 +271,16 @@ void model::loadModel(std::string model, std::vector<Particle> &particles, std::
         bcCoords[i][0] = (dotBABA * dotCApPrim - dotCABA * dotBApPrim) * invDenom; // u
         bcCoords[i][1] = (dotCACA * dotBApPrim - dotCABA * dotCApPrim) * invDenom; // v
 
-        printf("BCC for v[%i]: %f, %f, %f, sum: %f\n", i, bcCoords[i][0], bcCoords[i][1], bcCoords[i][2], (bcCoords[i][0]+bcCoords[i][1]+bcCoords[i][2]));
+        printf("BCC for v[%i]: %f, %f, %f, sum: %f\n", i, bcCoords[i][0], bcCoords[i][1], bcCoords[i][2], (bcCoords[i][0] + bcCoords[i][1] + bcCoords[i][2]));
     }
 
     calculateNormals(normals, vertices, elements);
-    
+
 }
 
 
 
-void model::gui(bool *show)
+void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints)
 {
 	if (!*show)
 	{

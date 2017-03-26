@@ -3,15 +3,21 @@
 
 using namespace glm;
 
-bool intersect(Triangle &triangle, Particle &p, Intersection &isect) {
+bool intersect(Triangle &triangle, ParticleData &particles, int index, Intersection &isect) {
+
+    /*
+        Aliases
+    */
+    vec3  &pPos   = particles.pPosition[index];
+    float &radius = particles.radius[index];
 
     // Check intersection of target position and triangle
 
     /*
      * Step 1: Check if particle intesect with plane.
      */
-    float rr = p.radius * p.radius;
-    float dist = dot(p.pPos-triangle.v0, triangle.normal);
+    float rr = radius * radius;
+    float dist = dot(pPos-triangle.v0, triangle.normal);
 
     // Always end early.
     if (dist * dist > rr) {
@@ -20,7 +26,7 @@ bool intersect(Triangle &triangle, Particle &p, Intersection &isect) {
 
 
 	isect.responseGradient = triangle.normal;
-	isect.responseDistance = (p.radius - dist);
+	isect.responseDistance = (radius - dist);
 
 
     vec3 A = triangle.v1 - triangle.v0;
@@ -31,21 +37,21 @@ bool intersect(Triangle &triangle, Particle &p, Intersection &isect) {
      */
 
     // First vertex
-	float aa = dot(triangle.v0 - p.pPos, triangle.v0 - p.pPos);
+	float aa = dot(triangle.v0 - pPos, triangle.v0 - pPos);
     if (aa < rr) 
 	{
         return true;
     }
 
     // Second vertex
-	float bb = dot(triangle.v1 - p.pPos, triangle.v1 - p.pPos);
+	float bb = dot(triangle.v1 - pPos, triangle.v1 - pPos);
     if (bb < rr) 
 	{
         return true;
     }
 
     // Third vertex
-	float cc = dot(triangle.v2 - p.pPos, triangle.v2 - p.pPos);
+	float cc = dot(triangle.v2 - pPos, triangle.v2 - pPos);
     if (cc < rr) 
 	{
         return true;
@@ -55,7 +61,7 @@ bool intersect(Triangle &triangle, Particle &p, Intersection &isect) {
     /**
      * Step 3: Check if projected center of particle is inside triangle
      */
-    vec3 projetedPosition = p.pPos - dist * triangle.normal;
+    vec3 projetedPosition = pPos - dist * triangle.normal;
 
     // Baycentric check
     
@@ -89,27 +95,27 @@ bool intersect(Triangle &triangle, Particle &p, Intersection &isect) {
 
 
 	// First edge, v0 to v1
-    float t = (dot(A, p.pPos) - dot(A, triangle.v0)) / dot(A,A);
+    float t = (dot(A, pPos) - dot(A, triangle.v0)) / dot(A,A);
     vec3 Q = triangle.v0 + t*A;
-	vec3 Qp = p.pPos - Q;
+	vec3 Qp = pPos - Q;
     float d2 = dot(Qp,Qp);
 
     if (d2 < rr && (t >= 0 || t <= 1)) {
         return true;
     }
 
-    t = (dot(B, p.pPos) - dot(B, triangle.v0)) / dot(B,B);
+    t = (dot(B, pPos) - dot(B, triangle.v0)) / dot(B,B);
     Q = triangle.v0 + t*B;
-	Qp = p.pPos - Q;
+	Qp = pPos - Q;
     d2 = dot(Qp, Qp);
 
     if (d2 < rr && (t >= 0 || t <= 1)) {
         return true;
     }
 
-    t = (dot(C, p.pPos) - dot(C, triangle.v1)) / dot(C,C);
+    t = (dot(C, pPos) - dot(C, triangle.v1)) / dot(C,C);
     Q = triangle.v1 + t*C;
-	Qp = p.pPos - Q;
+	Qp = pPos - Q;
     d2 = dot(Qp, Qp);
 
     if (d2 < rr && (t >= 0 || t <= 1)) {
