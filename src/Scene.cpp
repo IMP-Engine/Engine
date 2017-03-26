@@ -126,7 +126,7 @@ Scene::Scene()
     }
 }
 
-void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix, glm::vec3 &viewSpaceLightPosition) {
+void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix, glm::vec3 &lightPosition) {
 
     glm::mat4 modelViewMatrix = viewMatrix * modelMatrix;
     glm::mat4 modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
@@ -135,7 +135,7 @@ void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix, glm::vec3
     glUseProgram(shader);
     glUniformMatrix4fv(glGetUniformLocation(shader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
     glUniformMatrix4fv(glGetUniformLocation(shader, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
-    glUniform3fv(glGetUniformLocation(shader, "viewSpaceLightPos"), 1, &viewSpaceLightPosition.x);
+    glUniform3fv(glGetUniformLocation(shader, "lightPos"), 1, &lightPosition.x);
 
     // Draw cube
     glPolygonMode(GL_FRONT, GL_FILL);

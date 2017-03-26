@@ -177,9 +177,9 @@ void display() {
 	projectionMatrix = perspective(radians(camera.getFovy()), ratio, nearPlane, farPlane);
     modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
 
-    vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));//vec4(camera.cameraPos, 1.0));
+    vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
 	
-    scene->render(viewMatrix, projectionMatrix, viewSpaceLightPosition);
+    scene->render(viewMatrix, projectionMatrix, vec3(lightPosition));
     
 	performance::stopTimer(id);
 	

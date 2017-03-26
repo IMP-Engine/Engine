@@ -14,6 +14,6 @@ out vec3 normalOut;
 void main() {
     gl_Position = modelViewProjectionMatrix * vec4(vPos, 1.0);
     color = vec3(0.8, 0.8, 0.8);//vCol;
-    position = (modelViewMatrix * vec4(vPos, 1.0)).xyz;
+    position = vPos;
     normalOut = normal;
 }
