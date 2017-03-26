@@ -9,6 +9,7 @@
 
 #include <glm/glm.hpp>
 #include "../imgui/imgui.h"
+#include "../glad/glad.h"
 
 #include "modelConfig.h"
 #include "../particles/Particle.h"
@@ -31,6 +32,11 @@ namespace model {
 		Loads a non sdf model into particles and adds object specific constraints.
 	*/
 	void loadPredefinedModel(std::string model, std::vector<Particle> &particles, std::vector<Constraint*> &constraints, modelConfig config);
+
+    /*
+        Calculates normals from given vertices for given elements.
+    */
+    void calculateNormals(std::vector<glm::vec3> &normals, std::vector<glm::vec4> &vertices, std::vector<GLushort> &elements);
 
 	/*
 		Loads the object located at path into particles and adds simple 
