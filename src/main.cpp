@@ -66,7 +66,7 @@ vector<Constraint *> constraints;
 ParticleRenderer *particleRenderer;
 
 // Light
-const vec3 lightPosition = vec3(9.0f);
+const vec3 lightPosition = vec3(4.0f);
 
 // Simulation variables and parameters
 bool doPyshics = false;

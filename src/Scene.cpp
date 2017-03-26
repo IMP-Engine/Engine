@@ -138,8 +138,9 @@ void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix, glm::vec3
     glUniform3fv(glGetUniformLocation(shader, "lightPos"), 1, &lightPosition.x);
 
     // Draw cube
+    glDisable(GL_CULL_FACE);
     glPolygonMode(GL_FRONT, GL_FILL);
-    glPolygonMode(GL_BACK, GL_LINE); // The idea was to render the "front" of the cube as wireframe. Not that it's working, but we even want to do that?
+    glPolygonMode(GL_BACK, GL_LINE);
 
     glBindVertexArray(vao);
    
@@ -150,6 +151,7 @@ void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix, glm::vec3
 	glBindVertexArray(0);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glEnable(GL_CULL_FACE);
 }
 
 void Scene::init() {
