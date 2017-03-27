@@ -126,7 +126,7 @@ Scene::Scene()
     }
 }
 
-void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix, glm::vec3 &lightPosition) {
+void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix, const glm::vec3 &lightPosition) {
 
     glm::mat4 modelViewMatrix = viewMatrix * modelMatrix;
     glm::mat4 modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
