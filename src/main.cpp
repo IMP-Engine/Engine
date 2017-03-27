@@ -21,6 +21,7 @@
 
 #define WORLD_MIN vec3(-20.f,-20.f,-20.f)
 #define WORLD_MAX vec3( 20.f, 20.f, 20.f)
+#define M_PI 3.14159265358979323846264338327950288 /* pi */
 
 #include "performance.h"
 #include "physics.h"
@@ -155,12 +156,12 @@ void display() {
 
 	int id = performance::startTimer("Reset and draw scene");
 
-    float ratio;
-    int width, height;
+    GLfloat ratio;
+    GLint width, height;
     mat4 viewMatrix, modelViewProjectionMatrix, modelViewMatrix, projectionMatrix;
 
     glfwGetFramebufferSize(window, &width, &height);
-    ratio = (GLfloat)WIDTH / (GLfloat)HEIGHT;
+    ratio = (GLfloat)width / (GLfloat)height;
 
     glViewport(0, 0, width, height);
     glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
@@ -195,8 +196,12 @@ void display() {
     }
     else // render particles
     {
+        int viewport[4];
+        glGetIntegerv(GL_VIEWPORT, viewport);
+        float heightOfNearPlane = (float)abs(viewport[3] - viewport[1]) / (2 * tan(0.5*camera.getFovy()*M_PI / 180.0));
+
         id = performance::startTimer("Render particles");
-        particleRenderer->render(physicSystem.particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
+        particleRenderer->render(physicSystem.particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix, heightOfNearPlane);
 
         visualization::drawConstraints(physicSystem.constraints, physicSystem.particles, modelViewProjectionMatrix);
     }
