@@ -47,7 +47,7 @@ void ParticleRenderer::init()
     glGenBuffers(1, &sizeBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, sizeBuffer);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(sizeAttribLocation, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void *)(sizeof(Particle) - sizeof(float)));
+    glVertexAttribPointer(sizeAttribLocation, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void *)0);
 
     /*
 	glEnableVertexAttribArray(1);
