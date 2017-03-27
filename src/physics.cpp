@@ -49,6 +49,7 @@ void Physics::step(Scene *scene, float dt)
 	}
 
         // Breakable constraints
+	constraints.removeBroken(particles);
     /*
         constraints.erase(
                 std::remove_if(
