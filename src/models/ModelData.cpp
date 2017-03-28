@@ -3,6 +3,9 @@
 ModelData::ModelData()
 {
     cardinality = 0;
+    elements.reserve(MAX_VERTICES);
+    bcCoords.reserve(MAX_VERTICES);
+    closestParticles.reserve(MAX_VERTICES);
 }
 
 ModelData::~ModelData()
@@ -17,7 +20,7 @@ void ModelData::clear()
     cardinality = 0;
 }
 
-void addVertices(std::vector<short> &e, std::vector<float[3]> &bc, std::vector<int[3]> &particles, ModelData &data)
+void ModelData::addVertices(std::vector<short> &e, std::vector<float[3]> &bc, std::vector<int[3]> &particles, ModelData &data)
 {
     for (int i = 0; i < bc.size(); i++)
     {

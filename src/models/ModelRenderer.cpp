@@ -12,7 +12,7 @@ ModelRenderer::~ModelRenderer()
 void ModelRenderer::init()
 {
     // Shader setup
-    simpleShader = glHelper::loadShader(VERT_SHADER_PATH, FRAG_SHADER_PATH);
+    simpleShader = glHelper::loadShader(SURFACE_VERT_SHADER_PATH, SURFACE_FRAG_SHADER_PATH);
     GLuint mvp_location = glGetUniformLocation(simpleShader, "MVP");
     GLuint vpos_location = glGetAttribLocation(simpleShader, "vPos");
 
@@ -36,16 +36,29 @@ void ModelRenderer::init()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void calculateVertices(ModelData &data, std::vector<glm::vec3> &positions, std::vector<glm::vec3> &normals)
+void calculateVertices(ParticleData &particles, ModelData &data, std::vector<glm::vec3> &positions, std::vector<glm::vec3> &normals)
 {
+    for (int i = 0; i < data.cardinality; i += 3)
+    {
+        glm::vec3 p1 = particles.position[data.closestParticles[i]];
+        glm::vec3 p2 = particles.position[data.closestParticles[i+1]];
+        glm::vec3 p3 = particles.position[data.closestParticles[i+2]];
+        
+        glm::vec3 u = data.bcCoords[i]   * (p3 - p1);
+        glm::vec3 v = data.bcCoords[i+1] * (p2 - p1);
+        glm::vec3 normal = normalize(cross(u, v));
 
+        positions.push_back(p1 + u + v + normal * data.bcCoords[i + 2]);
+        printf("Pos %i: {%f, %f, %f}\n", (i/3), positions[i/3].x, positions[i/3].y, positions[i/3].z);
+        normals.push_back(normal);
+    }
 }
 
-void ModelRenderer::render(ModelData &data, glm::mat4 &modelViewProjectionMatrix, glm::mat4 &modelViewMatrix, glm::vec3 &viewSpaceLightPosition, glm::mat4 &projectionMatrix)
+void ModelRenderer::render(ParticleData &particles, ModelData &data, glm::mat4 &modelViewProjectionMatrix, glm::mat4 &modelViewMatrix, glm::vec3 &viewSpaceLightPosition, glm::mat4 &projectionMatrix)
 {
     std::vector<glm::vec3> positions;
     std::vector<glm::vec3> normals;
-    calculateVertices(data, positions, normals);
+    calculateVertices(particles, data, positions, normals);
 
     glUseProgram(simpleShader);
     glBindVertexArray(vao);
@@ -65,7 +78,7 @@ void ModelRenderer::render(ModelData &data, glm::mat4 &modelViewProjectionMatrix
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     int size;
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-    glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
+    //glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
 	//glDrawArrays(GL_TRIANGLES, 0, data.cardinality);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);

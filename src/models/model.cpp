@@ -36,7 +36,7 @@ void model::loadPredefinedModel(std::string model, ParticleData &particles, Cons
 	}
 }
 
-void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vector<GLushort> &elements)
+void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vector<short> &elements)
 {
     std::ifstream in(MODEL_FOLDER + filename + ".obj", std::ios::in);
     if (!in)
@@ -56,7 +56,7 @@ void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vecto
         else if (line.substr(0, 2) == "f ")
         {
             std::istringstream s(line.substr(2));
-            GLushort a, b, c;
+            short a, b, c;
             s >> a; s >> b; s >> c;
             a--; b--; c--;
             elements.push_back(a); elements.push_back(b); elements.push_back(c);
@@ -67,23 +67,23 @@ void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vecto
 }
 
 
-void model::calculateNormals(std::vector<glm::vec3> &normals, std::vector<glm::vec4> &vertices, std::vector<GLushort> &elements) {
-    normals.resize(vertices.size(), glm::vec3(0.0, 0.0, 0.0));
-    for (int i = 0; i < elements.size(); i += 3)
-    {
-        GLushort ia = elements[i];
-        GLushort ib = elements[i + 1];
-        GLushort ic = elements[i + 2];
-        glm::vec3 normal = glm::normalize(glm::cross(
-            glm::vec3(vertices[ib]) - glm::vec3(vertices[ia]),
-            glm::vec3(vertices[ic]) - glm::vec3(vertices[ia])));
-        normals[ia] = normals[ib] = normals[ic] = normal;
-    }
-}
+//void calculateNormals(std::vector<glm::vec3> &normals, std::vector<glm::vec4> &vertices, std::vector<short> &elements) {
+//    normals.resize(vertices.size(), glm::vec3(0.0, 0.0, 0.0));
+//    for (uint i = 0; i < elements.size(); i += 3)
+//    {
+//        short ia = elements[i];
+//        short ib = elements[i + 1];
+//        short ic = elements[i + 2];
+//        glm::vec3 normal = glm::normalize(glm::cross(
+//            glm::vec3(vertices[ib]) - glm::vec3(vertices[ia]),
+//            glm::vec3(vertices[ic]) - glm::vec3(vertices[ia])));
+//        normals[ia] = normals[ib] = normals[ic] = normal;
+//    }
+//}
 
 // For more information on what *max, origin and spacing is, refer to https://github.com/christopherbatty/SDFGen
 // Explanation is found in main.cpp
-void model::loadModel(std::string model, ParticleData &particles, ConstraintData &constraints, modelConfig config)
+void model::loadModel(std::string model, ParticleData &particles, ConstraintData &constraints, modelConfig config, ModelData &modelData)
 {
 
 	std::vector<Particle>::size_type start = particles.cardinality;
@@ -166,19 +166,18 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
     // Load Mesh
     std::vector<glm::vec4> vertices;
     std::vector<glm::vec3> normals;
-    std::vector<GLushort> elements;
+    std::vector<short> elements;
     loadMesh(model, vertices, elements);
-    printf("Size of vertices is: %i", vertices.size());
 
     // Find three closest particles and calculate barycentric coordinates for all vertices
     std::vector<float[3]> bcCoords(vertices.size());
     std::vector<int[3]> closestParticles(vertices.size());
 
-    for (int i = 0; i < vertices.size(); i++)
+    for (uint i = 0; i < vertices.size(); i++)
     {
         closestParticles[i][0] = 0;
         closestParticles[i][1] = 1;
-        closestParticles[i][2] = 2;
+        closestParticles[i][2] = particles.cardinality-1; // To prevent three particles in a row
 
         // Sort wrt. distance from vertex. Looks messy, but should be the fastest way? Max 3 comparisons
         float distances[3];
@@ -192,7 +191,7 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
             closestParticles[i][0] = 1;
             closestParticles[i][1] = 0;
         }
-        newDist = distance(vec3(vertices[i]), position[2]);
+        newDist = distance(vec3(vertices[i]), position[closestParticles[i][2]]);
         if (newDist >= distances[1]) { distances[2] = newDist; }
         else
         {
@@ -201,41 +200,51 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
             if (newDist >= distances[0])
             {
                 distances[1] = newDist;
-                closestParticles[i][1] = 2;
+                closestParticles[i][1] = closestParticles[i][2];
             }
             else
             {
                 distances[1] = distances[0];
                 distances[0] = newDist;
                 closestParticles[i][1] = closestParticles[i][0];
-                closestParticles[i][0] = 2;
+                closestParticles[i][0] = closestParticles[i][2];
             }
         }
 
-
-        for (std::vector<Particle>::size_type j = (start + 3); j < particles.cardinality; j++)
+        vec3 vertex = vec3(vertices[i]);
+        for (std::vector<Particle>::size_type j = (start + 2); j < particles.cardinality-1; j++)
         {
             newDist = distance(position[j], vec3(vertices[i]));
             if (newDist < distances[2])
             {
                 if (newDist < distances[1])
                 {
-                    distances[2] = distances[1];
-                    closestParticles[i][2] = closestParticles[i][1];
-                    if (newDist < distances[0])
+                    if (newDist < distances[0] &&
+                        abs(dot(normalize(position[closestParticles[i][1]] - position[j]), normalize(position[closestParticles[i][2]] - position[j]))) < 0.999) // particles are not on the same line
                     {
+                        distances[2] = distances[1];
+                        closestParticles[i][2] = closestParticles[i][1];
+
                         distances[1] = distances[0];
                         distances[0] = newDist;
                         closestParticles[i][1] = closestParticles[i][0];
                         closestParticles[i][0] = j;
                     }
-                    else
+                    else if (abs(dot(normalize(position[closestParticles[i][0]] - position[j]), normalize(position[closestParticles[i][2]] - position[j]))) < 0.999)
                     {
+                        distances[2] = distances[1];
+                        closestParticles[i][2] = closestParticles[i][1];
+
                         distances[1] = newDist;
                         closestParticles[i][1] = j;
                     }
+                    else if (abs(dot(normalize(position[closestParticles[i][1]] - position[j]), normalize(position[closestParticles[i][0]] - position[j]))) < 0.999)
+                    {
+                        distances[2] = newDist;
+                        closestParticles[i][2] = j;
+                    }
                 }
-                else
+                else if(abs(dot(normalize(position[closestParticles[i][1]] - position[j]), normalize(position[closestParticles[i][0]] - position[j]))) < 0.999)
                 {
                     distances[2] = newDist;
                     closestParticles[i][2] = j;
@@ -247,7 +256,6 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
         // Calculate Barycentric coordinates
 
         // Adams BCoords
-        vec3 vertex = vec3(vertices[i]);
         vec3 CA = position[closestParticles[i][2]] - position[closestParticles[i][0]];
         vec3 BA = position[closestParticles[i][1]] - position[closestParticles[i][0]];
         vec3 normal = normalize(cross(CA, BA));
@@ -272,15 +280,16 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
         bcCoords[i][1] = (dotCACA * dotBApPrim - dotCABA * dotCApPrim) * invDenom; // v
 
         printf("BCC for v[%i]: %f, %f, %f, sum: %f\n", i, bcCoords[i][0], bcCoords[i][1], bcCoords[i][2], (bcCoords[i][0] + bcCoords[i][1] + bcCoords[i][2]));
-    }
+    } // end for all vertices
 
-    calculateNormals(normals, vertices, elements);
+    modelData.addVertices(elements, bcCoords, closestParticles, modelData);
 
+    //calculateNormals(normals, vertices, elements);
 }
 
 
 
-void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints)
+void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints, ModelData &modelData)
 {
 	if (!*show)
 	{
@@ -305,7 +314,7 @@ void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints
 		
 		if ((unsigned int)selected >= predefinedModels.size())
 		{
-			loadModel(models[selected], particles, constraints, config);
+			loadModel(models[selected], particles, constraints, config, modelData);
 		}
 		else
 		{
