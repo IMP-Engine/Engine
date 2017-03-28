@@ -42,8 +42,10 @@ glm::vec3 DistanceConstraintData::gradient(int constraintIndex, int particleInde
     return (particleIndex == firstParticleIndex ? c : -c);
 }
 
-float DistanceConstraintData::scaleFactor(int constraintIndex, ParticleData &particleData)
+float DistanceConstraintData::scaleFactor(int constraintIndex, ParticleData &particleData, float lam, double dt)
 {
+	float aDash = (stiffness[constraintIndex] / (dt*dt));
+
     int firstParticleIndex = particles[constraintIndex].x;
     int secondParticleIndex = particles[constraintIndex].y;
 
@@ -52,7 +54,7 @@ float DistanceConstraintData::scaleFactor(int constraintIndex, ParticleData &par
 
     std::vector<float> &invmass = particleData.invmass;
 
-    return (length(p1 - p2) - distance[constraintIndex]) / (invmass[firstParticleIndex] + invmass[secondParticleIndex]);
+    return (-(length(p1 - p2) - distance[constraintIndex]) - aDash*lam) / (invmass[firstParticleIndex] + invmass[secondParticleIndex] + aDash);
 }
 
 void DistanceConstraintData::clear()

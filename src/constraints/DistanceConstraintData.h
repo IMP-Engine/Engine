@@ -26,7 +26,7 @@ public:
 
     float evaluate(int constraintIndex, ParticleData &particleData);
     glm::vec3 gradient(int constraintIndex, int particleIndex, ParticleData &particleData);
-    float scaleFactor(int constraintIndex, ParticleData &particleData);
+    float scaleFactor(int constraintIndex, ParticleData &particleData, float lam, double dt);
 
     void clear();
     void removeBroken(ParticleData &particleData);
