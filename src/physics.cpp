@@ -105,7 +105,7 @@ void Physics::step(Scene *scene, float dt)
     }
 	// Size is total amount of constraints
 	lam.resize(constraints.distanceConstraints.cardinality);
-	for each (auto f in lam) f = 0;
+	for (size_t i = 0; i < lam.size(); i++) lam[i] = 0;
 	/* 
 	 * Stationary iterative linear solver - Gauss-Seidel 
 	 */
