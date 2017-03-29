@@ -125,7 +125,7 @@ void Scene::loadScene(std::string scene) {
     while (std::getline(file, line))
     {
         // Fill vertices
-        if (line.substr(0, 1) == "v")
+        if (line.substr(0, 2) == "v ")
         {
             std::istringstream s(line = line.substr(2));
             glm::vec3 vertex;
@@ -157,8 +157,10 @@ void Scene::loadScene(std::string scene) {
         
     }
 
-    for (unsigned int i = 0; i < indices.size() - 1; i++)
+    for (unsigned int i = 0; i < indices.size(); i++)
     {
+        std::cout << "indices.size() = "<< indices.size() << std::endl;
+        std::cout << "vertices.size() = "<< vertices.size() << std::endl;
         Triangle t = Triangle();
         /*
         t.v0 = vec3(vertices[indices[i]],
@@ -174,9 +176,9 @@ void Scene::loadScene(std::string scene) {
                     vertices[indices[i + 2]]);
                     */
         //std::cout << "vertices " << indices[i].x << ", " << indices[i].y << ", " << indices[i].z << std::endl;
-        t.v0 = vertices[indices[i].x];
-        t.v1 = vertices[indices[i].y];
-        t.v2 = vertices[indices[i].z];
+        t.v0 = vertices[indices[i].x - 1];
+        t.v1 = vertices[indices[i].y - 1];
+        t.v2 = vertices[indices[i].z - 1];
 
         t.u = t.v1 - t.v0;
         t.v = t.v2 - t.v0;
@@ -255,11 +257,11 @@ void Scene::init() {
 
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(), &(vertices[0]), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vertices.size(), &(vertices[0]), GL_STATIC_DRAW);
 
     glGenBuffers(1, &ibo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLshort) * indices.size(), &(indices[0]), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(glm::vec3) * indices.size(), &(indices[0]), GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(vpos_location);
     glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
