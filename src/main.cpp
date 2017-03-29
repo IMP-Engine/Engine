@@ -136,6 +136,8 @@ void init() {
     physicSystem.overRelaxConst = 1.0f;
     physicSystem.restitutionCoefficient = 1.f; // 1 is Elastic collision
 
+    modelData = ModelData();
+    modelData.clear();
 
     scene->init();
 

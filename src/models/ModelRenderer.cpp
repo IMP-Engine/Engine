@@ -49,7 +49,7 @@ void calculateVertices(ParticleData &particles, ModelData &data, std::vector<glm
         glm::vec3 normal = normalize(cross(u, v));
 
         positions.push_back(p1 + u + v + normal * data.bcCoords[i + 2]);
-        printf("Pos %i: {%f, %f, %f}\n", (i/3), positions[i/3].x, positions[i/3].y, positions[i/3].z);
+        //printf("Pos %i: {%f, %f, %f}\n", (i/3), positions[i/3].x, positions[i/3].y, positions[i/3].z);
         normals.push_back(normal);
     }
 }
@@ -78,7 +78,7 @@ void ModelRenderer::render(ParticleData &particles, ModelData &data, glm::mat4 &
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     int size;
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-    //glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
+    glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
 	//glDrawArrays(GL_TRIANGLES, 0, data.cardinality);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);

@@ -64,8 +64,6 @@ void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vecto
             a--; b--; c--;
             elements.push_back(a); elements.push_back(b); elements.push_back(c);
         }
-        //else if (line[0] == '#') {/* ignoring this line */}
-        //else {/* ignoring this line */}
     }
 }
 
@@ -176,16 +174,18 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
     std::vector<float[3]> bcCoords(vertices.size());
     std::vector<int[3]> closestParticles(vertices.size());
 
+    // For all vertices, find three closest particles
     for (uint i = 0; i < vertices.size(); i++)
     {
+        vec3 vertex = vec3(vertices[i]);
         closestParticles[i][0] = 0;
         closestParticles[i][1] = 1;
         closestParticles[i][2] = particles.cardinality-1; // To prevent three particles in a row
 
         // Sort wrt. distance from vertex. Looks messy, but should be the fastest way? Max 3 comparisons
         float distances[3];
-        distances[0] = distance(vec3(vertices[i]), position[0]);
-        float newDist = distance(vec3(vertices[i]), position[1]);
+        distances[0] = distance(vertex, position[0]);
+        float newDist = distance(vertex, position[1]);
         if (newDist >= distances[0]) { distances[1] = newDist; }
         else
         {
@@ -194,7 +194,7 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
             closestParticles[i][0] = 1;
             closestParticles[i][1] = 0;
         }
-        newDist = distance(vec3(vertices[i]), position[closestParticles[i][2]]);
+        newDist = distance(vertex, position[closestParticles[i][2]]);
         if (newDist >= distances[1]) { distances[2] = newDist; }
         else
         {
@@ -214,48 +214,67 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
             }
         }
 
-        vec3 vertex = vec3(vertices[i]);
         for (std::vector<Particle>::size_type j = (start + 2); j < particles.cardinality-1; j++)
         {
             newDist = distance(position[j], vec3(vertices[i]));
             if (newDist < distances[2])
-            {
-                if (newDist < distances[1])
-                {
-                    if (newDist < distances[0] &&
-                        abs(dot(normalize(position[closestParticles[i][1]] - position[j]), normalize(position[closestParticles[i][2]] - position[j]))) < 0.999) // particles are not on the same line
-                    {
+            {   // Can new particle replace cP[2]?
+                if (abs(dot(normalize(position[closestParticles[i][0]] - position[j]), normalize(position[closestParticles[i][1]] - position[j]))) < 0.9) 
+                {   // Change with cP[2]
+                    if (newDist < distances[1])
+                    {   // Closer than cP[1]
                         distances[2] = distances[1];
                         closestParticles[i][2] = closestParticles[i][1];
-
-                        distances[1] = distances[0];
-                        distances[0] = newDist;
-                        closestParticles[i][1] = closestParticles[i][0];
-                        closestParticles[i][0] = j;
+                        if (newDist < distances[0])
+                        {   // Closer than cP[0]
+                            distances[1] = distances[0];
+                            closestParticles[i][1] = closestParticles[i][0];
+                            distances[0] = newDist;
+                            closestParticles[i][0] = j;
+                        }
+                        else
+                        {   // Not closer than cP[0], but still closer than cP[1]
+                            distances[1] = newDist;
+                            closestParticles[i][1] = j;
+                        }
                     }
-                    else if (abs(dot(normalize(position[closestParticles[i][0]] - position[j]), normalize(position[closestParticles[i][2]] - position[j]))) < 0.999)
-                    {
-                        distances[2] = distances[1];
-                        closestParticles[i][2] = closestParticles[i][1];
-
-                        distances[1] = newDist;
-                        closestParticles[i][1] = j;
-                    }
-                    else if (abs(dot(normalize(position[closestParticles[i][1]] - position[j]), normalize(position[closestParticles[i][0]] - position[j]))) < 0.999)
-                    {
+                    else 
+                    {   // Not closer than cP[1], but still closer than cP[2]
                         distances[2] = newDist;
                         closestParticles[i][2] = j;
                     }
                 }
-                else if(abs(dot(normalize(position[closestParticles[i][1]] - position[j]), normalize(position[closestParticles[i][0]] - position[j]))) < 0.999)
+                else if (newDist < distances[1])
                 {
-                    distances[2] = newDist;
-                    closestParticles[i][2] = j;
+                    // Can new particle replace cP[1]?
+                    if (abs(dot(normalize(position[closestParticles[i][0]] - position[j]), normalize(position[closestParticles[i][2]] - position[j]))) < 0.9)
+                    {   // Change with cP[1]
+                        if (newDist < distances[0])
+                        {   // Closer than cP[0]
+                            distances[1] = distances[0];
+                            closestParticles[i][1] = closestParticles[i][0];
+                            distances[0] = newDist;
+                            closestParticles[i][0] = j;
+                        }
+                        else
+                        {   // Not closer than cP[0], but still closer than cP[1]
+                            distances[1] = newDist;
+                            closestParticles[i][1] = j;
+                        }
+                    }
+                    else if (newDist < distances[0] && // Can new particle replace cP[0]?
+                        abs(dot(normalize(position[closestParticles[i][1]] - position[j]), normalize(position[closestParticles[i][2]] - position[j]))) < 0.9)
+                    {   // Change with cP[0]
+                        distances[0] = newDist;
+                        closestParticles[i][0] = j;
+                    }
                 }
             }
-        }
-        //printf("Distances: %f, %f, %f\n", distances[0], distances[1], distances[2]);
+        } // End for all particles
 
+        //printf("Indices:%i,%i,%i\n", closestParticles[i][0], closestParticles[i][1], closestParticles[i][2]);
+        //printf("V:(%f,%f,%f) P1:(%f,%f,%f) P2:(%f,%f,%f) P3:(%f,%f,%f)\n", vertex.x, vertex.y, vertex.z, position[closestParticles[i][0]].x, position[closestParticles[i][0]].y, position[closestParticles[i][0]].z, position[closestParticles[i][1]].x, position[closestParticles[i][1]].y, position[closestParticles[i][1]].z, position[closestParticles[i][2]].x, position[closestParticles[i][2]].y, position[closestParticles[i][2]].z);
+        
         // Calculate Barycentric coordinates
 
         // Adams BCoords
@@ -264,11 +283,12 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
         vec3 normal = normalize(cross(CA, BA));
         bcCoords[i][2] = dot(vertex - position[closestParticles[i][0]], normal); // distance offset along normal
         vec3 projetedPosition = vertex - bcCoords[i][2] * normal;
+        //printf("Normal.xyz: %f,%f,%f Distance offset: %f\n", normal.x, normal.y, normal.z, bcCoords[i][2]);
 
         // Baycentric check
 
         // particle position relative to v0
-        vec3 pPrim = projetedPosition - vertex;
+        vec3 pPrim = projetedPosition - position[closestParticles[i][0]];
 
         // Compute dot products
         float dotCACA = dot(CA, CA);
@@ -282,7 +302,8 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
         bcCoords[i][0] = (dotBABA * dotCApPrim - dotCABA * dotBApPrim) * invDenom; // u
         bcCoords[i][1] = (dotCACA * dotBApPrim - dotCABA * dotCApPrim) * invDenom; // v
 
-        printf("BCC for v[%i]: %f, %f, %f, sum: %f\n", i, bcCoords[i][0], bcCoords[i][1], bcCoords[i][2], (bcCoords[i][0] + bcCoords[i][1] + bcCoords[i][2]));
+        //printf("CP: %i, %i, %i\n", closestParticles[i][0], closestParticles[i][1], closestParticles[i][2]);
+        //printf(" BCC: %f, %f, %f, sum: %f\n", i, bcCoords[i][0], bcCoords[i][1], bcCoords[i][2], (bcCoords[i][0] + bcCoords[i][1]));
     } // end for all vertices
 
     modelData.addVertices(elements, bcCoords, closestParticles, modelData);
