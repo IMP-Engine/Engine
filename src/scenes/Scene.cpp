@@ -136,15 +136,16 @@ void Scene::loadScene(std::string scene) {
         // Fill indices
         if (line.substr(0, 1) == "f")
         {
-            glm::vec3 index;
+            glm::ivec3 index;
             line = line.substr(2);
             for (int xyz = 0; xyz < 3; xyz++) {
                 std::istringstream s(line.substr(0, line.find("//")));
                 s >> index[xyz];
+                index[xyz] -= 1;
                 line = line.substr(line.find(" ") + 1);
             }
             indices.push_back(index);
-            //std::cout << index.x << ", " << index.y << ", " << index.z << std::endl;
+            std::cout << index.x << ", " << index.y << ", " << index.z << std::endl;
         }
 
         // Fill normals
@@ -159,8 +160,8 @@ void Scene::loadScene(std::string scene) {
 
     for (unsigned int i = 0; i < indices.size(); i++)
     {
-        std::cout << "indices.size() = "<< indices.size() << std::endl;
-        std::cout << "vertices.size() = "<< vertices.size() << std::endl;
+        //std::cout << "indices.size() = "<< indices.size() << std::endl;
+        //std::cout << "vertices.size() = "<< vertices.size() << std::endl;
         Triangle t = Triangle();
         /*
         t.v0 = vec3(vertices[indices[i]],
@@ -176,9 +177,9 @@ void Scene::loadScene(std::string scene) {
                     vertices[indices[i + 2]]);
                     */
         //std::cout << "vertices " << indices[i].x << ", " << indices[i].y << ", " << indices[i].z << std::endl;
-        t.v0 = vertices[indices[i].x - 1];
-        t.v1 = vertices[indices[i].y - 1];
-        t.v2 = vertices[indices[i].z - 1];
+        t.v0 = vertices[indices[i].x];
+        t.v1 = vertices[indices[i].y];
+        t.v2 = vertices[indices[i].z];
 
         t.u = t.v1 - t.v0;
         t.v = t.v2 - t.v0;
@@ -261,7 +262,7 @@ void Scene::init() {
 
     glGenBuffers(1, &ibo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(glm::vec3) * indices.size(), &(indices[0]), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(glm::ivec3) * indices.size(), &(indices[0]), GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(vpos_location);
     glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);

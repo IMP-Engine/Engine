@@ -38,7 +38,7 @@ public:
     glm::mat4 modelMatrix;
 
     std::vector<glm::vec3> vertices;
-    std::vector<glm::vec3> indices;
+    std::vector<glm::ivec3> indices;
     std::vector<float> a;
     std::vector<unsigned short> b;
     std::vector<float> normals;
