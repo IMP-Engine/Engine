@@ -9,11 +9,11 @@
 #include "../particles//ParticleData.h"
 
 #ifdef _WIN32
-#define SURFACE_VERT_SHADER_PATH "../../src/shaders/simple.vert.glsl"
-#define SURFACE_FRAG_SHADER_PATH "../../src/shaders/simple.frag.glsl"
+#define SURFACE_VERT_SHADER_PATH "../../src/shaders/simple.vert"
+#define SURFACE_FRAG_SHADER_PATH "../../src/shaders/simple.frag"
 #elif __unix__
-#define SURFACE_VERT_SHADER_PATH "../src/shaders/simple.vert.glsl"
-#define SURFACE_FRAG_SHADER_PATH "../src/shaders/simple.frag.glsl"
+#define SURFACE_VERT_SHADER_PATH "../src/shaders/simple.vert"
+#define SURFACE_FRAG_SHADER_PATH "../src/shaders/simple.frag"
 #endif
 
 class ModelRenderer
