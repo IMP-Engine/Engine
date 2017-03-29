@@ -2,7 +2,7 @@
 
 #include <vector>
 #include "particles/Particle.h"
-#include "Scene.h"
+#include "scenes/Scene.h"
 #include "intersections.h"
 #include "constraints/Constraint.h"
 

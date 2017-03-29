@@ -25,7 +25,7 @@
 #include "performance.h"
 #include "physics.h"
 #include "particles/ParticleRenderer.h"
-#include "Scene.h"
+#include "scenes/Scene.h"
 
 #include "constraints/DistanceConstraint.h"
 #include "constraints/visualizeConstraint.h"
@@ -44,7 +44,7 @@ using namespace std;
  ********************** Global variables **********************************
  **************************************************************************/
 
- // Application
+// Application
 GLFWwindow* window;
 ImVec4 clear_color = ImColor(255, 255, 255);;
 bool vsync = true;
@@ -71,8 +71,9 @@ const vec3 lightPosition = vec3(50.0f);
 // Simulation variables and parameters
 bool doPyshics = false;
 int iterations = 5;
-bool showPerformance = false;
 bool showModels = false;
+bool showSceneSelection = false;
+bool showPerformance = false;
 float pSleeping = 0.0001f;
 float overRelaxConst = 1.0f;
 float restitutionCoefficient = 1.f; // 1 is Elastic collision
@@ -81,7 +82,7 @@ float timestep = 0.01667;
 
 
 static void errorCallback(int error, const char* description) {
-	std::cerr << "Error: " << description << std::endl;
+    std::cerr << "Error: " << description << std::endl;
 }
 
 void init() {
@@ -119,43 +120,43 @@ void init() {
     debug::setupGLDebugMessages();
 #endif
 
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
 
     ImGui_ImplGlfwGL3_Init(window, true); 
 
-	input::initialize(window);
+    input::initialize(window);
 
     visualization::initialize();
 
-	performance::initialize();
+    performance::initialize();
 
-	scene = new Scene;
-	particles.reserve(200000);
-	constraints.reserve(2000000);
+    scene = new Scene;
+    particles.reserve(200000);
+    constraints.reserve(2000000);
 
     scene->init();
 
-	model::loadModelNames();
+    model::loadModelNames();
 
-	// Load some model to begin with, so that debugging is easier on us
-	model::modelConfig conf;
-	conf.centerPos = vec3(0.f);
-	conf.distanceThreshold = 2;
-	conf.invmass = 0.8f;
-	conf.phase = 0;
-	conf.scale = vec3(4.f);
-	conf.stiffness = 0.8f;
-	conf.numParticles = ivec3(4);
-	model::loadPredefinedModel("Box", particles, constraints, conf);
+    // Load some model to begin with, so that debugging is easier on us
+    model::modelConfig conf;
+    conf.centerPos = vec3(0.f);
+    conf.distanceThreshold = 2;
+    conf.invmass = 0.8f;
+    conf.phase = 0;
+    conf.scale = vec3(4.f);
+    conf.stiffness = 0.8f;
+    conf.numParticles = ivec3(4);
+    model::loadPredefinedModel("Box", particles, constraints, conf);
 
-	particleRenderer = new ParticleRenderer(&particles);
-	particleRenderer->init();
+    particleRenderer = new ParticleRenderer(&particles);
+    particleRenderer->init();
 }
 
 void display(double deltaTime) {
 
-	int id = performance::startTimer("Reset and draw scene");
+    int id = performance::startTimer("Reset and draw scene");
 
     float ratio;
     int width, height;
@@ -168,37 +169,37 @@ void display(double deltaTime) {
     glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	mat4 modelMatrix(1.0f); // Identity matrix
+    mat4 modelMatrix(1.0f); // Identity matrix
 
-	viewMatrix = camera.getViewMatrix();
+    viewMatrix = camera.getViewMatrix();
     // Set up a projection matrix
     float nearPlane = 0.01f;
     float farPlane = 1000.0f;
 
     modelViewMatrix = viewMatrix * modelMatrix;
-	projectionMatrix = perspective(radians(camera.getFovy()), ratio, nearPlane, farPlane);
+    projectionMatrix = perspective(radians(camera.getFovy()), ratio, nearPlane, farPlane);
     modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
 
     vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
-	
+
     scene->render(viewMatrix, projectionMatrix);
-    
-	performance::stopTimer(id);
-	
+
+    performance::stopTimer(id);
+
     if (doPyshics)
     {
-		physics::simulate(particles, constraints, scene, useVariableTimestep ? deltaTime : timestep, iterations);
+        physics::simulate(particles, constraints, scene, useVariableTimestep ? deltaTime : timestep, iterations);
     }
-	
+
     id = performance::startTimer("Render particles");
     particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
-	performance::stopTimer(id);
+    performance::stopTimer(id);
 
     visualization::drawConstraints(&constraints, modelViewProjectionMatrix);
 
-	// Since we may want to measure performance of something that happens after the call to gui()
-	// we place this call as late as possible to allow for measuring more things
-	performance::gui(&showPerformance);
+    // Since we may want to measure performance of something that happens after the call to gui()
+    // we place this call as late as possible to allow for measuring more things
+    performance::gui(&showPerformance);
 
     ImGui::Render();
 
@@ -216,24 +217,27 @@ void gui()
     ImGui::ColorEdit3("clear color", (float*)&clear_color);
     ImGui::Checkbox("Vsync", &vsync);
     if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
-	if (ImGui::Button("Models")) showModels ^= 1; ImGui::SameLine();
-	if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
+    if (ImGui::Button("Models")) showModels ^= 1; ImGui::SameLine();
+    if (ImGui::Button("Scenes")) showSceneSelection ^= 1; ImGui::SameLine();
+    if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-	visualization::gui();
-	ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
-	ImGui::Checkbox("Variable timestep", &useVariableTimestep);
+    visualization::gui();
+    ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
+    ImGui::Checkbox("Variable timestep", &useVariableTimestep);
     ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
     ImGui::SliderFloat("Over-relax-constant", &overRelaxConst, 1, 5);
     ImGui::SliderFloat("Particle Sleeping (squared)", &pSleeping, 0, 1, "%.9f", 10.f);
-	ImGui::SliderFloat("Restitution Coeff.", &restitutionCoefficient, 0, 1);
-	if (!useVariableTimestep) 
-	{
-		ImGui::SliderFloat("Timestep", &timestep, 0, .05f, "%.5f"); ImGui::SameLine();
-		ImGui::Text((std::to_string(1 / timestep) + " \"FPS\"").c_str());
-	}
-	ImGui::End();
+    ImGui::SliderFloat("Restitution Coeff.", &restitutionCoefficient, 0, 1);
+    if (!useVariableTimestep) 
+    {
+        ImGui::SliderFloat("Timestep", &timestep, 0, .05f, "%.5f"); ImGui::SameLine();
+        ImGui::Text((std::to_string(1 / timestep) + " \"FPS\"").c_str());
+    }
+    ImGui::End();
 
-	model::gui(&showModels);
+    model::gui(&showModels);
+
+    scene->gui(&showSceneSelection);
 
     // Remove when all group members feel comfortable with how GUI works and what it can provide
     // Demo window
@@ -258,7 +262,7 @@ int main(void) {
 
     while (!glfwWindowShouldClose(window))
     {
-		int id = performance::startTimer("All but display()");
+        int id = performance::startTimer("All but display()");
 
         // Calculate deltatime of current frame
         GLdouble currentFrame = glfwGetTime();
@@ -266,16 +270,16 @@ int main(void) {
         lastFrame = currentFrame;
 
         glfwPollEvents();
-		camera.move(input::getKeys(), deltaTime);
+        camera.move(input::getKeys(), deltaTime);
 
         ImGui_ImplGlfwGL3_NewFrame();
 
         gui();
 
-		performance::stopTimer(id);
+        performance::stopTimer(id);
 
         display(deltaTime);
-		performance::next();
+        performance::next();
     }
 
     // Cleanup
