@@ -288,7 +288,7 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
         bcCoords[i][1] = (dotCACA * dotBApPrim - dotCABA * dotCApPrim) * invDenom; // v
 
         //printf("CP: %i, %i, %i\n", closestParticles[i][0], closestParticles[i][1], closestParticles[i][2]);
-        //printf(" BCC: %f, %f, %f, sum: %f\n", i, bcCoords[i][0], bcCoords[i][1], bcCoords[i][2], (bcCoords[i][0] + bcCoords[i][1]));
+        printf(" BCC: %f, %f, %f, sum: %f\n", bcCoords[i][0], bcCoords[i][1], bcCoords[i][2], (bcCoords[i][0] + bcCoords[i][1]));
     } // end for all vertices
 
     modelData.addVertices(elements, bcCoords, closestParticles, modelData);
