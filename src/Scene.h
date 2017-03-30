@@ -35,7 +35,7 @@ public:
     std::vector<Triangle> triangles;
     int numTriangles;
 
-    void render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix);
+    void render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix, const glm::vec3 &lightPosition);
     void init();
 };
 

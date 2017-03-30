@@ -64,7 +64,7 @@ Physics physicSystem;
 ParticleRenderer *particleRenderer;
 
 // Light
-const vec3 lightPosition = vec3(50.0f);
+const vec3 lightPosition = vec3(4.0f);
 
 // Simulation variables and parameters
 bool doPyshics = false;
@@ -180,7 +180,7 @@ void display(double deltaTime) {
 
     vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
 	
-    scene->render(viewMatrix, projectionMatrix);
+    scene->render(viewMatrix, projectionMatrix, vec3(lightPosition));
     
 	performance::stopTimer(id);
 	
