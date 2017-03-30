@@ -1,8 +1,7 @@
 #version 430
 
 in vec3 color;
-
-uniform vec3 normal;
+in vec3 normalOut;
 
 out vec4 outColor;
 

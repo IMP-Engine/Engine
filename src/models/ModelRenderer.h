@@ -25,6 +25,7 @@ public:
 	GLuint simpleShader;
 	GLuint vao;
 	GLuint vbo;
+    GLuint nbo;
     GLuint ibo;
     unsigned int *particleCount;
 
