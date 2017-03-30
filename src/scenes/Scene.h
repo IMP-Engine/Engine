@@ -39,16 +39,16 @@ public:
 
     std::vector<glm::vec3> vertices;
     std::vector<glm::ivec3> indices;
-    std::vector<float> a;
-    std::vector<unsigned short> b;
-    std::vector<float> normals;
+    std::vector<glm::vec3> normalVectors;
+    std::vector<glm::vec3> normals;
+    std::vector<int> normalIndices;
     std::vector<Triangle> triangles;
     int numTriangles;
 
     void loadSceneNames();
     void loadScene(std::string scene);
     void gui(bool *show);
-    void render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix);
+    void render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix, const glm::vec3 &lightPosition);
     void init();
 };
 

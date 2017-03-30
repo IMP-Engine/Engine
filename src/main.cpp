@@ -21,13 +21,13 @@
 
 #define WORLD_MIN vec3(-20.f,-20.f,-20.f)
 #define WORLD_MAX vec3( 20.f, 20.f, 20.f)
+#define M_PI 3.14159265358979323846264338327950288 /* pi */
 
 #include "performance.h"
 #include "physics.h"
 #include "particles/ParticleRenderer.h"
 #include "scenes/Scene.h"
 
-#include "constraints/DistanceConstraint.h"
 #include "constraints/visualizeConstraint.h"
 #include "models/model.h"
 #include "input.h"
@@ -35,7 +35,6 @@
 #ifdef _DEBUG
 #include "intersections/tests.h"
 #endif // _DEB
-
 
 using namespace glm;
 using namespace std;
@@ -59,24 +58,20 @@ GLdouble lastFrame = 0.0f;
 
 // Scene
 Scene *scene;
-vector<Particle> particles;
-vector<Constraint *> constraints;
+Physics physicSystem;
 
 // Shaders and rendering 
 ParticleRenderer *particleRenderer;
+bool renderSurfaces = false;
 
 // Light
-const vec3 lightPosition = vec3(50.0f);
+const vec3 lightPosition = vec3(4.0f);
 
 // Simulation variables and parameters
 bool doPyshics = false;
-int iterations = 5;
 bool showModels = false;
 bool showSceneSelection = false;
 bool showPerformance = false;
-float pSleeping = 0.0001f;
-float overRelaxConst = 1.0f;
-float restitutionCoefficient = 1.f; // 1 is Elastic collision
 bool useVariableTimestep = true;
 float timestep = 0.01667;
 
@@ -132,8 +127,13 @@ void init() {
     performance::initialize();
 
     scene = new Scene;
-    particles.reserve(200000);
-    constraints.reserve(2000000);
+    physicSystem = Physics();
+
+    physicSystem.iterations = 5;
+    physicSystem.pSleeping = 0.0001f;
+    physicSystem.overRelaxConst = 1.0f;
+    physicSystem.restitutionCoefficient = 1.f; // 1 is Elastic collision
+
 
     scene->init();
 
@@ -148,9 +148,9 @@ void init() {
     conf.scale = vec3(4.f);
     conf.stiffness = 0.8f;
     conf.numParticles = ivec3(4);
-    model::loadPredefinedModel("Box", particles, constraints, conf);
+    model::loadPredefinedModel("Box", physicSystem.particles, physicSystem.constraints, conf);
 
-    particleRenderer = new ParticleRenderer(&particles);
+    particleRenderer = new ParticleRenderer();
     particleRenderer->init();
 }
 
@@ -158,12 +158,12 @@ void display(double deltaTime) {
 
     int id = performance::startTimer("Reset and draw scene");
 
-    float ratio;
-    int width, height;
+    GLfloat ratio;
+    GLint width, height;
     mat4 viewMatrix, modelViewProjectionMatrix, modelViewMatrix, projectionMatrix;
 
     glfwGetFramebufferSize(window, &width, &height);
-    ratio = (GLfloat)WIDTH / (GLfloat)HEIGHT;
+    ratio = (GLfloat)width / (GLfloat)height;
 
     glViewport(0, 0, width, height);
     glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
@@ -182,20 +182,31 @@ void display(double deltaTime) {
 
     vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
 
-    scene->render(viewMatrix, projectionMatrix);
+    scene->render(viewMatrix, projectionMatrix, vec3(lightPosition));
 
     performance::stopTimer(id);
 
     if (doPyshics)
     {
-        physics::simulate(particles, constraints, scene, useVariableTimestep ? deltaTime : timestep, iterations);
+        physicSystem.step(scene, useVariableTimestep ? deltaTime : timestep);
     }
 
-    id = performance::startTimer("Render particles");
-    particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
-    performance::stopTimer(id);
+    if (renderSurfaces)
+    {
+        id = performance::startTimer("Render surfaces");
+    }
+    else // render particles
+    {
+        int viewport[4];
+        glGetIntegerv(GL_VIEWPORT, viewport);
+        float heightOfNearPlane = (float)abs(viewport[3] - viewport[1]) / (2 * tan(0.5*camera.getFovy()*M_PI / 180.0));
 
-    visualization::drawConstraints(&constraints, modelViewProjectionMatrix);
+        id = performance::startTimer("Render particles");
+        particleRenderer->render(physicSystem.particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix, heightOfNearPlane);
+
+        visualization::drawConstraints(physicSystem.constraints, physicSystem.particles, modelViewProjectionMatrix);
+    }
+    performance::stopTimer(id);
 
     // Since we may want to measure performance of something that happens after the call to gui()
     // we place this call as late as possible to allow for measuring more things
@@ -221,13 +232,14 @@ void gui()
     if (ImGui::Button("Scenes")) showSceneSelection ^= 1; ImGui::SameLine();
     if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
     visualization::gui();
     ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
-    ImGui::Checkbox("Variable timestep", &useVariableTimestep);
-    ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
-    ImGui::SliderFloat("Over-relax-constant", &overRelaxConst, 1, 5);
-    ImGui::SliderFloat("Particle Sleeping (squared)", &pSleeping, 0, 1, "%.9f", 10.f);
-    ImGui::SliderFloat("Restitution Coeff.", &restitutionCoefficient, 0, 1);
+    ImGui::Checkbox("Timestep from framerate", &useVariableTimestep);
+    ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
+    ImGui::SliderFloat("Over-relax-constant", &physicSystem.overRelaxConst, 1, 5);
+    ImGui::SliderFloat("Particle Sleeping (squared)", &physicSystem.pSleeping, 0, 1, "%.9f", 10.f);
+    ImGui::SliderFloat("Restitution Coeff.", &physicSystem.restitutionCoefficient, 0, 1);
     if (!useVariableTimestep) 
     {
         ImGui::SliderFloat("Timestep", &timestep, 0, .05f, "%.5f"); ImGui::SameLine();
@@ -235,7 +247,7 @@ void gui()
     }
     ImGui::End();
 
-    model::gui(&showModels);
+    model::gui(&showModels, physicSystem.particles, physicSystem.constraints);
 
     scene->gui(&showSceneSelection);
 
@@ -270,7 +282,7 @@ int main(void) {
         lastFrame = currentFrame;
 
         glfwPollEvents();
-        camera.move(input::getKeys(), deltaTime);
+        camera.move(input::getKeys(), (float)deltaTime);
 
         ImGui_ImplGlfwGL3_NewFrame();
 

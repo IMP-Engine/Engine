@@ -5,7 +5,7 @@
 #include <GLFW/glfw3.h>
 #include "glm/glm.hpp"
 #include "../glHelper.h"
-#include "Particle.h"
+#include "ParticleData.h"
 
 
 
@@ -21,15 +21,16 @@
 class ParticleRenderer
 {
 public:
-	ParticleRenderer(std::vector<Particle> *particleVector) : particles(particleVector) { };
+	ParticleRenderer();
 	~ParticleRenderer();
-	std::vector<Particle> *particles;
 
 	GLuint particleShader;
 	GLuint vao;
 	GLuint particleBuffer;
+    GLuint sizeBuffer;
+    unsigned int *particleCount;
 
 	void init();
-	void render(mat4 &modelViewProjectionMatrix, mat4 &modelViewMatrix, vec3 &viewSpaceLightPosition, mat4 &projectionMatrix);
+	void render(ParticleData &particles, glm::mat4 &modelViewProjectionMatrix, glm::mat4 &modelViewMatrix, glm::vec3 &viewSpaceLightPosition, glm::mat4 &projectionMatrix, GLint height);
 };
 

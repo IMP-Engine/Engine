@@ -56,7 +56,7 @@ void Scene::loadScene(std::string scene) {
             std::istringstream s(line = line.substr(2));
             glm::vec3 normal;
             s >> normal.x; s >> normal.y; s >> normal.z;
-            normals.push_back(normal);
+            normalVectors.push_back(normal);
         }
 
         // Load indices and normal indices
@@ -68,7 +68,12 @@ void Scene::loadScene(std::string scene) {
             // Normal indices
             std::istringstream s(line.substr(line.find("//") + 2, line.find(" ") + 1));
             s >> normalIndex;
-            normalIndices.push_back(normalIndex);
+
+            for (int i = 0; i < 3; ++i) {
+                normalIndices.push_back(normalIndex - 1);
+                normals.push_back(normalVectors[normalIndex - 1]);
+            }
+            std::cout << "normalIndex = " << normalIndex << std::endl;
 
             // Indices
             line = line.substr(2);
@@ -80,15 +85,33 @@ void Scene::loadScene(std::string scene) {
             }
             indices.push_back(index);
         }
-
-        /*
-           for (int i = 0; i < numIndices / 3; i++)
-           {
-           normals.push_back(normalComponents[i]);
-           }
-           */
-        
     }
+
+    std::cout << "vertices.size() = " << vertices.size() << std::endl;
+    std::cout << "normals.size() = " << normals.size() << std::endl;
+    std::cout << "normalVectors.size() = " << normalVectors.size() << std::endl;
+    std::cout << "normalIndices.size() = " << normalIndices.size() << std::endl;
+
+    /*
+    for (unsigned int i = 0; i < normalIndices.size(); ++i) {
+        normals.push_back(normalVectors[normalIndices[i]]);
+    }
+    */
+    
+    /*
+    for (int i = 0; i < normalIndices.size(); ++i) {
+        std::cout << "normalIndices[" << i << "] = " << normalIndices[i] << std::endl;
+        std::cout << "normals[" << i << "] = " << normals[i].x << ", " << normals[i].y << ", " << normals[i].z << std::endl;
+    }
+    */
+
+    std::cout << "normals = " << std::endl;
+    for (int i = 0; i < normals.size(); ++i) {
+        //std::cout << "normalIndices[" << i << "] = " << normalIndices[i] << std::endl;
+        std::cout << normals[i].x << ", " << normals[i].y << ", " << normals[i].z << std::endl;
+    }
+
+    std::cout << "normals.size() = " << normals.size() << std::endl;
 
     for (unsigned int i = 0; i < indices.size(); i++)
     {
@@ -125,6 +148,9 @@ void Scene::gui(bool *show)
     if (ImGui::Button("Load")) {
         vertices.clear();
         indices.clear();
+        normalVectors.clear();
+        normals.clear();
+        normalIndices.clear();
 
         if ((unsigned int)selectedScene >= predefinedScenes.size()) {
             loadScene(scenes[selectedScene]);
@@ -137,8 +163,8 @@ void Scene::gui(bool *show)
     ImGui::End();
 }
 
-void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix) {
-
+void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix, const glm::vec3 &lightPosition)
+{
     glm::mat4 modelViewMatrix = viewMatrix * modelMatrix;
     glm::mat4 modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
 
@@ -148,12 +174,12 @@ void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix) {
     glUniformMatrix4fv(glGetUniformLocation(shader, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
 
     // Draw cube
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glPolygonMode(GL_FRONT, GL_FILL);
+    glPolygonMode(GL_BACK, GL_LINE);
 
     glBindVertexArray(vao);
    
     int size;
-    glDisable(GL_CULL_FACE);
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
     glDrawElements(GL_TRIANGLES, size / sizeof(GLint), GL_UNSIGNED_INT, 0);
 
@@ -168,6 +194,7 @@ void Scene::init() {
     shader = glHelper::loadShader(VERT_SHADER_PATH, FRAG_SHADER_PATH);
     GLuint mvp_location = glGetUniformLocation(shader, "MVP");
     GLuint vpos_location = glGetAttribLocation(shader, "vPos");
+    GLuint normal_location = glGetAttribLocation(shader, "normal");
 
     // Scene setup
     glGenVertexArrays(1, &vao);
@@ -183,6 +210,13 @@ void Scene::init() {
 
     glEnableVertexAttribArray(vpos_location);
     glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    glGenBuffers(1, &normalBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * normals.size(), &(normals[0]), GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(normal_location);
+    glVertexAttribPointer(normal_location, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
