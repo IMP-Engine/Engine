@@ -45,7 +45,7 @@ void ModelRenderer::init()
 
 void calculateVertices(ParticleData &particles, ModelData &data, std::vector<glm::vec3> &positions, std::vector<glm::vec3> &normals)
 {
-    for (int i = 0; i < data.cardinality; i += 3)
+    for (int i = 0; i < data.closestParticles.size(); i += 3)
     {
         glm::vec3 p1 = particles.position[data.closestParticles[i]];
         glm::vec3 p2 = particles.position[data.closestParticles[i+1]];
@@ -71,7 +71,7 @@ void ModelRenderer::render(ParticleData &particles, ModelData &data, glm::mat4 &
     glBindVertexArray(vao);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * data.cardinality/3, &(positions[0]), GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * positions.size(), &(positions[0]), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, nbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * normals.size(), &(normals[0]), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);

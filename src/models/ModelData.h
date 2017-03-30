@@ -8,7 +8,6 @@ class ModelData
 public:
 	ModelData();
 	~ModelData();
-    unsigned int cardinality;
 
     std::vector<short> elements;
     std::vector<float> bcCoords;
