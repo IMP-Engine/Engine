@@ -12,89 +12,6 @@ int selectedScene = 0;
 
 Scene::Scene()
 {
-    /*
-    // Cube setup
-    unsigned short cubeIndices[] = {
-        // front
-        2, 1, 0,
-        2, 0, 3,
-        // top
-        2, 5, 1,
-        2, 6, 5,
-        // back
-        4, 5, 6,
-        4, 6, 7,
-        // bottom
-        4, 7, 3,
-        4, 3, 0,
-        // left
-        4, 0, 1,
-        4, 1, 5,
-        // right
-        2, 3, 7,
-        2, 7, 6
-    };
-
-    float cubeVertices[] = {
-        -10.0f, -10.0f,  10.0f,
-        10.0f, -10.0f,  10.0f,
-        10.0f,  10.0f,  10.0f,
-        -10.0f,  10.0f,  10.0f,
-
-        -10.0f, -10.0f, -10.0f,
-        10.0f, -10.0f, -10.0f,
-        10.0f,  10.0f, -10.0f,
-        -10.0f,  10.0f, -10.0f,
-    };
-
-    float normalComponents[] = {
-        -0.5773f, -0.5773f,  0.5773f,
-         0.5773f, -0.5773f,  0.5773f,
-         0.5773f,  0.5773f,  0.5773f,
-        -0.5773f,  0.5773f,  0.5773f,
-
-        -0.5773f, -0.5773f, -0.5773f,
-         0.5773f, -0.5773f, -0.5773f,
-         0.5773f,  0.5773f, -0.5773f,
-        -0.5773f,  0.5773f, -0.5773f,
-    };
-
-    for (int i = 0; i < 24; i++)
-    {
-        //vertices.push_back(cubeVertices[i]);
-        a.push_back(cubeVertices[i]);
-    }
-    for (int i = 0; i < 36; i++)
-    {
-        //indices.push_back(cubeIndices[i]);
-        b.push_back(cubeIndices[i]);
-    }
-    for (int i = 0; i < 24; i++)
-    {
-        normals.push_back(normalComponents[i]);
-    }
-
-    for (unsigned int i = 0; i < b.size();i += 3) {
-        Triangle t = Triangle();
-        t.v0 = vec3(a[3 * b[i]],
-                    a[3 * b[i] + 1],
-                    a[3 * b[i] + 2]);
-
-        t.v1 = vec3(a[3 * b[i + 1]],
-                    a[3 * b[i + 1] + 1],
-                    a[3 * b[i + 1] + 2]);
-
-        t.v2 = vec3(a[3 * b[i + 2]],
-                    a[3 * b[i + 2] + 1],
-                    a[3 * b[i + 2] + 2]);
-
-        t.u = t.v1 - t.v0;
-        t.v = t.v2 - t.v0;
-        t.normal = normalize(cross(t.u, t.v));
-        triangles.push_back(t);
-    }
-*/
-
     Scene::loadSceneNames();
     Scene::loadScene("cube");
 }
@@ -124,7 +41,7 @@ void Scene::loadScene(std::string scene) {
 
     while (std::getline(file, line))
     {
-        // Fill vertices
+        // Load vertices
         if (line.substr(0, 2) == "v ")
         {
             std::istringstream s(line = line.substr(2));
@@ -133,22 +50,37 @@ void Scene::loadScene(std::string scene) {
             vertices.push_back(vertex);
         }
 
-        // Fill indices
+        // Load normals
+        if (line.substr(0, 2) == "vn")
+        {
+            std::istringstream s(line = line.substr(2));
+            glm::vec3 normal;
+            s >> normal.x; s >> normal.y; s >> normal.z;
+            normals.push_back(normal);
+        }
+
+        // Load indices and normal indices
         if (line.substr(0, 1) == "f")
         {
             glm::ivec3 index;
+            int normalIndex;
+            
+            // Normal indices
+            std::istringstream s(line.substr(line.find("//") + 2, line.find(" ") + 1));
+            s >> normalIndex;
+            normalIndices.push_back(normalIndex);
+
+            // Indices
             line = line.substr(2);
-            for (int xyz = 0; xyz < 3; xyz++) {
+            for (int xyz = 0; xyz < 3; ++xyz) {
                 std::istringstream s(line.substr(0, line.find("//")));
                 s >> index[xyz];
-                index[xyz] -= 1;
+                index[xyz] -= 1; // -1 to account for 0-indexing in C++ vs 1-indexing from Blender
                 line = line.substr(line.find(" ") + 1);
             }
             indices.push_back(index);
-            std::cout << index.x << ", " << index.y << ", " << index.z << std::endl;
         }
 
-        // Fill normals
         /*
            for (int i = 0; i < numIndices / 3; i++)
            {
@@ -160,23 +92,7 @@ void Scene::loadScene(std::string scene) {
 
     for (unsigned int i = 0; i < indices.size(); i++)
     {
-        //std::cout << "indices.size() = "<< indices.size() << std::endl;
-        //std::cout << "vertices.size() = "<< vertices.size() << std::endl;
         Triangle t = Triangle();
-        /*
-        t.v0 = vec3(vertices[indices[i]],
-                    vertices[indices[i + 1]],
-                    vertices[indices[i + 2]]);
-
-        t.v1 = vec3(vertices[indices[i]],
-                    vertices[indices[i + 1]],
-                    vertices[indices[i + 2]]);
-
-        t.v2 = vec3(vertices[indices[i]],
-                    vertices[indices[i + 1]],
-                    vertices[indices[i + 2]]);
-                    */
-        //std::cout << "vertices " << indices[i].x << ", " << indices[i].y << ", " << indices[i].z << std::endl;
         t.v0 = vertices[indices[i].x];
         t.v1 = vertices[indices[i].y];
         t.v2 = vertices[indices[i].z];
@@ -202,7 +118,7 @@ void Scene::gui(bool *show)
         return;
     }
 
-    // Dropdown of all scenes the scenes folder
+    // Dropdown of all scenes in the scenes folder
     ImGui::Combo("Choose scene", &selectedScene, [](void *a, int b, const char **c) -> bool { *c = ((std::vector<std::string>*)a)->at(b).c_str(); return true; }, &scenes, scenes.size());
 
     ImGui::SameLine();
@@ -239,7 +155,7 @@ void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix) {
     int size;
     glDisable(GL_CULL_FACE);
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-    glDrawElements(GL_TRIANGLES, size / sizeof(GLint), GL_UNSIGNED_INT, 0); //sizeof(GLushort),
+    glDrawElements(GL_TRIANGLES, size / sizeof(GLint), GL_UNSIGNED_INT, 0);
 
 	glBindVertexArray(0);
 
