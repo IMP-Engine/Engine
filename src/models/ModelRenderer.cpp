@@ -65,8 +65,8 @@ void ModelRenderer::render(ParticleData &particles, ModelData &data, glm::mat4 &
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * data.cardinality/3, &(positions[0]), GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, ibo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(short) * data.cardinality, &(data.elements[0]), GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(short) * data.elements.size(), &(data.elements[0]), GL_STATIC_DRAW);
 
     // Send uniforms to shader
 	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
