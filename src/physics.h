@@ -26,6 +26,7 @@ public:
     float restitutionCoefficient;
 
     int iterations;
+	int collisionIterations;
 
     ParticleData particles;
     ConstraintData constraints;

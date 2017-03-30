@@ -36,6 +36,7 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::m
                 p.phase = config.phase;
 				p.numBoundConstraints = 0;
 				p.radius = min(dx, min(dy, dz)) / 2;
+				p.radius = p.radius == 0 ? max(dx, max(dy, dz)) / 2 : p.radius;
 
                 addParticle(p, particles);
             }

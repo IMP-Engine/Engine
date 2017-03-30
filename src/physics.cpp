@@ -1,5 +1,6 @@
 #include "physics.h"
 
+#include <tuple>
 
 #ifndef WORLD_MIN
 #define WORLD_MIN vec3(-20.f,-20.f,-20.f)
@@ -10,6 +11,8 @@
 
 void Physics::step(Scene *scene, float dt)
 {
+	ImGui::SetNextWindowSize(ImVec2(350, 560), ImGuiSetCond_FirstUseEver);
+	ImGui::Begin("asd");
     /* Aliases */
     std::vector<vec3>  &position  = particles.position;
     std::vector<vec3>  &pPosition = particles.pPosition;
@@ -33,60 +36,39 @@ void Physics::step(Scene *scene, float dt)
 		velocity[i] = velocity[i] - glm::vec3(0.f, dt * GRAVITY, 0.f); // Gravity
 		pPosition[i] = position[i] + dt * velocity[i]; // symplectic Euler
 		// ******************************************************************************************************************
-
-		// For all particles i
-		// Generate collision constraints
 		/*
-		* Add constraints from collisions to already given list of constraints
+		* Clamp positions so that we do not lose any particles
 		*/
-		// TODO
-		// Temporary collision check and handler for some plane
-		/*if (pPosition[i].y < -10) {
-			pPosition[i].y = -10;
-		}*/
         pPosition[i] = (min)((max)(WORLD_MIN, pPosition[i]), WORLD_MAX);
 		// ******************************************************************************************************************
 	}
 
-        // Breakable constraints
+	// Breakable constraints
 	constraints.removeBroken(particles);
-    /*
-        constraints.erase(
-                std::remove_if(
-                    constraints.begin(), 
-                    constraints.end(),
-                    [](Constraint *c) {
-                        //return (c->evaluate() > c->threshold);
-                        if (c->evaluate() > c->threshold)
-                        {
-                            // Minska constraints i c
-                            for (unsigned int i = 0; i < c->particles.size(); i++) {
-                                c->particles[i]->numBoundConstraints--;
-                            }
-                            return true;
-                        } 
-                        else 
-                        { 
-                            return false; 
-                        }
-                    }),
-                    constraints.end()
-                );
-    */
 
+	static float a = 1.0f;
+
+	ImGui::DragFloat("", &a, 0.0001f);
 
 	// For all particles i
 	// Generate collision constraints
 	/* Add constraints from collisions to already given list of constraints */
+	TriangleCollisionConstraintData &triangleConstraints = constraints.triangleCollisionConstraints;
     for (unsigned int i = 0; i != particles.cardinality; i++)
     {
         // Check collisions with scene
         for (std::vector<Triangle>::iterator t = scene->triangles.begin(); t != scene->triangles.end(); t++)
         {
             Intersection isect;
-            if (intersect((*t), particles, i, isect))
-            {
-                pPosition[i] += isect.responseGradient * (isect.responseDistance * (1 + restitutionCoefficient));
+			if (intersect((*t), particles, i, isect))
+			{
+				//pPosition[i] += isect.responseGradient * (isect.responseDistance * (1 + restitutionCoefficient));
+				TriangleCollisionConstraint c;
+				c.particleIndex = i;
+				c.normal = isect.responseGradient;
+				c.distance = glm::dot(t->v0, isect.responseGradient) + particles.radius[i];
+				// Num Bound constraints ? TODO
+				addConstraint(triangleConstraints, c);
             }
         }
 
@@ -102,6 +84,22 @@ void Physics::step(Scene *scene, float dt)
             }
         }
     }
+
+	vec3 delta(0);
+	for (int j = 0; j < collisionIterations; j++)
+	{
+		for (int i = 0; i < triangleConstraints.cardinality; i++) {
+			if (triangleConstraints.solveTriangleCollision(delta, i, particles, a))
+			{
+				int p = triangleConstraints.particles[i];
+				position[p] -= delta;
+				pPosition[p] -= delta;
+			}
+		}
+	}	ImGui::End();
+
+
+	
 	/* 
 	 * Stationary iterative linear solver - Gauss-Seidel 
 	 */
@@ -148,20 +146,18 @@ void Physics::step(Scene *scene, float dt)
         {
 			position[i] = pPosition[i];
         }
-		// ***************************************************************************************************************************
-
-		/*
-		* Update velocities according to friction and restituition coefficients
-		*/
-		// Naive friction implementation
-		if (position[i].y <= -10) {
-			velocity[i].z *= 0.4f;
-			velocity[i].x *= 0.4f;
-		}
 	}
 		// Update velocities according to friction and restituition coefficients
 		/* Skip this for now */
 	
+	for (int i = 0; i < triangleConstraints.particles.size(); i++)
+	{
+		velocity[triangleConstraints.particles[i]] *= .99f;
+	}
+
+	// Collision constraints can unfortunately only exist in the timeframe of a single frame
+	triangleConstraints.clear();
+
 	performance::stopTimer(id);
 	
 }
