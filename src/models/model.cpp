@@ -318,6 +318,7 @@ void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints
 	{
 		particles.clear();
 		constraints.clear();
+        modelData.clear();
 		
 		if ((unsigned int)selected >= predefinedModels.size())
 		{
