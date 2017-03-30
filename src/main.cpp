@@ -218,7 +218,8 @@ void gui()
 	if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	visualization::gui();
-  ImGui::Checkbox("Physics", &doPyshics);
+  ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
+  ImGui::Checkbox("Variable timestep", &useVariableTimestep);
   ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
   ImGui::SliderFloat("Over-relax-constant", &physicSystem.overRelaxConst, 1, 5);
   ImGui::SliderFloat("Particle Sleeping (squared)", &physicSystem.pSleeping, 0, 1, "%.9f", 10.f);
