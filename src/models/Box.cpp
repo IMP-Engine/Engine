@@ -44,7 +44,7 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::m
 
 
     // Create constraints
-    float stiffness = config.stiffness;
+    float elasticity = config.elasticity;
     float distanceThreshold = config.distanceThreshold;
 	float maxDist = sqrt(dx*dx + dy*dy + dz*dz);
 
@@ -60,7 +60,7 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::m
                 DistanceConstraint constraint;
                 constraint.firstParticleIndex  = i;
                 constraint.secondParticleIndex = j;
-                constraint.stiffness = config.stiffness;
+                constraint.elasticity = config.elasticity;
                 constraint.distance  = glm::distance(position[i], position[j]);
                 constraint.threshold = config.distanceThreshold;
                 constraint.equality  = true;
@@ -99,7 +99,7 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::m
         DistanceConstraint constraint;
         constraint.firstParticleIndex  = i;
         constraint.secondParticleIndex = j;
-        constraint.stiffness = config.stiffness;
+        constraint.elasticity = config.elasticity;
         constraint.distance  = glm::distance(position[i], position[j]);
         constraint.threshold = config.distanceThreshold;
         constraint.equality  = true;

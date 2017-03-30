@@ -9,10 +9,10 @@ class VolumeConstraint :
 public:
 	float volume;
 
-	VolumeConstraint(Particle* p1, Particle* p2, float stiffness, float volume, bool equality = true) {
+	VolumeConstraint(Particle* p1, Particle* p2, float elasticity, float volume, bool equality = true) {
 		this->particles.push_back(p1);
 		this->particles.push_back(p2);
-		this->stiffness = stiffness;
+		this->elasticity = elasticity;
 		this->volume = volume;
 		this->equality = equality;
 	}
