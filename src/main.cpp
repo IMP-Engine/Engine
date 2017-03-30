@@ -70,6 +70,7 @@ const vec3 lightPosition = vec3(50.0f);
 bool doPyshics = false;
 bool showPerformance = false;
 bool showModels = false;
+float timestep = 0.01667;
 
 
 static void errorCallback(int error, const char* description) {
@@ -150,7 +151,7 @@ void init() {
 	particleRenderer->init();
 }
 
-void display() {
+void display(double deltaTime) {
 
 	int id = performance::startTimer("Reset and draw scene");
 
@@ -184,7 +185,7 @@ void display() {
 	
     if (doPyshics)
     {
-        physicSystem.step(scene, ImGui::GetIO().DeltaTime);
+        physicSystem.step(scene, useVariableTimestep ? deltaTime : timestep);
     }
 	
     id = performance::startTimer("Render particles");
@@ -217,11 +218,16 @@ void gui()
 	if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	visualization::gui();
-    ImGui::Checkbox("Physics", &doPyshics);
-    ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
-    ImGui::SliderFloat("Over-relax-constant", &physicSystem.overRelaxConst, 1, 5);
-    ImGui::SliderFloat("Particle Sleeping (squared)", &physicSystem.pSleeping, 0, 1, "%.9f", 10.f);
+  ImGui::Checkbox("Physics", &doPyshics);
+  ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
+  ImGui::SliderFloat("Over-relax-constant", &physicSystem.overRelaxConst, 1, 5);
+  ImGui::SliderFloat("Particle Sleeping (squared)", &physicSystem.pSleeping, 0, 1, "%.9f", 10.f);
 	ImGui::SliderFloat("Restitution Coeff.", &physicSystem.restitutionCoefficient, 0, 1);
+  if (!useVariableTimestep) 
+	{
+		ImGui::SliderFloat("Timestep", &timestep, 0, .05f, "%.5f"); ImGui::SameLine();
+		ImGui::Text((std::to_string(1 / timestep) + " \"FPS\"").c_str());
+	}
 	ImGui::End();
 
 	model::gui(&showModels, physicSystem.particles, physicSystem.constraints);
@@ -265,7 +271,7 @@ int main(void) {
 
 		performance::stopTimer(id);
 
-        display();
+        display(deltaTime);
 		performance::next();
     }
 
