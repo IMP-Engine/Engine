@@ -44,7 +44,7 @@ glm::vec3 DistanceConstraintData::gradient(int constraintIndex, int particleInde
 
 float DistanceConstraintData::scaleFactor(int constraintIndex, ParticleData &particleData, float lambda, double dt)
 {
-	float aDash = (elasticity[constraintIndex] / (dt*dt));
+	float aDash = (elasticity[constraintIndex] / float(dt*dt));
 
     int firstParticleIndex = particles[constraintIndex].x;
     int secondParticleIndex = particles[constraintIndex].y;
