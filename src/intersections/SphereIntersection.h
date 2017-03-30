@@ -3,5 +3,5 @@
 #include "../primitives.h"
 #include "Intersection.h"
 
-bool intersect(Particle &p1, Particle &p2, Intersection &i);
+bool intersect(ParticleData particles, int first, int second, Intersection &i);
 

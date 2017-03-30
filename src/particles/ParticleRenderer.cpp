@@ -3,6 +3,10 @@
 
 
 
+ParticleRenderer::ParticleRenderer()
+{
+}
+
 ParticleRenderer::~ParticleRenderer()
 {
 }
@@ -36,21 +40,22 @@ void ParticleRenderer::init()
 
 	glGenBuffers(1, &particleBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, particleBuffer);
-	
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(positionAttribLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Particle), (void *)0);
+	glVertexAttribPointer(positionAttribLocation, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void *)0);
 
+    /*
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(phaseAttribLocation, 1, GL_INT, GL_FALSE, sizeof(Particle), (void *)(sizeof(Particle) - sizeof(int)));
+	glVertexAttribPointer(phaseAttribLocation, 1, GL_INT, GL_FALSE, sizeof(int), (void *)(sizeof(Particle) - sizeof(int)));
+    */
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
-void ParticleRenderer::render(mat4 &modelViewProjectionMatrix, mat4 &modelViewMatrix, vec3 &viewSpaceLightPosition, mat4 &projectionMatrix)
+void ParticleRenderer::render(ParticleData &particles, glm::mat4 &modelViewProjectionMatrix, glm::mat4 &modelViewMatrix, glm::vec3 &viewSpaceLightPosition, glm::mat4 &projectionMatrix)
 {
+
 	glBindBuffer(GL_ARRAY_BUFFER, particleBuffer);
-	Particle *ps = &(*particles)[0];
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Particle) * particles->size(), ps, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * particles.cardinality, &particles.position[0], GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	glUseProgram(particleShader);
@@ -61,7 +66,7 @@ void ParticleRenderer::render(mat4 &modelViewProjectionMatrix, mat4 &modelViewMa
 	glUniformMatrix4fv(glGetUniformLocation(particleShader, "projectionM4atrix"), 1, false, &projectionMatrix[0].x);
 	glUniform3fv(glGetUniformLocation(particleShader, "viewSpaceLightPos"), 1, &viewSpaceLightPosition.x);
 
-	glDrawArrays(GL_POINTS, 0, particles->size());
+	glDrawArrays(GL_POINTS, 0, particles.cardinality);
 
 	glBindVertexArray(0);
 	glUseProgram(0);
