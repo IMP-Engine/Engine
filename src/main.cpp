@@ -27,7 +27,6 @@
 #include "particles/ParticleRenderer.h"
 #include "Scene.h"
 
-#include "constraints/DistanceConstraint.h"
 #include "constraints/visualizeConstraint.h"
 #include "models/model.h"
 #include "input.h"
@@ -59,8 +58,7 @@ GLdouble lastFrame = 0.0f;
 
 // Scene
 Scene *scene;
-vector<Particle> particles;
-vector<Constraint *> constraints;
+Physics physicSystem;
 
 // Shaders and rendering 
 ParticleRenderer *particleRenderer;
@@ -70,12 +68,8 @@ const vec3 lightPosition = vec3(50.0f);
 
 // Simulation variables and parameters
 bool doPyshics = false;
-int iterations = 5;
 bool showPerformance = false;
 bool showModels = false;
-float pSleeping = 0.0001f;
-float overRelaxConst = 1.0f;
-float restitutionCoefficient = 1.f; // 1 is Elastic collision
 
 
 static void errorCallback(int error, const char* description) {
@@ -129,8 +123,13 @@ void init() {
 	performance::initialize();
 
 	scene = new Scene;
-	particles.reserve(200000);
-	constraints.reserve(2000000);
+    physicSystem = Physics();
+
+    physicSystem.iterations = 5;
+    physicSystem.pSleeping = 0.0001f;
+    physicSystem.overRelaxConst = 1.0f;
+    physicSystem.restitutionCoefficient = 1.f; // 1 is Elastic collision
+
 
     scene->init();
 
@@ -145,9 +144,9 @@ void init() {
 	conf.scale = vec3(4.f);
 	conf.stiffness = 0.8f;
 	conf.numParticles = ivec3(4);
-	model::loadPredefinedModel("Box", particles, constraints, conf);
+	model::loadPredefinedModel("Box", physicSystem.particles, physicSystem.constraints, conf);
 
-	particleRenderer = new ParticleRenderer(&particles);
+	particleRenderer = new ParticleRenderer();
 	particleRenderer->init();
 }
 
@@ -185,14 +184,14 @@ void display() {
 	
     if (doPyshics)
     {
-		physics::simulate(particles, constraints, scene, ImGui::GetIO().DeltaTime, iterations);
+        physicSystem.step(scene, ImGui::GetIO().DeltaTime);
     }
 	
     id = performance::startTimer("Render particles");
-    particleRenderer->render(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
+    particleRenderer->render(physicSystem.particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
 	performance::stopTimer(id);
 
-    visualization::drawConstraints(&constraints, modelViewProjectionMatrix);
+    visualization::drawConstraints(physicSystem.constraints, physicSystem.particles, modelViewProjectionMatrix);
 
 	// Since we may want to measure performance of something that happens after the call to gui()
 	// we place this call as late as possible to allow for measuring more things
@@ -219,13 +218,13 @@ void gui()
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	visualization::gui();
     ImGui::Checkbox("Physics", &doPyshics);
-    ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
-    ImGui::SliderFloat("Over-relax-constant", &overRelaxConst, 1, 5);
-    ImGui::SliderFloat("Particle Sleeping (squared)", &pSleeping, 0, 1, "%.9f", 10.f);
-	ImGui::SliderFloat("Restitution Coeff.", &restitutionCoefficient, 0, 1);
+    ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
+    ImGui::SliderFloat("Over-relax-constant", &physicSystem.overRelaxConst, 1, 5);
+    ImGui::SliderFloat("Particle Sleeping (squared)", &physicSystem.pSleeping, 0, 1, "%.9f", 10.f);
+	ImGui::SliderFloat("Restitution Coeff.", &physicSystem.restitutionCoefficient, 0, 1);
 	ImGui::End();
 
-	model::gui(&showModels);
+	model::gui(&showModels, physicSystem.particles, physicSystem.constraints);
 
     // Remove when all group members feel comfortable with how GUI works and what it can provide
     // Demo window
@@ -258,7 +257,7 @@ int main(void) {
         lastFrame = currentFrame;
 
         glfwPollEvents();
-		camera.move(input::getKeys(), deltaTime);
+		camera.move(input::getKeys(), (float)deltaTime);
 
         ImGui_ImplGlfwGL3_NewFrame();
 

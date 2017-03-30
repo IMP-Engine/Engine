@@ -1,10 +1,9 @@
 #include "Box.h"
-#include "../constraints/DistanceConstraint.h"
 
 
-void Box::makeBox(std::vector<Particle> &particles, std::vector<Constraint*> &constraints, model::modelConfig config) {
+void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::modelConfig config) {
  
-	std::vector<Particle>::size_type start = particles.size();
+	unsigned int start = particles.cardinality;
 
     float dx = 0, dy = 0, dz = 0;
 
@@ -38,7 +37,7 @@ void Box::makeBox(std::vector<Particle> &particles, std::vector<Constraint*> &co
 				p.numBoundConstraints = 0;
 				p.radius = min(dx, min(dy, dz)) / 2;
 
-                particles.push_back(p);
+                addParticle(p, particles);
             }
         }
     }
@@ -49,21 +48,27 @@ void Box::makeBox(std::vector<Particle> &particles, std::vector<Constraint*> &co
     float distanceThreshold = config.distanceThreshold;
 	float maxDist = sqrt(dx*dx + dy*dy + dz*dz);
 
-    for (unsigned int i = start; i < particles.size(); i++) 
+    std::vector<vec3> &position = particles.position;
+    std::vector<int> &numBoundConstraints = particles.numBoundConstraints;
+
+    for (unsigned int i = start; i < particles.cardinality; i++) 
     {
-        for (unsigned int j = i + 1; j < particles.size(); j++) 
+        for (unsigned int j = i + 1; j < particles.cardinality; j++) 
         {
-            if (glm::distance(particles[i].pos, particles[j].pos) <= maxDist)
+            if (glm::distance(particles.position[i], particles.position[j]) <= maxDist)
             {
-                Constraint* c = new DistanceConstraint(
-                    &particles[i],
-                    &particles[j],
-                    config.stiffness,
-                    config.distanceThreshold,
-                    glm::distance(particles[i].pos, particles[j].pos));
-                constraints.push_back(c);
-                particles[i].numBoundConstraints++;
-                particles[j].numBoundConstraints++;
+                DistanceConstraint constraint;
+                constraint.firstParticleIndex  = i;
+                constraint.secondParticleIndex = j;
+                constraint.stiffness = config.stiffness;
+                constraint.distance  = glm::distance(position[i], position[j]);
+                constraint.threshold = config.distanceThreshold;
+                constraint.equality  = true;
+
+                addConstraint(constraints.distanceConstraints, constraint);
+
+                numBoundConstraints[i]++;
+                numBoundConstraints[j]++;
             }
         }
     }
@@ -76,7 +81,7 @@ void Box::makeBox(std::vector<Particle> &particles, std::vector<Constraint*> &co
 
 
 
-    vec3 n = config.numParticles;
+    ivec3 n = config.numParticles;
  
 
     int pairs[] = {
@@ -90,14 +95,18 @@ void Box::makeBox(std::vector<Particle> &particles, std::vector<Constraint*> &co
     {
         int i = pairs[k];
         int j = pairs[k + 1];
-        Constraint* c = new DistanceConstraint(
-            &particles[i],
-            &particles[j],
-            config.stiffness,
-            config.distanceThreshold,
-            glm::distance(particles[i].pos, particles[j].pos));
-        constraints.push_back(c);
-        particles[i].numBoundConstraints++;
-        particles[j].numBoundConstraints++;
+
+        DistanceConstraint constraint;
+        constraint.firstParticleIndex  = i;
+        constraint.secondParticleIndex = j;
+        constraint.stiffness = config.stiffness;
+        constraint.distance  = glm::distance(position[i], position[j]);
+        constraint.threshold = config.distanceThreshold;
+        constraint.equality  = true;
+
+        addConstraint(constraints.distanceConstraints, constraint);
+
+        numBoundConstraints[i]++;
+        numBoundConstraints[j]++;
     }
 }
