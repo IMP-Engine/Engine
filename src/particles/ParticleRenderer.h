@@ -27,9 +27,10 @@ public:
 	GLuint particleShader;
 	GLuint vao;
 	GLuint particleBuffer;
+    GLuint sizeBuffer;
     unsigned int *particleCount;
 
 	void init();
-	void render(ParticleData &particles, glm::mat4 &modelViewProjectionMatrix, glm::mat4 &modelViewMatrix, glm::vec3 &viewSpaceLightPosition, glm::mat4 &projectionMatrix);
+	void render(ParticleData &particles, glm::mat4 &modelViewProjectionMatrix, glm::mat4 &modelViewMatrix, glm::vec3 &viewSpaceLightPosition, glm::mat4 &projectionMatrix, GLint height);
 };
 

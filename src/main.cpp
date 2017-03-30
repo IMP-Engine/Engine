@@ -21,6 +21,7 @@
 
 #define WORLD_MIN vec3(-20.f,-20.f,-20.f)
 #define WORLD_MAX vec3( 20.f, 20.f, 20.f)
+#define M_PI 3.14159265358979323846264338327950288 /* pi */
 
 #include "performance.h"
 #include "physics.h"
@@ -62,6 +63,7 @@ Physics physicSystem;
 
 // Shaders and rendering 
 ParticleRenderer *particleRenderer;
+bool renderSurfaces = false;
 
 // Light
 const vec3 lightPosition = vec3(4.0f);
@@ -156,12 +158,12 @@ void display(double deltaTime) {
 
 	int id = performance::startTimer("Reset and draw scene");
 
-    float ratio;
-    int width, height;
+    GLfloat ratio;
+    GLint width, height;
     mat4 viewMatrix, modelViewProjectionMatrix, modelViewMatrix, projectionMatrix;
 
     glfwGetFramebufferSize(window, &width, &height);
-    ratio = (GLfloat)WIDTH / (GLfloat)HEIGHT;
+    ratio = (GLfloat)width / (GLfloat)height;
 
     glViewport(0, 0, width, height);
     glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
@@ -189,11 +191,23 @@ void display(double deltaTime) {
         physicSystem.step(scene, useVariableTimestep ? deltaTime : timestep);
     }
 	
-    id = performance::startTimer("Render particles");
-    particleRenderer->render(physicSystem.particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
-	performance::stopTimer(id);
+    if (renderSurfaces)
+    {
+        id = performance::startTimer("Render surfaces");
 
-    visualization::drawConstraints(physicSystem.constraints, physicSystem.particles, modelViewProjectionMatrix);
+    }
+    else // render particles
+    {
+        int viewport[4];
+        glGetIntegerv(GL_VIEWPORT, viewport);
+        float heightOfNearPlane = (float)abs(viewport[3] - viewport[1]) / (2 * tan(0.5*camera.getFovy()*M_PI / 180.0));
+
+        id = performance::startTimer("Render particles");
+        particleRenderer->render(physicSystem.particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix, heightOfNearPlane);
+
+        visualization::drawConstraints(physicSystem.constraints, physicSystem.particles, modelViewProjectionMatrix);
+    }
+    performance::stopTimer(id);
 
 	// Since we may want to measure performance of something that happens after the call to gui()
 	// we place this call as late as possible to allow for measuring more things
