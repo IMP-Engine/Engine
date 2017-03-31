@@ -21,6 +21,7 @@
 
 #define WORLD_MIN vec3(-20.f,-20.f,-20.f)
 #define WORLD_MAX vec3( 20.f, 20.f, 20.f)
+#define M_PI 3.14159265358979323846264338327950288 /* pi */
 
 #include "performance.h"
 #include "physics.h"
@@ -70,12 +71,14 @@ bool renderSurfaces = false;
 ModelData modelData;
 
 // Light
-const vec3 lightPosition = vec3(50.0f);
+const vec3 lightPosition = vec3(4.0f);
 
 // Simulation variables and parameters
 bool doPyshics = false;
 bool showPerformance = false;
 bool showModels = false;
+bool useVariableTimestep = false;
+float timestep = 0.01667;
 
 
 static void errorCallback(int error, const char* description) {
@@ -161,16 +164,16 @@ void init() {
     modelRenderer->init();
 }
 
-void display() {
+void display(double deltaTime) {
 
 	int id = performance::startTimer("Reset and draw scene");
 
-    float ratio;
-    int width, height;
+    GLfloat ratio;
+    GLint width, height;
     mat4 viewMatrix, modelViewProjectionMatrix, modelViewMatrix, projectionMatrix;
 
     glfwGetFramebufferSize(window, &width, &height);
-    ratio = (GLfloat)WIDTH / (GLfloat)HEIGHT;
+    ratio = (GLfloat)width / (GLfloat)height;
 
     glViewport(0, 0, width, height);
     glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
@@ -189,13 +192,13 @@ void display() {
 
     vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
 	
-    scene->render(viewMatrix, projectionMatrix);
+    scene->render(viewMatrix, projectionMatrix, vec3(lightPosition));
     
 	performance::stopTimer(id);
 	
     if (doPyshics)
     {
-        physicSystem.step(scene, ImGui::GetIO().DeltaTime);
+        physicSystem.step(scene, useVariableTimestep ? deltaTime : timestep);
     }
 	
     if (renderSurfaces)
@@ -205,8 +208,12 @@ void display() {
     }
     else // render particles
     {
+        int viewport[4];
+        glGetIntegerv(GL_VIEWPORT, viewport);
+        float heightOfNearPlane = (float)abs(viewport[3] - viewport[1]) / (2 * tan(0.5*camera.getFovy()*M_PI / 180.0));
+
         id = performance::startTimer("Render particles");
-        particleRenderer->render(physicSystem.particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
+        particleRenderer->render(physicSystem.particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix, heightOfNearPlane);
 
         visualization::drawConstraints(physicSystem.constraints, physicSystem.particles, modelViewProjectionMatrix);
     }
@@ -236,12 +243,17 @@ void gui()
 	if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	visualization::gui();
-    ImGui::Checkbox("Physics", &doPyshics);
-    ImGui::Checkbox("Render surfaces", &renderSurfaces);
-    ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
-    ImGui::SliderFloat("Over-relax-constant", &physicSystem.overRelaxConst, 1, 5);
-    ImGui::SliderFloat("Particle Sleeping (squared)", &physicSystem.pSleeping, 0, 1, "%.9f", 10.f);
+  ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
+  ImGui::Checkbox("Timestep from framerate", &useVariableTimestep);
+  ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
+  ImGui::SliderFloat("Over-relax-constant", &physicSystem.overRelaxConst, 1, 5);
+  ImGui::SliderFloat("Particle Sleeping (squared)", &physicSystem.pSleeping, 0, 1, "%.9f", 10.f);
 	ImGui::SliderFloat("Restitution Coeff.", &physicSystem.restitutionCoefficient, 0, 1);
+  if (!useVariableTimestep) 
+	{
+		ImGui::SliderFloat("Timestep", &timestep, 0, .05f, "%.5f"); ImGui::SameLine();
+		ImGui::Text((std::to_string(1 / timestep) + " \"FPS\"").c_str());
+	}
 	ImGui::End();
 
 	model::gui(&showModels, physicSystem.particles, physicSystem.constraints, modelData);
@@ -285,7 +297,7 @@ int main(void) {
 
 		performance::stopTimer(id);
 
-        display();
+        display(deltaTime);
 		performance::next();
     }
 

@@ -5,7 +5,8 @@ in vec2 gl_PointCoord;
 
 flat in vec3 color;
 flat in vec3 centerPos;
-flat in float particleSize;
+flat in float particleSizeOut;
+
 out vec4 outColor;
 
 uniform vec3 viewSpaceLightPos;
@@ -20,7 +21,7 @@ void main() {
                                // Get normal of fragment on the imagined sphere
     vec3 normal = normalize(vec3(pointCoord, cos(length * M_PI / 2)));
     // Get fragment position in viewspace
-    vec3 fragPos = centerPos + (particleSize / 300) * vec3(normal.x, -normal.y, -normal.z);
+    vec3 fragPos = centerPos + particleSizeOut * vec3(normal.x, -normal.y, -normal.z);
     // Calculate direct diffuse lighting
     float diffuse = max(0.0, dot(normalize(viewSpaceLightPos - fragPos), normal));
 
