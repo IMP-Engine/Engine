@@ -243,6 +243,7 @@ void gui()
 	if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	visualization::gui();
+    ImGui::Checkbox("Render surfaces", &renderSurfaces);
   ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
   ImGui::Checkbox("Timestep from framerate", &useVariableTimestep);
   ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
