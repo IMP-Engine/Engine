@@ -162,6 +162,7 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
     // For all vertices, find three closest particles
     for (uint i = 0; i < vertices.size(); i++)
     {
+        // Take three arbitrary particles to start with
         vec3 vertex = vec3(vertices[i]);
         closestParticles[i][0] = 0;
         closestParticles[i][1] = 1;
@@ -200,7 +201,7 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
         }
 
         for (std::vector<Particle>::size_type j = (start + 2); j < particles.cardinality-1; j++)
-        {
+        {   // For the rest of the particles, see if they are closer
             newDist = distance(position[j], vec3(vertices[i]));
             if (newDist < distances[2])
             {   // Can new particle replace cP[2]?
@@ -230,8 +231,7 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
                     }
                 }
                 else if (newDist < distances[1])
-                {
-                    // Can new particle replace cP[1]?
+                {   // Can new particle replace cP[1]?
                     if (abs(dot(normalize(position[closestParticles[i][0]] - position[j]), normalize(position[closestParticles[i][2]] - position[j]))) < 0.9)
                     {   // Change with cP[1]
                         if (newDist < distances[0])
