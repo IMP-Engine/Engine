@@ -177,6 +177,7 @@ void Scene::gui(bool *show)
         normalVectors.clear();
         normals.clear();
         normalIndices.clear();
+        triangles.clear();
 
         if ((unsigned int)selectedScene >= predefinedScenes.size()) {
             loadScene(scenes[selectedScene]);
@@ -198,6 +199,7 @@ void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix, const glm
     glUseProgram(shader);
     glUniformMatrix4fv(glGetUniformLocation(shader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
     glUniformMatrix4fv(glGetUniformLocation(shader, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
+    glUniform3fv(glGetUniformLocation(shader, "lightPos"), 1, &lightPosition.x);
 
     // Draw cube
     glPolygonMode(GL_FRONT, GL_FILL);
@@ -205,9 +207,7 @@ void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix, const glm
 
     glBindVertexArray(vao);
    
-    int size;
-    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-    glDrawElements(GL_TRIANGLES, size / sizeof(GLint), GL_UNSIGNED_INT, 0);
+    glDrawArrays(GL_TRIANGLES, 0, vertices.size()+1);
 
 	glBindVertexArray(0);
 
