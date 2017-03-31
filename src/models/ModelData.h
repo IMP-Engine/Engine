@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "../glad/glad.h"
 
 #define MAX_VERTICES 200000
 
@@ -9,7 +10,7 @@ public:
 	ModelData();
 	~ModelData();
 
-    std::vector<short> elements;
+    std::vector<GLushort> elements;
     std::vector<float> bcCoords;
     std::vector<int> closestParticles;
 
