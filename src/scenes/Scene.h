@@ -37,10 +37,11 @@ public:
 
     glm::mat4 modelMatrix;
 
-    std::vector<glm::vec3> vertices;
-    std::vector<glm::ivec3> indices;
+    std::vector<glm::vec3> loadedVertices;
+    std::vector<float> vertices;
+    std::vector<int> indices;
     std::vector<glm::vec3> normalVectors;
-    std::vector<glm::vec3> normals;
+    std::vector<float> normals;
     std::vector<int> normalIndices;
     std::vector<Triangle> triangles;
     int numTriangles;

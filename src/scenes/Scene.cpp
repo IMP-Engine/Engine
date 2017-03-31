@@ -47,7 +47,7 @@ void Scene::loadScene(std::string scene) {
             std::istringstream s(line = line.substr(2));
             glm::vec3 vertex;
             s >> vertex.x; s >> vertex.y; s >> vertex.z;
-            vertices.push_back(vertex);
+            loadedVertices.push_back(vertex);
         }
 
         // Load normals
@@ -62,63 +62,88 @@ void Scene::loadScene(std::string scene) {
         // Load indices and normal indices
         if (line.substr(0, 1) == "f")
         {
-            glm::ivec3 index;
-            int normalIndex;
-            
             // Normal indices
+            unsigned int normalIndex;
+            
             std::istringstream s(line.substr(line.find("//") + 2, line.find(" ") + 1));
             s >> normalIndex;
 
+            normalIndex--;
             for (int i = 0; i < 3; ++i) {
-                normalIndices.push_back(normalIndex - 1);
-                normals.push_back(normalVectors[normalIndex - 1]);
+                normalIndices.push_back(normalIndex);
             }
-            std::cout << "normalIndex = " << normalIndex << std::endl;
 
             // Indices
+            unsigned int index;
+
             line = line.substr(2);
             for (int xyz = 0; xyz < 3; ++xyz) {
                 std::istringstream s(line.substr(0, line.find("//")));
-                s >> index[xyz];
-                index[xyz] -= 1; // -1 to account for 0-indexing in C++ vs 1-indexing from Blender
+                s >> index;
+                index--;
+                indices.push_back(index);
                 line = line.substr(line.find(" ") + 1);
             }
-            indices.push_back(index);
         }
     }
 
-    std::cout << "vertices.size() = " << vertices.size() << std::endl;
-    std::cout << "normals.size() = " << normals.size() << std::endl;
-    std::cout << "normalVectors.size() = " << normalVectors.size() << std::endl;
-    std::cout << "normalIndices.size() = " << normalIndices.size() << std::endl;
-
-    /*
-    for (unsigned int i = 0; i < normalIndices.size(); ++i) {
-        normals.push_back(normalVectors[normalIndices[i]]);
-    }
-    */
-    
-    /*
     for (int i = 0; i < normalIndices.size(); ++i) {
-        std::cout << "normalIndices[" << i << "] = " << normalIndices[i] << std::endl;
-        std::cout << "normals[" << i << "] = " << normals[i].x << ", " << normals[i].y << ", " << normals[i].z << std::endl;
-    }
-    */
-
-    std::cout << "normals = " << std::endl;
-    for (int i = 0; i < normals.size(); ++i) {
-        //std::cout << "normalIndices[" << i << "] = " << normalIndices[i] << std::endl;
-        std::cout << normals[i].x << ", " << normals[i].y << ", " << normals[i].z << std::endl;
+        normals.push_back(normalVectors[normalIndices[i]].x);
+        normals.push_back(normalVectors[normalIndices[i]].y);
+        normals.push_back(normalVectors[normalIndices[i]].z);
     }
 
-    std::cout << "normals.size() = " << normals.size() << std::endl;
+    for (int i = 0; i < indices.size(); ++i) {
+        vertices.push_back(loadedVertices[indices[i]].x);
+        vertices.push_back(loadedVertices[indices[i]].y);
+        vertices.push_back(loadedVertices[indices[i]].z);
+    }
 
-    for (unsigned int i = 0; i < indices.size(); i++)
+    for (int i = 0; i < indices.size(); ++i) {
+    }
+
+    std::cout << "loadedVertices.size() = " << loadedVertices.size() << std::endl;
+    printf("loadedVertices:\n");
+    for (int i = 0; i < loadedVertices.size(); ++i) {
+        printf("%f, %f, %f\n", loadedVertices[i].x, loadedVertices[i].y, loadedVertices[i].z);
+    }
+
+    std::cout << "\nindices.size() = " << indices.size() << std::endl;
+    printf("indices:\n");
+    for (int i = 0; i < indices.size(); i+=3) {
+        printf("%d, %d, %d\n", indices[i], indices[i+1], indices[i+2]);
+    }
+
+    std::cout << "\nnormalVectors.size() = " << normalVectors.size() << std::endl;
+    printf("normalVectors:\n");
+    for (int i = 0; i < normalVectors.size(); ++i) {
+        printf("%f, %f, %f\n", normalVectors[i].x, normalVectors[i].y, normalVectors[i].z);
+    }
+
+    std::cout << "\nnormalIndices.size() = " << normalIndices.size() << std::endl;
+    printf("normalIndices:\n");
+    for (int i = 0; i < normalIndices.size(); i += 3) {
+        printf("%d, %d, %d\n", normalIndices[i], normalIndices[i+1], normalIndices[i+2]);
+    }
+
+    std::cout << "\nvertices.size() = " << vertices.size() << std::endl;
+    printf("vertices:\n");
+    for (int i = 0; i < vertices.size(); i+=3) {
+        printf("%f, %f, %f\n", vertices[i], vertices[i+1], vertices[i+2]);
+    }
+
+    std::cout << "\nnormals.size() = " << normals.size() << std::endl;
+    printf("normals:\n");
+    for (int i = 0; i < normals.size(); i+=3) {
+        printf("%f, %f, %f\n", normals[i], normals[i+1], normals[i+2]);
+    }
+
+    for (unsigned int i = 0; i < indices.size(); i+=3)
     {
         Triangle t = Triangle();
-        t.v0 = vertices[indices[i].x];
-        t.v1 = vertices[indices[i].y];
-        t.v2 = vertices[indices[i].z];
+        t.v0 = loadedVertices[indices[i]];
+        t.v1 = loadedVertices[indices[i+1]];
+        t.v2 = loadedVertices[indices[i+2]];
 
         t.u = t.v1 - t.v0;
         t.v = t.v2 - t.v0;
@@ -146,6 +171,7 @@ void Scene::gui(bool *show)
 
     ImGui::SameLine();
     if (ImGui::Button("Load")) {
+        loadedVertices.clear();
         vertices.clear();
         indices.clear();
         normalVectors.clear();
@@ -202,18 +228,22 @@ void Scene::init() {
 
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vertices.size(), &(vertices[0]), GL_STATIC_DRAW);
+    //glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vertices.size(), &(vertices[0]), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(), &(vertices[0]), GL_STATIC_DRAW);
 
+    /*
     glGenBuffers(1, &ibo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(glm::ivec3) * indices.size(), &(indices[0]), GL_STATIC_DRAW);
+    */
 
     glEnableVertexAttribArray(vpos_location);
     glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     glGenBuffers(1, &normalBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * normals.size(), &(normals[0]), GL_STATIC_DRAW);
+    //glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * normals.size(), &(normals[0]), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * normals.size(), &(normals[0]), GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(normal_location);
     glVertexAttribPointer(normal_location, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
