@@ -119,10 +119,12 @@ void Physics::dampPlaneCollision(std::vector<int> & numBoundConstraints, std::ve
         // Split into tangential and normal velocity
         vec3 nVel = dot(planeConstraints.normals[i], velocity[planeConstraints.particles[i]]) * planeConstraints.normals[i];
         vec3 tVel = -nVel + velocity[planeConstraints.particles[i]];
-        // Damp tangential according to parameter
-        tVel *= restitutionCoefficient;
+        // Damp tangential velocity according to parameter
+        tVel *= restitutionCoefficientT;
         // flip normal velocity
-        nVel = dot(nVel, planeConstraints.normals[i]) > 0 ? nVel : -nVel;;
+        nVel = dot(nVel, planeConstraints.normals[i]) > 0 ? nVel : -nVel;
+        // Damp normal velocity according to parameter
+        nVel *= restitutionCoefficientN;
         // Combine
         velocity[planeConstraints.particles[i]] = tVel + nVel;
     }

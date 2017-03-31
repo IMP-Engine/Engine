@@ -23,7 +23,8 @@ public:
 
     float overRelaxConst;
     float pSleeping;
-    float restitutionCoefficient;
+    float restitutionCoefficientN;
+    float restitutionCoefficientT;
 
     int iterations;
 	int collisionIterations;
