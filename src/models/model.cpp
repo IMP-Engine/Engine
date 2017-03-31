@@ -102,7 +102,7 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
 	float d = spacing / glm::length(origin);
 	origin /= glm::length(origin);
 
-	for (int i = 0; i < imax; i++) for (int j = 0; j < jmax; j++) for (int k = 0; k < kmax; k++)
+	for (int i = -imax/2; i < imax/2; i++) for (int j = -jmax/2; j < jmax/2; j++) for (int k = -kmax/2; k < kmax/2; k++)
 	{
 		std::getline(file, line);
 		// Negative inside, positive outside
@@ -163,7 +163,7 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
     for (uint i = 0; i < vertices.size(); i++)
     {
         // Take three arbitrary particles to start with
-        vec3 vertex = vec3(vertices[i]);
+        vec3 vertex = origin + config.centerPos + vec3(vertices[i]) * config.scale;
         closestParticles[i][0] = 0;
         closestParticles[i][1] = 1;
         closestParticles[i][2] = particles.cardinality-1; // To prevent three particles in a row
@@ -202,7 +202,7 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
 
         for (std::vector<Particle>::size_type j = (start + 2); j < particles.cardinality-1; j++)
         {   // For the rest of the particles, see if they are closer
-            newDist = distance(position[j], vec3(vertices[i]));
+            newDist = distance(position[j], vertex);
             if (newDist < distances[2])
             {   // Can new particle replace cP[2]?
                 if (abs(dot(normalize(position[closestParticles[i][0]] - position[j]), normalize(position[closestParticles[i][1]] - position[j]))) < 0.9) 
