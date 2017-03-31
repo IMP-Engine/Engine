@@ -57,6 +57,9 @@ Camera camera;
 GLdouble deltaTime = 0.0f;
 GLdouble lastFrame = 0.0f;
 
+int bPhysics;
+int aPhysics;
+
 // Scene
 Scene *scene;
 Physics physicSystem;
@@ -157,8 +160,6 @@ void init() {
 
 void display(double deltaTime) {
 
-	int id = performance::startTimer("Reset and draw scene");
-
     GLfloat ratio;
     GLint width, height;
     mat4 viewMatrix, modelViewProjectionMatrix, modelViewMatrix, projectionMatrix;
@@ -184,17 +185,17 @@ void display(double deltaTime) {
     vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
 	
     scene->render(viewMatrix, projectionMatrix, vec3(lightPosition));
-    
-	performance::stopTimer(id);
-	
+
+    performance::stopTimer(bPhysics);
     if (doPyshics)
     {
         physicSystem.step(scene, useVariableTimestep ? deltaTime : timestep);
     }
-	
+    aPhysics = performance::startTimer("After physics");
+
     if (renderSurfaces)
     {
-        id = performance::startTimer("Render surfaces");
+       
 
     }
     else // render particles
@@ -203,12 +204,10 @@ void display(double deltaTime) {
         glGetIntegerv(GL_VIEWPORT, viewport);
         float heightOfNearPlane = (float)abs(viewport[3] - viewport[1]) / (2 * tan(0.5*camera.getFovy()*M_PI / 180.0));
 
-        id = performance::startTimer("Render particles");
         particleRenderer->render(physicSystem.particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix, heightOfNearPlane);
 
         visualization::drawConstraints(physicSystem.constraints, physicSystem.particles, modelViewProjectionMatrix);
     }
-    performance::stopTimer(id);
 
 	// Since we may want to measure performance of something that happens after the call to gui()
 	// we place this call as late as possible to allow for measuring more things
@@ -275,8 +274,7 @@ int main(void) {
 
     while (!glfwWindowShouldClose(window))
     {
-		int id = performance::startTimer("All but display()");
-
+        bPhysics = performance::startTimer("Before physics");
         // Calculate deltatime of current frame
         GLdouble currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
@@ -289,9 +287,8 @@ int main(void) {
 
         gui();
 
-		performance::stopTimer(id);
-
         display(deltaTime);
+        performance::stopTimer(aPhysics);
 		performance::next();
     }
 

@@ -1,6 +1,5 @@
 #pragma once
 #include "PlaneCollisionConstraintData.h"
-#include "../imgui/imgui.h"
 
 PlaneCollisionConstraintData::PlaneCollisionConstraintData()
 {

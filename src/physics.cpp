@@ -20,8 +20,6 @@ void Physics::step(Scene *scene, float dt)
     std::vector<int>   &phase     = particles.phase;
     std::vector<int>   &numBoundConstraints = particles.numBoundConstraints;
 
-    int id = performance::startTimer("Physics");
-
 	const float GRAVITY = 6.0f;
 	for (std::vector<glm::vec3>::size_type i = 0; i != particles.cardinality; i++) {
 		/*
@@ -41,13 +39,21 @@ void Physics::step(Scene *scene, float dt)
 	}
 
 	// Breakable constraints
+    int id = performance::startTimer("Remove broken constraints");
 	constraints.removeBroken(particles);
+    performance::stopTimer(id);
+    
+    id = performance::startTimer("Detect collisions");
+    detectCollisions(scene, numBoundConstraints, constraints.planeCollisionConstraints, phase, pPosition);
+    performance::stopTimer(id);
 
-    detectCollisions(scene, numBoundConstraints, constraints.triangleCollisionConstraints, phase, pPosition);
+    id = performance::startTimer("Solve collisions");
+    resolveCollisons(position, pPosition, constraints.planeCollisionConstraints, constraints.particleCollisionConstraints);
+    performance::stopTimer(id);
 
-    resolveCollisons(position, pPosition, constraints.triangleCollisionConstraints);
-	
+    id = performance::startTimer("Solve constraints");
     resolveConstraints(pPosition, invmass, numBoundConstraints);
+    performance::stopTimer(id);
 
 	for (std::vector<glm::vec3>::size_type i = 0; i != particles.cardinality; i++) 
 	{
@@ -65,13 +71,23 @@ void Physics::step(Scene *scene, float dt)
         }
 	}
 	
+    id = performance::startTimer("Damp collisions");
     // Update velocities according to friction and restituition coefficients
-    dampPlaneCollision(numBoundConstraints, velocity, constraints.triangleCollisionConstraints);
+    dampPlaneCollision(numBoundConstraints, velocity, constraints.planeCollisionConstraints);
+    performance::stopTimer(id);
 
 	// Collision constraints can unfortunately only exist for the limited time of a single step
-    constraints.triangleCollisionConstraints.clear();
-
-	performance::stopTimer(id);
+    for (int i = 0; i < constraints.planeCollisionConstraints.cardinality; i++) 
+    { 
+        numBoundConstraints[constraints.planeCollisionConstraints.particles[i]]--;
+    }
+    for (int i = 0; i < constraints.particleCollisionConstraints.cardinality; i++)
+    { 
+        numBoundConstraints[constraints.particleCollisionConstraints.particles[i][0]]--;
+        numBoundConstraints[constraints.particleCollisionConstraints.particles[i][1]]--;
+    }
+    constraints.planeCollisionConstraints.clear();
+    constraints.particleCollisionConstraints.clear();
 	
 }
 
@@ -84,24 +100,27 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector
         * Distance Constraints
         */
         DistanceConstraintData &distanceConstraints = constraints.distanceConstraints;
+        vec3 delta1(0);
+        vec3 delta2(0);
         for (int constraintIndex = 0; constraintIndex < distanceConstraints.cardinality; constraintIndex++)
         {
-
-            if (distanceConstraints.evaluate(constraintIndex, particles))
+            if (distanceConstraints.solveDistanceConstraint(delta1, delta2, constraintIndex, particles))
             {
+                // delta p_i = -w_i * s * grad_{p_i} C(p) * stiffness correction 
                 ivec2 &constraintParticles = distanceConstraints.particles[constraintIndex];
-                for (int pIndex = 0; pIndex < 2; pIndex++)
-                {
-                    int p = constraintParticles[pIndex];
-                    // delta p_i = -w_i * s * grad_{p_i} C(p) * stiffness correction 
-                    pPosition[p] -=
-                        invmass[p]
-                        * distanceConstraints.scaleFactor(constraintIndex, particles)
-                        * distanceConstraints.gradient(constraintIndex, p, particles)
-                        * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
-                        * overRelaxConst
-                        / (float)numBoundConstraints[p];
-                }
+                int p1 = constraintParticles[0];
+                int p2 = constraintParticles[1];
+                pPosition[p1] -= 
+                    delta1
+                    * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
+                    * overRelaxConst
+                    / (float)numBoundConstraints[p1];
+
+                pPosition[p2] -= 
+                    delta2 
+                    * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
+                    * overRelaxConst
+                    / (float)numBoundConstraints[p2];
             }
         }
         
@@ -115,7 +134,6 @@ void Physics::dampPlaneCollision(std::vector<int> & numBoundConstraints, std::ve
 {
     for (int i = 0; i < planeConstraints.particles.size(); i++)
     {
-        numBoundConstraints[planeConstraints.particles[i]]--;
         // Split into tangential and normal velocity
         vec3 nVel = dot(planeConstraints.normals[i], velocity[planeConstraints.particles[i]]) * planeConstraints.normals[i];
         vec3 tVel = -nVel + velocity[planeConstraints.particles[i]];
@@ -130,17 +148,29 @@ void Physics::dampPlaneCollision(std::vector<int> & numBoundConstraints, std::ve
     }
 }
 
-void Physics::resolveCollisons(std::vector<glm::vec3> & position, std::vector<glm::vec3> & pPosition, PlaneCollisionConstraintData & planeConstraints)
+void Physics::resolveCollisons(std::vector<glm::vec3> & position, std::vector<glm::vec3> & pPosition, PlaneCollisionConstraintData & planeConstraints, DistanceConstraintData & particleConstraints)
 {
-    vec3 delta(0);
+    vec3 delta1(0);
+    vec3 delta2(0);
     for (int j = 0; j < collisionIterations; j++)
     {
         for (int i = 0; i < planeConstraints.cardinality; i++) {
-            if (planeConstraints.solvePlaneCollision(delta, i, particles))
+            if (planeConstraints.solvePlaneCollision(delta1, i, particles))
             {
                 int p = planeConstraints.particles[i];
-                position[p] -= delta;
-                pPosition[p] -= delta;
+                position[p] -= delta1 * overRelaxConst;
+                pPosition[p] -= delta1 * overRelaxConst;
+            }
+        }
+
+        for (int i = 0; i < particleConstraints.cardinality; i++)
+        {
+            if (particleConstraints.solveDistanceConstraint(delta1, delta2, i, particles))
+            {
+                int p1 = particleConstraints.particles[i][0];
+                int p2 = particleConstraints.particles[i][1];
+                pPosition[p1] -= delta1 * overRelaxConst;
+                pPosition[p2] -= delta2 * overRelaxConst;
             }
         }
     }
@@ -173,8 +203,15 @@ void Physics::detectCollisions(Scene * scene, std::vector<int> & numBoundConstra
             if (phase[i] != phase[j]
                 && intersect(particles, i, j, isect))
             {
-                pPosition[i] += isect.point;
-                pPosition[j] += isect.responseGradient;// * isect.responseDistance;
+                DistanceConstraint c;
+                c.firstParticleIndex = i;
+                c.secondParticleIndex = j;
+                c.equality = false;
+                c.distance = particles.radius[i] + particles.radius[j];
+                numBoundConstraints[i]++;
+                numBoundConstraints[j]++;
+                
+                addConstraint(constraints.particleCollisionConstraints, c);
             }
         }
     }

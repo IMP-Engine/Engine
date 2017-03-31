@@ -8,7 +8,8 @@ public:
     ConstraintData();
     ~ConstraintData();
     DistanceConstraintData distanceConstraints;
-	PlaneCollisionConstraintData triangleCollisionConstraints;
+    DistanceConstraintData particleCollisionConstraints;
+	PlaneCollisionConstraintData planeCollisionConstraints;
 
     void clear();
     void removeBroken(ParticleData &particleData);
