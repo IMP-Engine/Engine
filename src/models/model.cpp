@@ -198,7 +198,7 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
                 closestParticles[i][1] = closestParticles[i][0];
                 closestParticles[i][0] = closestParticles[i][2];
             }
-        }
+        } // End three first particles
 
         for (std::vector<Particle>::size_type j = (start + 2); j < particles.cardinality-1; j++)
         {   // For the rest of the particles, see if they are closer
@@ -257,20 +257,12 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
             }
         } // End for all particles
 
-        //printf("Indices:%i,%i,%i\n", closestParticles[i][0], closestParticles[i][1], closestParticles[i][2]);
-        //printf("V:(%f,%f,%f) P1:(%f,%f,%f) P2:(%f,%f,%f) P3:(%f,%f,%f)\n", vertex.x, vertex.y, vertex.z, position[closestParticles[i][0]].x, position[closestParticles[i][0]].y, position[closestParticles[i][0]].z, position[closestParticles[i][1]].x, position[closestParticles[i][1]].y, position[closestParticles[i][1]].z, position[closestParticles[i][2]].x, position[closestParticles[i][2]].y, position[closestParticles[i][2]].z);
-        
         // Calculate Barycentric coordinates
-
-        // Adams BCoords
         vec3 CA = position[closestParticles[i][2]] - position[closestParticles[i][0]];
         vec3 BA = position[closestParticles[i][1]] - position[closestParticles[i][0]];
         vec3 normal = normalize(cross(CA, BA));
         bcCoords[i][2] = dot(vertex - position[closestParticles[i][0]], normal); // distance offset along normal
         vec3 projetedPosition = vertex - bcCoords[i][2] * normal;
-        //printf("Normal.xyz: %f,%f,%f Distance offset: %f\n", normal.x, normal.y, normal.z, bcCoords[i][2]);
-
-        // Baycentric check
 
         // particle position relative to v0
         vec3 pPrim = projetedPosition - position[closestParticles[i][0]];
@@ -286,9 +278,6 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
         float invDenom = 1 / (dotCACA * dotBABA - dotCABA * dotCABA);
         bcCoords[i][0] = (dotBABA * dotCApPrim - dotCABA * dotBApPrim) * invDenom; // u
         bcCoords[i][1] = (dotCACA * dotBApPrim - dotCABA * dotCApPrim) * invDenom; // v
-
-        //printf("CP: %i, %i, %i\n", closestParticles[i][0], closestParticles[i][1], closestParticles[i][2]);
-        printf(" BCC: %f, %f, %f, sum: %f\n", bcCoords[i][0], bcCoords[i][1], bcCoords[i][2], (bcCoords[i][0] + bcCoords[i][1]));
     } // end for all vertices
 
     modelData.addVertices(elements, bcCoords, closestParticles, modelData);

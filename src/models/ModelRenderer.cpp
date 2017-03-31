@@ -56,7 +56,6 @@ void calculateVertices(ParticleData &particles, ModelData &data, std::vector<glm
         v *= data.bcCoords[i+1];
 
         positions.push_back(p1 + u + v + normal * data.bcCoords[i + 2]);
-        //printf("Pos %i: {%f, %f, %f}\n", (i/3), positions[i/3].x, positions[i/3].y, positions[i/3].z);
         normals.push_back(normal);
     }
 }
@@ -84,11 +83,8 @@ void ModelRenderer::render(ParticleData &particles, ModelData &data, glm::mat4 &
 	glUniform3fv(glGetUniformLocation(simpleShader, "viewSpaceLightPos"), 1, &viewSpaceLightPosition.x);
 
     // Draw
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    int size;
-    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-    glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
-	//glDrawArrays(GL_TRIANGLES, 0, data.cardinality);
+    glPolygonMode(GL_FRONT, GL_FILL);
+	glDrawElements(GL_TRIANGLES, data.elements.size(), GL_UNSIGNED_SHORT, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
