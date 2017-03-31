@@ -163,7 +163,7 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
     for (uint i = 0; i < vertices.size(); i++)
     {
         // Take three arbitrary particles to start with
-        vec3 vertex = origin + config.centerPos + vec3(vertices[i]) * config.scale;
+        vec3 vertex = origin + config.centerPos + vec3(vertices[i]) * config.scale * vec3(0.5);
         closestParticles[i][0] = 0;
         closestParticles[i][1] = 1;
         closestParticles[i][2] = particles.cardinality-1; // To prevent three particles in a row
