@@ -51,9 +51,11 @@ void calculateVertices(ParticleData &particles, ModelData &data, std::vector<glm
         glm::vec3 p2 = particles.position[data.closestParticles[i+1]];
         glm::vec3 p3 = particles.position[data.closestParticles[i+2]];
         
-        glm::vec3 u = data.bcCoords[i]   * (p3 - p1);
-        glm::vec3 v = data.bcCoords[i+1] * (p2 - p1);
+        glm::vec3 u = (p3 - p1);
+        glm::vec3 v = (p2 - p1);
         glm::vec3 normal = normalize(cross(u, v));
+        u *= data.bcCoords[i];
+        v *= data.bcCoords[i+1];
 
         positions.push_back(p1 + u + v + normal * data.bcCoords[i + 2]);
         //printf("Pos %i: {%f, %f, %f}\n", (i/3), positions[i/3].x, positions[i/3].y, positions[i/3].z);
