@@ -32,4 +32,22 @@ public:
     ConstraintData constraints;
 
 	void step(Scene *scene, float dt);
+
+private:
+    /*
+        Stationary iterative linear solver - Gauss-Seidel
+    */
+    void resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector<float> & invmass, std::vector<int> & numBoundConstraints);
+
+    void dampPlaneCollision(std::vector<int> & numBoundConstraints, std::vector<glm::vec3> & velocity, PlaneCollisionConstraintData & triangleConstraints);
+
+    /*
+        Project position and predicted positions to valid states as specified by the planeCollisions constraints
+    */
+    void resolveCollisons(std::vector<glm::vec3> & position, std::vector<glm::vec3> & pPosition, PlaneCollisionConstraintData & planeConstraints);
+
+    /*
+        If there is a collision with the scene, add that constraint to triangleConstraints.
+    */
+    void detectCollisions(Scene * scene, std::vector<int> & numBoundConstraints, PlaneCollisionConstraintData & triangleConstraints, std::vector<int> & phase, std::vector<glm::vec3> & pPosition);
 };

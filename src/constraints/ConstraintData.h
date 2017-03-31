@@ -1,6 +1,6 @@
 #pragma once
 #include "DistanceConstraintData.h"
-#include "TriangleCollisionConstraintData.h"
+#include "PlaneCollisionConstraintData.h"
 
 class ConstraintData
 {
@@ -8,7 +8,7 @@ public:
     ConstraintData();
     ~ConstraintData();
     DistanceConstraintData distanceConstraints;
-	TriangleCollisionConstraintData triangleCollisionConstraints;
+	PlaneCollisionConstraintData triangleCollisionConstraints;
 
     void clear();
     void removeBroken(ParticleData &particleData);

@@ -1,8 +1,8 @@
 #pragma once
-#include "TriangleCollisionConstraintData.h"
+#include "PlaneCollisionConstraintData.h"
 #include "../imgui/imgui.h"
 
-TriangleCollisionConstraintData::TriangleCollisionConstraintData()
+PlaneCollisionConstraintData::PlaneCollisionConstraintData()
 {
 	particles.reserve(MAX_DISTANCE_CONSTRAINTS);
 	normals.reserve(MAX_DISTANCE_CONSTRAINTS);
@@ -10,21 +10,18 @@ TriangleCollisionConstraintData::TriangleCollisionConstraintData()
 	cardinality = 0;
 }
 
-bool TriangleCollisionConstraintData::solveTriangleCollision(glm::vec3 & delta, const int idx, ParticleData & particleData, float a)
+bool PlaneCollisionConstraintData::solvePlaneCollision(glm::vec3 & delta, const int idx, ParticleData & particleData)
 {
 	float c = glm::dot(normals[idx], particleData.pPosition[particles[idx]]) - distances[idx];
 
 	if (c > 0)
 		return false;
-	
 
-
-	delta = c * normals[idx] * a;
+	delta = c * normals[idx];
 	return true;
-	
 }
 
-void TriangleCollisionConstraintData::clear()
+void PlaneCollisionConstraintData::clear()
 {
 	particles.clear();
 	normals.clear();
@@ -32,7 +29,7 @@ void TriangleCollisionConstraintData::clear()
 	cardinality = 0;
 }
 
-void addConstraint(TriangleCollisionConstraintData & data, TriangleCollisionConstraint & config)
+void addConstraint(PlaneCollisionConstraintData & data, PlaneCollisionConstraint & config)
 {
 	data.particles.push_back(config.particleIndex);
 	data.normals.push_back(config.normal);

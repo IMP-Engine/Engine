@@ -5,16 +5,16 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::m
  
 	unsigned int start = particles.cardinality;
 
-    float dx = 0, dy = 0, dz = 0;
+    float dx = config.scale.x, dy = config.scale.y, dz = config.scale.z;
 
     if (config.numParticles.x > 1) {
-        dx = config.scale.x / (config.numParticles.x-1);
+        dx /= (config.numParticles.x-1);
     }
     if (config.numParticles.y > 1) {
-        dy = config.scale.y / (config.numParticles.y-1);
+        dy /= (config.numParticles.y-1);
     }
     if (config.numParticles.z > 1) {
-        dz = config.scale.z / (config.numParticles.z-1);
+        dz /= (config.numParticles.z-1);
     }
 
     // Get the "minimum" corner to use as base position
@@ -36,7 +36,6 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::m
                 p.phase = config.phase;
 				p.numBoundConstraints = 0;
 				p.radius = min(dx, min(dy, dz)) / 2;
-				p.radius = p.radius == 0 ? max(dx, max(dy, dz)) / 2 : p.radius;
 
                 addParticle(p, particles);
             }

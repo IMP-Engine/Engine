@@ -10,10 +10,10 @@
 #endif // !MAX_DISTANCE_CONSTRAINTS
 
 
-class TriangleCollisionConstraintData
+class PlaneCollisionConstraintData
 {
 public:
-	TriangleCollisionConstraintData();
+	PlaneCollisionConstraintData();
 
 	int cardinality;
 
@@ -21,16 +21,16 @@ public:
 	std::vector<glm::vec3> normals;
 	std::vector<float> distances;
 
-	bool solveTriangleCollision(glm::vec3 &delta, const int idx, ParticleData &particleData, float a);
+	bool solvePlaneCollision(glm::vec3 &delta, const int idx, ParticleData &particleData);
 
 	void clear();
 
 };
-struct TriangleCollisionConstraint {
+struct PlaneCollisionConstraint {
 	int particleIndex;
 	vec3 normal;
 	float distance;
 };
 
-void addConstraint(TriangleCollisionConstraintData &data, TriangleCollisionConstraint &config);
+void addConstraint(PlaneCollisionConstraintData &data, PlaneCollisionConstraint &config);
 
