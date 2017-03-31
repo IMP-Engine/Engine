@@ -20,9 +20,9 @@ void ModelData::clear()
 
 void ModelData::addVertices(std::vector<short> &e, std::vector<float[3]> &bc, std::vector<int[3]> &particles, ModelData &data)
 {
-    for (int i = 0; i < bc.size(); ++i)
+    for (unsigned int i = 0; i < bc.size(); ++i)
     {
-        for (int j = 0; j < 3; j++)
+        for (unsigned short j = 0; j < 3; j++)
         {
             data.bcCoords.push_back(bc[i][j]);
             data.closestParticles.push_back(particles[i][j]);
