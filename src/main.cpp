@@ -66,12 +66,14 @@ ParticleRenderer *particleRenderer;
 bool renderSurfaces = false;
 
 // Light
-const vec3 lightPosition = vec3(50.0f);
+const vec3 lightPosition = vec3(4.0f);
 
 // Simulation variables and parameters
 bool doPyshics = false;
 bool showPerformance = false;
 bool showModels = false;
+bool useVariableTimestep = false;
+float timestep = 0.01667;
 
 
 static void errorCallback(int error, const char* description) {
@@ -153,7 +155,7 @@ void init() {
 	particleRenderer->init();
 }
 
-void display() {
+void display(double deltaTime) {
 
 	int id = performance::startTimer("Reset and draw scene");
 
@@ -181,13 +183,13 @@ void display() {
 
     vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
 	
-    scene->render(viewMatrix, projectionMatrix);
+    scene->render(viewMatrix, projectionMatrix, vec3(lightPosition));
     
 	performance::stopTimer(id);
 	
     if (doPyshics)
     {
-        physicSystem.step(scene, ImGui::GetIO().DeltaTime);
+        physicSystem.step(scene, useVariableTimestep ? deltaTime : timestep);
     }
 	
     if (renderSurfaces)
@@ -232,13 +234,19 @@ void gui()
 	if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	visualization::gui();
-    ImGui::Checkbox("Physics", &doPyshics);
+	ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
+    ImGui::Checkbox("Timestep from framerate", &useVariableTimestep);
     ImGui::Checkbox("Render surfaces", &renderSurfaces);
 	ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
 	ImGui::SliderInt("Collision Solver Iterations", &physicSystem.collisionIterations, 1, 32);
 	ImGui::SliderFloat("Over-relax-constant", &physicSystem.overRelaxConst, 1, 5);
     ImGui::SliderFloat("Particle Sleeping (squared)", &physicSystem.pSleeping, 0, 1, "%.9f", 10.f);
 	ImGui::SliderFloat("Restitution Coeff.", &physicSystem.restitutionCoefficient, 0, 1);
+  if (!useVariableTimestep) 
+	{
+		ImGui::SliderFloat("Timestep", &timestep, 0, .05f, "%.5f"); ImGui::SameLine();
+		ImGui::Text((std::to_string(1 / timestep) + " \"FPS\"").c_str());
+	}
 	ImGui::End();
 
 	model::gui(&showModels, physicSystem.particles, physicSystem.constraints);
@@ -282,7 +290,7 @@ int main(void) {
 
 		performance::stopTimer(id);
 
-        display();
+        display(deltaTime);
 		performance::next();
     }
 
