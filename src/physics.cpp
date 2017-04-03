@@ -8,7 +8,6 @@
 #endif // !WORLD_MIN
 
 
-
 void Physics::step(Scene *scene, float dt)
 {
 
@@ -93,34 +92,40 @@ void Physics::step(Scene *scene, float dt)
 
 void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector<float> & invmass, std::vector<int> & numBoundConstraints)
 {
+    DistanceConstraintData &distanceConstraints = constraints.distanceConstraints;
     for (int i = 0; i < iterations; i++)
     {
 
         /**
         * Distance Constraints
         */
-        DistanceConstraintData &distanceConstraints = constraints.distanceConstraints;
-        vec3 delta1(0);
-        vec3 delta2(0);
-        for (int constraintIndex = 0; constraintIndex < distanceConstraints.cardinality; constraintIndex++)
-        {
-            if (distanceConstraints.solveDistanceConstraint(delta1, delta2, constraintIndex, particles))
+        if (parallelConstraintSolve) {
+            tbb::parallel_for(
+                tbb::blocked_range<size_t>(0, distanceConstraints.cardinality), 
+                DistanceConstraintData::SolveDistanceConstraint(particles, constraints.distanceConstraints, overRelaxConst, i));
+        } else {
+            vec3 delta1(0);
+            vec3 delta2(0);
+            for (int constraintIndex = 0; constraintIndex < distanceConstraints.cardinality; constraintIndex++)
             {
-                // delta p_i = -w_i * s * grad_{p_i} C(p) * stiffness correction 
-                ivec2 &constraintParticles = distanceConstraints.particles[constraintIndex];
-                int p1 = constraintParticles[0];
-                int p2 = constraintParticles[1];
-                pPosition[p1] -= 
-                    delta1
-                    * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
-                    * overRelaxConst
-                    / (float)numBoundConstraints[p1];
+                if (distanceConstraints.solveDistanceConstraint(delta1, delta2, constraintIndex, particles))
+                {
+                    // delta p_i = -w_i * s * grad_{p_i} C(p) * stiffness correction 
+                    ivec2 &constraintParticles = distanceConstraints.particles[constraintIndex];
+                    int p1 = constraintParticles[0];
+                    int p2 = constraintParticles[1];
+                    pPosition[p1] -= 
+                        delta1
+                        * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
+                        * overRelaxConst
+                        / (float)numBoundConstraints[p1];
 
-                pPosition[p2] -= 
-                    delta2 
-                    * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
-                    * overRelaxConst
-                    / (float)numBoundConstraints[p2];
+                    pPosition[p2] -= 
+                        delta2 
+                        * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
+                        * overRelaxConst
+                        / (float)numBoundConstraints[p2];
+                }
             }
         }
         

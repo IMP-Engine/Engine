@@ -8,6 +8,7 @@
 #include <glm/geometric.hpp>
 #include <glm/gtx/norm.hpp>
 
+#include "../tbb/include/tbb/parallel_for.h"
 #include "particles/ParticleData.h"
 #include "Scene.h"
 #include "constraints/ConstraintData.h"
@@ -25,6 +26,7 @@ public:
     float pSleeping;
     float restitutionCoefficientN;
     float restitutionCoefficientT;
+    bool parallelConstraintSolve;
 
     int iterations;
 	int collisionIterations;
@@ -35,6 +37,7 @@ public:
 	void step(Scene *scene, float dt);
 
 private:
+
     /*
         Stationary iterative linear solver - Gauss-Seidel
     */
