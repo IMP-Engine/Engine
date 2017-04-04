@@ -6,7 +6,7 @@
 #define MODEL_FOLDER "../src/models/"
 #endif 
 
-model::modelConfig config = { 0.8f, vec3(0), 0, 0.5f, 0.5, vec3(1), ivec3(4) };
+model::ModelConfig config = { 0.8f, vec3(0), 0, 0.5f, 0.5, vec3(1), ivec3(4) };
 std::vector<std::string> predefinedModels{ "Box" };
 std::vector<std::string> models;
 int selected = 0;
@@ -28,7 +28,7 @@ void model::loadModelNames() {
 }
 
 // This 
-void model::loadPredefinedModel(std::string model, ParticleData &particles, ConstraintData &constraints, modelConfig config)
+void model::loadPredefinedModel(std::string model, ParticleData &particles, ConstraintData &constraints, ModelConfig config)
 {
 	if (model == "Box")
 	{
@@ -69,7 +69,7 @@ void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vecto
 
 void model::calculateNormals(std::vector<glm::vec3> &normals, std::vector<glm::vec4> &vertices, std::vector<GLushort> &elements) {
     normals.resize(vertices.size(), glm::vec3(0.0, 0.0, 0.0));
-    for (int i = 0; i < elements.size(); i += 3)
+    for (unsigned int i = 0; i < elements.size(); i += 3)
     {
         GLushort ia = elements[i];
         GLushort ib = elements[i + 1];
@@ -83,7 +83,7 @@ void model::calculateNormals(std::vector<glm::vec3> &normals, std::vector<glm::v
 
 // For more information on what *max, origin and spacing is, refer to https://github.com/christopherbatty/SDFGen
 // Explanation is found in main.cpp
-void model::loadModel(std::string model, ParticleData &particles, ConstraintData &constraints, modelConfig config)
+void model::loadModel(std::string model, ParticleData &particles, ConstraintData &constraints, ModelConfig config)
 {
 
 	std::vector<Particle>::size_type start = particles.cardinality;
@@ -174,7 +174,7 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
     std::vector<float[3]> bcCoords(vertices.size());
     std::vector<int[3]> closestParticles(vertices.size());
 
-    for (int i = 0; i < vertices.size(); i++)
+    for (unsigned int i = 0; i < vertices.size(); i++)
     {
         closestParticles[i][0] = 0;
         closestParticles[i][1] = 1;
@@ -280,7 +280,7 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
 
 
 
-void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints)
+void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints, std::vector< std::tuple<std::string, ModelConfig> > &objects)
 {
 	if (!*show)
 	{
@@ -298,11 +298,8 @@ void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints
 	ImGui::Combo("Choose model", &selected, [](void* a, int b, const char** c) -> bool { *c = ((std::vector<std::string>*)a)->at(b).c_str(); return true; }, &models, models.size());
 	
 	ImGui::SameLine();
-	if (ImGui::Button("Load"))
+	if (ImGui::Button("Add"))
 	{
-		particles.clear();
-		constraints.clear();
-		
 		if ((unsigned int)selected >= predefinedModels.size())
 		{
 			loadModel(models[selected], particles, constraints, config);
@@ -311,7 +308,27 @@ void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints
 		{
 			loadPredefinedModel(models[selected], particles, constraints, config);
 		}
+
+        std::cout << "# particles: " << particles.cardinality << std::endl << "# constraints: " << constraints.distanceConstraints.cardinality << std::endl;
+
+        objects.push_back(std::make_tuple(models[selected], config));
+
+        config.phase++;
+
 	}
+    ImGui::SameLine();
+    if (ImGui::Button("Clear and add")) {
+        particles.clear();
+		constraints.clear();
+        objects.clear();
+
+        config.phase = 0;
+
+        loadPredefinedModel("Box", particles, constraints, config);
+        objects.push_back(std::make_tuple("Box", config));
+        config.phase++;
+    }
+
 	// Below, sliders for deciding grejs
 	ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 	ImGui::DragFloat3("Origin", &config.centerPos.x, 1.f, -(std::numeric_limits<float>::max)(), (std::numeric_limits<float>::max)());
@@ -326,6 +343,69 @@ void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints
 		ImGui::SliderInt("Particles y", &config.numParticles.y, 1, 10);
 		ImGui::SliderInt("Particles z", &config.numParticles.z, 1, 10);
 	}
+
+    std::stringstream headerText;
+    headerText << "Objects (Particles: " << particles.cardinality << " Constraints: " << constraints.distanceConstraints.cardinality << ")";
+
+    ImGui::Text(headerText.str().c_str());
+    
+    ImGui::Columns(7, "object_table"); // 4-ways, with border
+    ImGui::Separator();
+    ImGui::Text("Type"); ImGui::NextColumn();
+    ImGui::Text("Origin"); ImGui::NextColumn();
+    ImGui::Text("Scale"); ImGui::NextColumn();
+    ImGui::Text("Inv.mass"); ImGui::NextColumn();
+    ImGui::Text("Dist.thre."); ImGui::NextColumn();
+    ImGui::Text("Stiff."); ImGui::NextColumn();
+    ImGui::Text("Phase"); ImGui::NextColumn();
+    ImGui::Separator();
+    static int selected = -1;
+    int i = 0;
+    for (auto obj : objects)
+    {
+        ModelConfig cfg;
+        std::string type;
+        std::tie(type, cfg) = obj;
+        if (ImGui::Selectable(type.c_str(), selected == i, ImGuiSelectableFlags_SpanAllColumns))
+            selected = i;
+        ImGui::NextColumn();
+
+        char centerPos[32];
+        sprintf_s(centerPos, 32, "%.6g, %.6g, %.6g", cfg.centerPos.x, cfg.centerPos.y, cfg.centerPos.z);
+        ImGui::Text(centerPos);
+        ImGui::NextColumn();
+
+        char scale[32];
+        sprintf_s(scale, 32, "%.6g, %.6g, %.6g", cfg.scale.x, cfg.scale.y, cfg.scale.z);
+        ImGui::Text(scale);
+        ImGui::NextColumn();
+
+        char invmass[32];
+        sprintf_s(invmass, 32, "%.6g", cfg.invmass);
+        ImGui::Text(invmass);
+        ImGui::NextColumn();
+
+        char distanceThreshold[32];
+        sprintf_s(distanceThreshold, 32, "%.6g", cfg.distanceThreshold);
+        ImGui::Text(distanceThreshold);
+        ImGui::NextColumn();
+
+        char stiffness[32];
+        sprintf_s(stiffness, 32, "%.6g", cfg.stiffness);
+        ImGui::Text(stiffness);
+        ImGui::NextColumn();
+
+        char phase[32];
+        sprintf_s(phase, 32, "%d", cfg.phase);
+        ImGui::Text(phase);
+        ImGui::NextColumn();
+
+
+
+        i++;
+    }
+    ImGui::Columns(1);
+    ImGui::Separator();
 
 	ImGui::End();
 }

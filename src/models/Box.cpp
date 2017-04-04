@@ -1,7 +1,7 @@
 #include "Box.h"
 
 
-void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::modelConfig config) {
+void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::ModelConfig config) {
  
 	unsigned int start = particles.cardinality;
 

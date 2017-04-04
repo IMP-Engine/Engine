@@ -29,6 +29,7 @@
 #include "Scene.h"
 
 #include "constraints/visualizeConstraint.h"
+#include "models/modelConfig.h"
 #include "models/model.h"
 #include "input.h"
 
@@ -60,6 +61,7 @@ GLdouble lastFrame = 0.0f;
 // Scene
 Scene *scene;
 Physics physicSystem;
+std::vector< std::tuple<std::string, model::ModelConfig> > objects;
 
 // Shaders and rendering 
 ParticleRenderer *particleRenderer;
@@ -73,7 +75,7 @@ bool doPyshics = false;
 bool showPerformance = false;
 bool showModels = false;
 bool useVariableTimestep = false;
-float timestep = 0.01667;
+float timestep = 0.01667f;
 
 
 static void errorCallback(int error, const char* description) {
@@ -139,15 +141,10 @@ void init() {
 
 	model::loadModelNames();
 
-	// Load some model to begin with, so that debugging is easier on us
-	model::modelConfig conf;
-	conf.centerPos = vec3(0.f);
-	conf.distanceThreshold = 2;
-	conf.invmass = 0.8f;
-	conf.phase = 0;
-	conf.scale = vec3(4.f);
-	conf.stiffness = 0.8f;
-	conf.numParticles = ivec3(4);
+
+    // Load some model to begin with, so that debugging is easier on us
+    model::ModelConfig conf;
+    conf.setDefaults();
 	model::loadPredefinedModel("Box", physicSystem.particles, physicSystem.constraints, conf);
 
 	particleRenderer = new ParticleRenderer();
@@ -188,7 +185,7 @@ void display(double deltaTime) {
 	
     if (doPyshics)
     {
-        physicSystem.step(scene, useVariableTimestep ? deltaTime : timestep);
+        physicSystem.step(scene, useVariableTimestep ? (float)deltaTime : timestep);
     }
 	
     if (renderSurfaces)
@@ -200,10 +197,10 @@ void display(double deltaTime) {
     {
         int viewport[4];
         glGetIntegerv(GL_VIEWPORT, viewport);
-        float heightOfNearPlane = (float)abs(viewport[3] - viewport[1]) / (2 * tan(0.5*camera.getFovy()*M_PI / 180.0));
+        float heightOfNearPlane = (float)(abs(viewport[3] - viewport[1]) / (2 * tan(0.5*camera.getFovy()*M_PI / 180.0f)));
 
         id = performance::startTimer("Render particles");
-        particleRenderer->render(physicSystem.particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix, heightOfNearPlane);
+        particleRenderer->render(physicSystem.particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix, (GLint)round(heightOfNearPlane));
 
         visualization::drawConstraints(physicSystem.constraints, physicSystem.particles, modelViewProjectionMatrix);
     }
@@ -229,24 +226,24 @@ void gui()
     ImGui::ColorEdit3("clear color", (float*)&clear_color);
     ImGui::Checkbox("Vsync", &vsync);
     if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
-	if (ImGui::Button("Models")) showModels ^= 1; ImGui::SameLine();
-	if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
+    if (ImGui::Button("Models")) showModels ^= 1; ImGui::SameLine();
+    if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-	visualization::gui();
-  ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
-  ImGui::Checkbox("Timestep from framerate", &useVariableTimestep);
-  ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
-  ImGui::SliderFloat("Over-relax-constant", &physicSystem.overRelaxConst, 1, 5);
-  ImGui::SliderFloat("Particle Sleeping (squared)", &physicSystem.pSleeping, 0, 1, "%.9f", 10.f);
-	ImGui::SliderFloat("Restitution Coeff.", &physicSystem.restitutionCoefficient, 0, 1);
-  if (!useVariableTimestep) 
-	{
-		ImGui::SliderFloat("Timestep", &timestep, 0, .05f, "%.5f"); ImGui::SameLine();
-		ImGui::Text((std::to_string(1 / timestep) + " \"FPS\"").c_str());
-	}
-	ImGui::End();
+    visualization::gui();
+    ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
+    ImGui::Checkbox("Timestep from framerate", &useVariableTimestep);
+    ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
+    ImGui::SliderFloat("Over-relax-constant", &physicSystem.overRelaxConst, 1, 5);
+    ImGui::SliderFloat("Particle Sleeping (squared)", &physicSystem.pSleeping, 0, 1, "%.9f", 10.f);
+    ImGui::SliderFloat("Restitution Coeff.", &physicSystem.restitutionCoefficient, 0, 1);
+    if (!useVariableTimestep) 
+    {
+        ImGui::SliderFloat("Timestep", &timestep, 0, .05f, "%.5f"); ImGui::SameLine();
+        ImGui::Text((std::to_string(1 / timestep) + " \"FPS\"").c_str());
+    }
+    ImGui::End();
 
-	model::gui(&showModels, physicSystem.particles, physicSystem.constraints);
+    model::gui(&showModels, physicSystem.particles, physicSystem.constraints, objects);
 
     // Remove when all group members feel comfortable with how GUI works and what it can provide
     // Demo window
