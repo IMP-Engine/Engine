@@ -43,7 +43,7 @@ void Physics::step(Scene *scene, float dt)
     detectCollisions(scene, numBoundConstraints, constraints.planeCollisionConstraints, phase, pPosition);
 
     id = performance::startTimer("Solve collisions");
-    resolveCollisons(position, pPosition, constraints.planeCollisionConstraints, constraints.particleCollisionConstraints);
+    resolveCollisions(position, pPosition, constraints.planeCollisionConstraints, constraints.particleCollisionConstraints);
     performance::stopTimer(id);
 
     id = performance::startTimer("Solve constraints");
@@ -147,7 +147,7 @@ void Physics::dampPlaneCollision(std::vector<int> & numBoundConstraints, std::ve
     }
 }
 
-void Physics::resolveCollisons(std::vector<glm::vec3> & position, std::vector<glm::vec3> & pPosition, PlaneCollisionConstraintData & planeConstraints, DistanceConstraintData & particleConstraints)
+void Physics::resolveCollisions(std::vector<glm::vec3> & position, std::vector<glm::vec3> & pPosition, PlaneCollisionConstraintData & planeConstraints, DistanceConstraintData & particleConstraints)
 {
     vec3 delta1(0);
     vec3 delta2(0);
