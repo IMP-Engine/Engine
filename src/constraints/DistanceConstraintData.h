@@ -37,8 +37,8 @@ public:
     */
     class SolveDistanceConstraint {
     public:
-        ParticleData &const particles;
-        DistanceConstraintData &const distanceConstraints;
+        ParticleData & particles;
+        DistanceConstraintData & distanceConstraints;
         float overRelaxConst;
         int iterationNum;
 

@@ -1,7 +1,5 @@
 #include "physics.h"
 
-#include <tuple>
-
 #ifndef WORLD_MIN
 #define WORLD_MIN vec3(-20.f,-20.f,-20.f)
 #define WORLD_MAX vec3( 20.f, 20.f, 20.f)
@@ -42,9 +40,7 @@ void Physics::step(Scene *scene, float dt)
 	constraints.removeBroken(particles);
     performance::stopTimer(id);
     
-    id = performance::startTimer("Detect collisions");
     detectCollisions(scene, numBoundConstraints, constraints.planeCollisionConstraints, phase, pPosition);
-    performance::stopTimer(id);
 
     id = performance::startTimer("Solve collisions");
     resolveCollisons(position, pPosition, constraints.planeCollisionConstraints, constraints.particleCollisionConstraints);
@@ -61,9 +57,7 @@ void Physics::step(Scene *scene, float dt)
 		* v_i = (x_i^* - x_i) / dt
 		* x_i = x_i^*
 		*/
-		velocity[i] = (pPosition[i] - position[i]) / dt;
-		// rough attempt at particle sleeping implementation in order to make particles stay in one place - most likely needs proper friction to work
-	
+		velocity[i] = (pPosition[i] - position[i]) / dt;	
         if (glm::length(position[i] - pPosition[i]) > pSleeping)
         {
 			position[i] = pPosition[i];
@@ -183,6 +177,7 @@ void Physics::resolveCollisons(std::vector<glm::vec3> & position, std::vector<gl
 
 void Physics::detectCollisions(Scene * scene, std::vector<int> & numBoundConstraints, PlaneCollisionConstraintData & planeConstraints, std::vector<int> & phase, std::vector<glm::vec3> & pPosition)
 {
+    int id = performance::startTimer("Detect scene collisions");
     for (unsigned int i = 0; i != particles.cardinality; i++)
     {
         // Check collisions with scene
@@ -200,7 +195,11 @@ void Physics::detectCollisions(Scene * scene, std::vector<int> & numBoundConstra
                 addConstraint(planeConstraints, c);
             }
         }
+    performance::stopTimer(id);
+    id = performance::startTimer("Detect particle collisions");
 
+    for (unsigned int i = 0; i != particles.cardinality; i++)
+    {
         // Check collisions with other particles
         for (unsigned int j = 0; j < i; j++)
         {
@@ -220,4 +219,6 @@ void Physics::detectCollisions(Scene * scene, std::vector<int> & numBoundConstra
             }
         }
     }
+    performance::stopTimer(id);
+
 }
