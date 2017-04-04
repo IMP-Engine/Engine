@@ -39,7 +39,7 @@ void model::loadPredefinedModel(std::string model, ParticleData &particles, Cons
 void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vector<short> &elements)
 {
     int pos;
-    if ((pos = filename.find("_")) != std::string::npos) { filename = filename.substr(0, pos); }
+    if ((pos = filename.rfind("_")) != std::string::npos) { filename = filename.substr(0, pos); }
 
     std::ifstream in(MODEL_FOLDER + filename + ".obj", std::ios::in);
     if (!in)
