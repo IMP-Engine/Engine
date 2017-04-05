@@ -58,6 +58,9 @@ Camera camera;
 GLdouble deltaTime = 0.0f;
 GLdouble lastFrame = 0.0f;
 
+int bPhysics;
+int aPhysics;
+
 // Scene
 Scene *scene;
 Physics physicSystem;
@@ -135,9 +138,11 @@ void init() {
     physicSystem = Physics();
 
     physicSystem.iterations = 5;
-    physicSystem.pSleeping = 0.0001f;
+	physicSystem.collisionIterations = 3;
+	physicSystem.pSleeping = 0.0001f;
     physicSystem.overRelaxConst = 1.0f;
-    physicSystem.restitutionCoefficient = 1.f; // 1 is Elastic collision
+    physicSystem.restitutionCoefficientT = 0.8f; 
+    physicSystem.restitutionCoefficientN = 0.8f;
 
     modelData = ModelData();
     modelData.clear();
@@ -166,8 +171,6 @@ void init() {
 
 void display(double deltaTime) {
 
-	int id = performance::startTimer("Reset and draw scene");
-
     GLfloat ratio;
     GLint width, height;
     mat4 viewMatrix, modelViewProjectionMatrix, modelViewMatrix, projectionMatrix;
@@ -193,17 +196,17 @@ void display(double deltaTime) {
     vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
 	
     scene->render(viewMatrix, projectionMatrix, vec3(lightPosition));
-    
-	performance::stopTimer(id);
-	
+
+    performance::stopTimer(bPhysics);
     if (doPyshics)
     {
         physicSystem.step(scene, useVariableTimestep ? deltaTime : timestep);
     }
-	
+    aPhysics = performance::startTimer("After physics");
+
     if (renderSurfaces)
     {
-        id = performance::startTimer("Render surfaces");
+        int id = performance::startTimer("Render surfaces");
         modelRenderer->render(physicSystem.particles, modelData, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
     }
     else // render particles
@@ -212,12 +215,10 @@ void display(double deltaTime) {
         glGetIntegerv(GL_VIEWPORT, viewport);
         float heightOfNearPlane = (float)abs(viewport[3] - viewport[1]) / (2 * tan(0.5*camera.getFovy()*M_PI / 180.0));
 
-        id = performance::startTimer("Render particles");
         particleRenderer->render(physicSystem.particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix, heightOfNearPlane);
 
         visualization::drawConstraints(physicSystem.constraints, physicSystem.particles, modelViewProjectionMatrix);
     }
-    performance::stopTimer(id);
 
 	// Since we may want to measure performance of something that happens after the call to gui()
 	// we place this call as late as possible to allow for measuring more things
@@ -243,13 +244,15 @@ void gui()
 	if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	visualization::gui();
+	ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
+    ImGui::Checkbox("Timestep from framerate", &useVariableTimestep);
     ImGui::Checkbox("Render surfaces", &renderSurfaces);
-  ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
-  ImGui::Checkbox("Timestep from framerate", &useVariableTimestep);
-  ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
-  ImGui::SliderFloat("Over-relax-constant", &physicSystem.overRelaxConst, 1, 5);
-  ImGui::SliderFloat("Particle Sleeping (squared)", &physicSystem.pSleeping, 0, 1, "%.9f", 10.f);
-	ImGui::SliderFloat("Restitution Coeff.", &physicSystem.restitutionCoefficient, 0, 1);
+	ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
+	ImGui::SliderInt("Collision Solver Iterations", &physicSystem.collisionIterations, 1, 32);
+	ImGui::SliderFloat("Over-relax-constant", &physicSystem.overRelaxConst, 1, 5);
+    ImGui::SliderFloat("Particle Sleeping (squared)", &physicSystem.pSleeping, 0, 1, "%.9f", 10.f);
+	ImGui::SliderFloat("Tangential COR", &physicSystem.restitutionCoefficientT, -1, 1);
+    ImGui::SliderFloat("Normal COR", &physicSystem.restitutionCoefficientN, 0, 1);
   if (!useVariableTimestep) 
 	{
 		ImGui::SliderFloat("Timestep", &timestep, 0, .05f, "%.5f"); ImGui::SameLine();
@@ -282,8 +285,7 @@ int main(void) {
 
     while (!glfwWindowShouldClose(window))
     {
-		int id = performance::startTimer("All but display()");
-
+        bPhysics = performance::startTimer("Before physics");
         // Calculate deltatime of current frame
         GLdouble currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
@@ -296,9 +298,8 @@ int main(void) {
 
         gui();
 
-		performance::stopTimer(id);
-
         display(deltaTime);
+        performance::stopTimer(aPhysics);
 		performance::next();
     }
 

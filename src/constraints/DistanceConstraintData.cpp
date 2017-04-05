@@ -13,9 +13,7 @@ DistanceConstraintData::DistanceConstraintData()
 }
 
 
-DistanceConstraintData::~DistanceConstraintData()
-{
-}
+DistanceConstraintData::~DistanceConstraintData(){}
 
 float DistanceConstraintData::evaluate(int constraintIndex, ParticleData &particleData)
 {
@@ -28,21 +26,7 @@ float DistanceConstraintData::evaluate(int constraintIndex, ParticleData &partic
     return length(p1 - p2) - distance[constraintIndex];
 }
 
-glm::vec3 DistanceConstraintData::gradient(int constraintIndex, int particleIndex, ParticleData &particleData)
-{
-    int firstParticleIndex  = particles[constraintIndex].x;
-    int secondParticleIndex = particles[constraintIndex].y;
-
-    glm::vec3 p1 = particleData.pPosition[firstParticleIndex];
-    glm::vec3 p2 = particleData.pPosition[secondParticleIndex];
-
-    glm::vec3 c = (p1 - p2);
-    c /= length(c);
-
-    return (particleIndex == firstParticleIndex ? c : -c);
-}
-
-float DistanceConstraintData::scaleFactor(int constraintIndex, ParticleData &particleData)
+bool DistanceConstraintData::solveDistanceConstraint(glm::vec3 & delta1, glm::vec3 & delta2, int constraintIndex, ParticleData & particleData)
 {
     int firstParticleIndex = particles[constraintIndex].x;
     int secondParticleIndex = particles[constraintIndex].y;
@@ -50,9 +34,20 @@ float DistanceConstraintData::scaleFactor(int constraintIndex, ParticleData &par
     glm::vec3 p1 = particleData.pPosition[firstParticleIndex];
     glm::vec3 p2 = particleData.pPosition[secondParticleIndex];
 
-    std::vector<float> &invmass = particleData.invmass;
+    vec3 diff = p1 - p2;
 
-    return (length(p1 - p2) - distance[constraintIndex]) / (invmass[firstParticleIndex] + invmass[secondParticleIndex]);
+    float c = length(diff) - distance[constraintIndex];
+
+    if (!equality[constraintIndex] && c > 0)
+        return false;
+
+    vec3 grad = glm::normalize(diff);
+    grad /= particleData.invmass[firstParticleIndex] + particleData.invmass[secondParticleIndex];
+    
+    delta1 = particleData.invmass[firstParticleIndex] * c * grad;
+    delta2 = -particleData.invmass[secondParticleIndex] * c * grad;
+
+    return true;
 }
 
 void DistanceConstraintData::clear()
