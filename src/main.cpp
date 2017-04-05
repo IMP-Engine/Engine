@@ -16,6 +16,7 @@
 #include "glHelper.h"
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
+#include <glm/gtc/constants.hpp>
 #include <vector>
 
 
@@ -201,7 +202,7 @@ void display(double deltaTime) {
     {
         int viewport[4];
         glGetIntegerv(GL_VIEWPORT, viewport);
-        float heightOfNearPlane = (float)abs(viewport[3] - viewport[1]) / (2 * tan(0.5*camera.getFovy()*M_PI / 180.0));
+        float heightOfNearPlane = (float)abs(viewport[3] - viewport[1]) / (2 * tan(0.5*camera.getFovy() * glm::pi<float>() / 180.0));
 
         particleRenderer->render(physicSystem.particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix, heightOfNearPlane);
 
