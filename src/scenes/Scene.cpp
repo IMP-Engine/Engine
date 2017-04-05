@@ -171,7 +171,7 @@ void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix, const glm
 
     glBindVertexArray(vao);
    
-    glDrawArrays(GL_TRIANGLES, 0, vertices.size()+1);
+    glDrawArrays(GL_TRIANGLES, 0, vertices.size()/3);
 
 	glBindVertexArray(0);
 
