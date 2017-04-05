@@ -1,12 +1,20 @@
 #pragma once
 
 #include <vector>
+#include <string>
+#include <iostream>
+#include <sstream>
+#include <fstream>
+#include <algorithm>
+#include <dirent.h>
 
-#include "glad/glad.h"
+#include "../glad/glad.h"
 #include <GLFW/glfw3.h>
 #include "glm/glm.hpp"
-#include "glHelper.h"
-#include "primitives.h"
+#include "../imgui/imgui.h"
+
+#include "../glHelper.h"
+#include "../primitives.h"
 
 #ifdef _WIN32
 #define VERT_SHADER_PATH "../../src/shaders/simple.vert"
@@ -29,12 +37,18 @@ public:
 
     glm::mat4 modelMatrix;
 
-    std::vector<float> vertexes;
-    std::vector<unsigned short> indices;
+    std::vector<glm::vec3> loadedVertices;
+    std::vector<float> vertices;
+    std::vector<int> indices;
+    std::vector<glm::vec3> normalVectors;
     std::vector<float> normals;
+    std::vector<int> normalIndices;
     std::vector<Triangle> triangles;
     int numTriangles;
 
+    void loadSceneNames();
+    void loadScene(std::string scene);
+    void gui(bool *show);
     void render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix, const glm::vec3 &lightPosition);
     void init();
 };

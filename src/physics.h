@@ -8,8 +8,8 @@
 #include <glm/geometric.hpp>
 #include <glm/gtx/norm.hpp>
 
+#include "scenes/Scene.h"
 #include "particles/ParticleData.h"
-#include "Scene.h"
 #include "constraints/ConstraintData.h"
 #include "intersections.h"
 #include "performance.h"

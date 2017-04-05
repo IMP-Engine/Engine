@@ -300,7 +300,7 @@ void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints
 	}
 
 	// Dropdown of all models in this folder
-	ImGui::Combo("Choose model", &selected, [](void* a, int b, const char** c) -> bool { *c = ((std::vector<std::string>*)a)->at(b).c_str(); return true; }, &models, models.size());
+	ImGui::Combo("Choose model", &selected, [](void *a, int b, const char **c) -> bool { *c = ((std::vector<std::string>*)a)->at(b).c_str(); return true; }, &models, models.size());
 	
 	ImGui::SameLine();
 	if (ImGui::Button("Load"))
