@@ -25,8 +25,8 @@ public:
     std::vector<float> threshold;
 
     float evaluate(int constraintIndex, ParticleData &particleData);
-    glm::vec3 gradient(int constraintIndex, int particleIndex, ParticleData &particleData);
-    float scaleFactor(int constraintIndex, ParticleData &particleData);
+
+    bool solveDistanceConstraint(glm::vec3 &delta1, glm::vec3 &delta2, int constraintIndex, ParticleData &particleData);
 
     void clear();
     void removeBroken(ParticleData &particleData);

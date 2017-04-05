@@ -36,8 +36,11 @@ void model::loadPredefinedModel(std::string model, ParticleData &particles, Cons
 	}
 }
 
-void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vector<GLushort> &elements)
+void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vector<short> &elements)
 {
+    int pos;
+    if ((pos = filename.rfind("_")) != std::string::npos) { filename = filename.substr(0, pos); }
+
     std::ifstream in(MODEL_FOLDER + filename + ".obj", std::ios::in);
     if (!in)
     {
@@ -56,34 +59,17 @@ void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vecto
         else if (line.substr(0, 2) == "f ")
         {
             std::istringstream s(line.substr(2));
-            GLushort a, b, c;
+            short a, b, c;
             s >> a; s >> b; s >> c;
             a--; b--; c--;
             elements.push_back(a); elements.push_back(b); elements.push_back(c);
         }
-        //else if (line[0] == '#') {/* ignoring this line */}
-        //else {/* ignoring this line */}
-    }
-}
-
-
-void model::calculateNormals(std::vector<glm::vec3> &normals, std::vector<glm::vec4> &vertices, std::vector<GLushort> &elements) {
-    normals.resize(vertices.size(), glm::vec3(0.0, 0.0, 0.0));
-    for (unsigned int i = 0; i < elements.size(); i += 3)
-    {
-        GLushort ia = elements[i];
-        GLushort ib = elements[i + 1];
-        GLushort ic = elements[i + 2];
-        glm::vec3 normal = glm::normalize(glm::cross(
-            glm::vec3(vertices[ib]) - glm::vec3(vertices[ia]),
-            glm::vec3(vertices[ic]) - glm::vec3(vertices[ia])));
-        normals[ia] = normals[ib] = normals[ic] = normal;
     }
 }
 
 // For more information on what *max, origin and spacing is, refer to https://github.com/christopherbatty/SDFGen
 // Explanation is found in main.cpp
-void model::loadModel(std::string model, ParticleData &particles, ConstraintData &constraints, ModelConfig config)
+void model::loadModel(std::string model, ParticleData &particles, ConstraintData &constraints, ModelConfig config, ModelData &modelData)
 {
 
 	std::vector<Particle>::size_type start = particles.cardinality;
@@ -116,7 +102,7 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
 	float d = spacing / glm::length(origin);
 	origin /= glm::length(origin);
 
-	for (int i = 0; i < imax; i++) for (int j = 0; j < jmax; j++) for (int k = 0; k < kmax; k++)
+	for (int i = -imax/2; i < imax/2; i++) for (int j = -jmax/2; j < jmax/2; j++) for (int k = -kmax/2; k < kmax/2; k++)
 	{
 		std::getline(file, line);
 		// Negative inside, positive outside
@@ -128,7 +114,7 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
 			p.invmass = config.invmass;
 			p.numBoundConstraints = 0;
 			p.phase = config.phase;
-			p.radius = d / 2;
+			p.radius = d * min(config.scale.x, min(config.scale.y, config.scale.z))/ 2;
 
 			addParticle(p,particles);
 		}
@@ -166,24 +152,26 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
     // Load Mesh
     std::vector<glm::vec4> vertices;
     std::vector<glm::vec3> normals;
-    std::vector<GLushort> elements;
+    std::vector<short> elements;
     loadMesh(model, vertices, elements);
-    printf("Size of vertices is: %i", vertices.size());
 
     // Find three closest particles and calculate barycentric coordinates for all vertices
     std::vector<float[3]> bcCoords(vertices.size());
     std::vector<int[3]> closestParticles(vertices.size());
 
-    for (unsigned int i = 0; i < vertices.size(); i++)
+    // For all vertices, find three closest particles
+    for (uint i = 0; i < vertices.size(); i++)
     {
+        // Take three arbitrary particles to start with
+        vec3 vertex = origin + config.centerPos + vec3(vertices[i]) * config.scale * vec3(0.5);
         closestParticles[i][0] = 0;
         closestParticles[i][1] = 1;
-        closestParticles[i][2] = 2;
+        closestParticles[i][2] = particles.cardinality-1; // To prevent three particles in a row
 
         // Sort wrt. distance from vertex. Looks messy, but should be the fastest way? Max 3 comparisons
         float distances[3];
-        distances[0] = distance(vec3(vertices[i]), position[0]);
-        float newDist = distance(vec3(vertices[i]), position[1]);
+        distances[0] = distance(vertex, position[0]);
+        float newDist = distance(vertex, position[1]);
         if (newDist >= distances[0]) { distances[1] = newDist; }
         else
         {
@@ -192,7 +180,7 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
             closestParticles[i][0] = 1;
             closestParticles[i][1] = 0;
         }
-        newDist = distance(vec3(vertices[i]), position[2]);
+        newDist = distance(vertex, position[closestParticles[i][2]]);
         if (newDist >= distances[1]) { distances[2] = newDist; }
         else
         {
@@ -201,63 +189,83 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
             if (newDist >= distances[0])
             {
                 distances[1] = newDist;
-                closestParticles[i][1] = 2;
+                closestParticles[i][1] = closestParticles[i][2];
             }
             else
             {
                 distances[1] = distances[0];
                 distances[0] = newDist;
                 closestParticles[i][1] = closestParticles[i][0];
-                closestParticles[i][0] = 2;
+                closestParticles[i][0] = closestParticles[i][2];
             }
-        }
+        } // End three first particles
 
-
-        for (std::vector<Particle>::size_type j = (start + 3); j < particles.cardinality; j++)
-        {
-            newDist = distance(position[j], vec3(vertices[i]));
+        for (std::vector<Particle>::size_type j = (start + 2); j < particles.cardinality-1; j++)
+        {   // For the rest of the particles, see if they are closer
+            newDist = distance(position[j], vertex);
             if (newDist < distances[2])
-            {
-                if (newDist < distances[1])
-                {
-                    distances[2] = distances[1];
-                    closestParticles[i][2] = closestParticles[i][1];
-                    if (newDist < distances[0])
-                    {
-                        distances[1] = distances[0];
+            {   // Can new particle replace cP[2]?
+                if (abs(dot(normalize(position[closestParticles[i][0]] - position[j]), normalize(position[closestParticles[i][1]] - position[j]))) < 0.9) 
+                {   // Change with cP[2]
+                    if (newDist < distances[1])
+                    {   // Closer than cP[1]
+                        distances[2] = distances[1];
+                        closestParticles[i][2] = closestParticles[i][1];
+                        if (newDist < distances[0])
+                        {   // Closer than cP[0]
+                            distances[1] = distances[0];
+                            closestParticles[i][1] = closestParticles[i][0];
+                            distances[0] = newDist;
+                            closestParticles[i][0] = j;
+                        }
+                        else
+                        {   // Not closer than cP[0], but still closer than cP[1]
+                            distances[1] = newDist;
+                            closestParticles[i][1] = j;
+                        }
+                    }
+                    else 
+                    {   // Not closer than cP[1], but still closer than cP[2]
+                        distances[2] = newDist;
+                        closestParticles[i][2] = j;
+                    }
+                }
+                else if (newDist < distances[1])
+                {   // Can new particle replace cP[1]?
+                    if (abs(dot(normalize(position[closestParticles[i][0]] - position[j]), normalize(position[closestParticles[i][2]] - position[j]))) < 0.9)
+                    {   // Change with cP[1]
+                        if (newDist < distances[0])
+                        {   // Closer than cP[0]
+                            distances[1] = distances[0];
+                            closestParticles[i][1] = closestParticles[i][0];
+                            distances[0] = newDist;
+                            closestParticles[i][0] = j;
+                        }
+                        else
+                        {   // Not closer than cP[0], but still closer than cP[1]
+                            distances[1] = newDist;
+                            closestParticles[i][1] = j;
+                        }
+                    }
+                    else if (newDist < distances[0] && // Can new particle replace cP[0]?
+                        abs(dot(normalize(position[closestParticles[i][1]] - position[j]), normalize(position[closestParticles[i][2]] - position[j]))) < 0.9)
+                    {   // Change with cP[0]
                         distances[0] = newDist;
-                        closestParticles[i][1] = closestParticles[i][0];
                         closestParticles[i][0] = j;
                     }
-                    else
-                    {
-                        distances[1] = newDist;
-                        closestParticles[i][1] = j;
-                    }
-                }
-                else
-                {
-                    distances[2] = newDist;
-                    closestParticles[i][2] = j;
                 }
             }
-        }
-        //printf("Distances: %f, %f, %f\n", distances[0], distances[1], distances[2]);
+        } // End for all particles
 
         // Calculate Barycentric coordinates
-
-        // Adams BCoords
-        vec3 vertex = vec3(vertices[i]);
         vec3 CA = position[closestParticles[i][2]] - position[closestParticles[i][0]];
         vec3 BA = position[closestParticles[i][1]] - position[closestParticles[i][0]];
         vec3 normal = normalize(cross(CA, BA));
         bcCoords[i][2] = dot(vertex - position[closestParticles[i][0]], normal); // distance offset along normal
         vec3 projetedPosition = vertex - bcCoords[i][2] * normal;
 
-        // Baycentric check
-
         // particle position relative to v0
-        vec3 pPrim = projetedPosition - vertex;
+        vec3 pPrim = projetedPosition - position[closestParticles[i][0]];
 
         // Compute dot products
         float dotCACA = dot(CA, CA);
@@ -270,17 +278,14 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
         float invDenom = 1 / (dotCACA * dotBABA - dotCABA * dotCABA);
         bcCoords[i][0] = (dotBABA * dotCApPrim - dotCABA * dotBApPrim) * invDenom; // u
         bcCoords[i][1] = (dotCACA * dotBApPrim - dotCABA * dotCApPrim) * invDenom; // v
+    } // end for all vertices
 
-        printf("BCC for v[%i]: %f, %f, %f, sum: %f\n", i, bcCoords[i][0], bcCoords[i][1], bcCoords[i][2], (bcCoords[i][0] + bcCoords[i][1] + bcCoords[i][2]));
-    }
-
-    calculateNormals(normals, vertices, elements);
-
+    modelData.addVertices(elements, bcCoords, closestParticles, modelData);
 }
 
 
 
-void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints, std::vector< std::tuple<std::string, ModelConfig> > &objects)
+void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints, std::vector< std::tuple<std::string, ModelConfig> > &objects, ModelData &modelData)
 {
 	if (!*show)
 	{
@@ -295,24 +300,21 @@ void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints
 	}
 
 	// Dropdown of all models in this folder
-	ImGui::Combo("Choose model", &selected, [](void* a, int b, const char** c) -> bool { *c = ((std::vector<std::string>*)a)->at(b).c_str(); return true; }, &models, models.size());
+	ImGui::Combo("Choose model", &selected, [](void *a, int b, const char **c) -> bool { *c = ((std::vector<std::string>*)a)->at(b).c_str(); return true; }, &models, models.size());
 	
 	ImGui::SameLine();
 	if (ImGui::Button("Add"))
 	{
 		if ((unsigned int)selected >= predefinedModels.size())
 		{
-			loadModel(models[selected], particles, constraints, config);
+			loadModel(models[selected], particles, constraints, config, modelData);
 		}
 		else
 		{
 			loadPredefinedModel(models[selected], particles, constraints, config);
 		}
-
-        std::cout << "# particles: " << particles.cardinality << std::endl << "# constraints: " << constraints.distanceConstraints.cardinality << std::endl;
-
+    
         objects.push_back(std::make_tuple(models[selected], config));
-
         config.phase++;
 
 	}
@@ -321,19 +323,18 @@ void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints
         particles.clear();
 		constraints.clear();
         objects.clear();
+        modelData.clear();
 
         config.phase = 0;
 
         if ((unsigned int)selected >= predefinedModels.size())
         {
-            loadModel(models[selected], particles, constraints, config);
+            loadModel(models[selected], particles, constraints, config, modelData);
         }
         else
         {
             loadPredefinedModel(models[selected], particles, constraints, config);
         }
-
-        std::cout << "# particles: " << particles.cardinality << std::endl << "# constraints: " << constraints.distanceConstraints.cardinality << std::endl;
 
         objects.push_back(std::make_tuple(models[selected], config));
 

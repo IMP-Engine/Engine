@@ -16,17 +16,18 @@
 #include "glHelper.h"
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
+#include <glm/gtc/constants.hpp>
 #include <vector>
 
 
 #define WORLD_MIN vec3(-20.f,-20.f,-20.f)
 #define WORLD_MAX vec3( 20.f, 20.f, 20.f)
-#define M_PI 3.14159265358979323846264338327950288 /* pi */
 
 #include "performance.h"
 #include "physics.h"
 #include "particles/ParticleRenderer.h"
-#include "Scene.h"
+#include "scenes/Scene.h"
+#include "models/ModelRenderer.h"
 
 #include "constraints/visualizeConstraint.h"
 #include "models/modelConfig.h"
@@ -37,7 +38,6 @@
 #include "intersections/tests.h"
 #endif // _DEB
 
-
 using namespace glm;
 using namespace std;
 
@@ -45,9 +45,9 @@ using namespace std;
  ********************** Global variables **********************************
  **************************************************************************/
 
- // Application
+// Application
 GLFWwindow* window;
-ImVec4 clear_color = ImColor(255, 255, 255);;
+ImVec4 clear_color = ImColor(30, 30, 30);;
 bool vsync = true;
 const GLuint WIDTH = 1280, HEIGHT = 720;
 
@@ -58,6 +58,9 @@ Camera camera;
 GLdouble deltaTime = 0.0f;
 GLdouble lastFrame = 0.0f;
 
+int bPhysics;
+int aPhysics;
+
 // Scene
 Scene *scene;
 Physics physicSystem;
@@ -65,21 +68,26 @@ std::vector< std::tuple<std::string, model::ModelConfig> > objects;
 
 // Shaders and rendering 
 ParticleRenderer *particleRenderer;
+ModelRenderer *modelRenderer;
 bool renderSurfaces = false;
+
+// Models
+ModelData modelData;
 
 // Light
 const vec3 lightPosition = vec3(4.0f);
 
 // Simulation variables and parameters
 bool doPyshics = false;
-bool showPerformance = false;
 bool showModels = false;
 bool useVariableTimestep = false;
 float timestep = 0.01667f;
+bool showSceneSelection = false;
+bool showPerformance = false;
 
 
 static void errorCallback(int error, const char* description) {
-	std::cerr << "Error: " << description << std::endl;
+    std::cerr << "Error: " << description << std::endl;
 }
 
 void init() {
@@ -117,30 +125,33 @@ void init() {
     debug::setupGLDebugMessages();
 #endif
 
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
 
     ImGui_ImplGlfwGL3_Init(window, true); 
 
-	input::initialize(window);
+    input::initialize(window);
 
     visualization::initialize();
 
-	performance::initialize();
+    performance::initialize();
 
-	scene = new Scene;
+    scene = new Scene;
     physicSystem = Physics();
 
     physicSystem.iterations = 5;
+    physicSystem.collisionIterations = 3;
     physicSystem.pSleeping = 0.0001f;
     physicSystem.overRelaxConst = 1.0f;
-    physicSystem.restitutionCoefficient = 1.f; // 1 is Elastic collision
+    physicSystem.restitutionCoefficientT = 0.8f; 
+    physicSystem.restitutionCoefficientN = 0.8f;
 
+    modelData = ModelData();
+    modelData.clear();
 
     scene->init();
 
 	model::loadModelNames();
-
 
     // Load some model to begin with, so that debugging is easier on us
     model::ModelConfig conf;
@@ -149,12 +160,12 @@ void init() {
 
 	particleRenderer = new ParticleRenderer();
 	particleRenderer->init();
+
+    modelRenderer = new ModelRenderer();
+    modelRenderer->init();
 }
 
 void display(double deltaTime) {
-
-	int id = performance::startTimer("Reset and draw scene");
-
     GLfloat ratio;
     GLint width, height;
     mat4 viewMatrix, modelViewProjectionMatrix, modelViewMatrix, projectionMatrix;
@@ -166,49 +177,51 @@ void display(double deltaTime) {
     glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	mat4 modelMatrix(1.0f); // Identity matrix
+    mat4 modelMatrix(1.0f); // Identity matrix
 
-	viewMatrix = camera.getViewMatrix();
+    viewMatrix = camera.getViewMatrix();
     // Set up a projection matrix
     float nearPlane = 0.01f;
     float farPlane = 1000.0f;
 
     modelViewMatrix = viewMatrix * modelMatrix;
-	projectionMatrix = perspective(radians(camera.getFovy()), ratio, nearPlane, farPlane);
+    projectionMatrix = perspective(radians(camera.getFovy()), ratio, nearPlane, farPlane);
     modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
 
     vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
-	
+
     scene->render(viewMatrix, projectionMatrix, vec3(lightPosition));
-    
-	performance::stopTimer(id);
-	
+
+    performance::stopTimer(bPhysics);
+
     if (doPyshics)
     {
         physicSystem.step(scene, useVariableTimestep ? (float)deltaTime : timestep);
     }
-	
+
+    aPhysics = performance::startTimer("After physics");
+
     if (renderSurfaces)
     {
-        id = performance::startTimer("Render surfaces");
+        int id = performance::startTimer("Render surfaces");
+        modelRenderer->render(physicSystem.particles, modelData, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
 
     }
     else // render particles
     {
         int viewport[4];
         glGetIntegerv(GL_VIEWPORT, viewport);
-        float heightOfNearPlane = (float)(abs(viewport[3] - viewport[1]) / (2 * tan(0.5*camera.getFovy()*M_PI / 180.0f)));
 
-        id = performance::startTimer("Render particles");
-        particleRenderer->render(physicSystem.particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix, (GLint)round(heightOfNearPlane));
+        GLint heightOfNearPlane = (GLint)round(abs(viewport[3] - viewport[1]) / (2 * tan(0.5*camera.getFovy() * glm::pi<float>() / 180.0)));
+
+        particleRenderer->render(physicSystem.particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix, heightOfNearPlane);
 
         visualization::drawConstraints(physicSystem.constraints, physicSystem.particles, modelViewProjectionMatrix);
     }
-    performance::stopTimer(id);
 
-	// Since we may want to measure performance of something that happens after the call to gui()
-	// we place this call as late as possible to allow for measuring more things
-	performance::gui(&showPerformance);
+    // Since we may want to measure performance of something that happens after the call to gui()
+    // we place this call as late as possible to allow for measuring more things
+    performance::gui(&showPerformance);
 
     ImGui::Render();
 
@@ -227,15 +240,19 @@ void gui()
     ImGui::Checkbox("Vsync", &vsync);
     if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
     if (ImGui::Button("Models")) showModels ^= 1; ImGui::SameLine();
+    if (ImGui::Button("Scenes")) showSceneSelection ^= 1; ImGui::SameLine();
     if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     visualization::gui();
     ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
     ImGui::Checkbox("Timestep from framerate", &useVariableTimestep);
+    ImGui::Checkbox("Render surfaces", &renderSurfaces);
     ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
+    ImGui::SliderInt("Collision Solver Iterations", &physicSystem.collisionIterations, 1, 32);
     ImGui::SliderFloat("Over-relax-constant", &physicSystem.overRelaxConst, 1, 5);
     ImGui::SliderFloat("Particle Sleeping (squared)", &physicSystem.pSleeping, 0, 1, "%.9f", 10.f);
-    ImGui::SliderFloat("Restitution Coeff.", &physicSystem.restitutionCoefficient, 0, 1);
+    ImGui::SliderFloat("Tangential COR", &physicSystem.restitutionCoefficientT, -1, 1);
+    ImGui::SliderFloat("Normal COR", &physicSystem.restitutionCoefficientN, 0, 1);
     if (!useVariableTimestep) 
     {
         ImGui::SliderFloat("Timestep", &timestep, 0, .05f, "%.5f"); ImGui::SameLine();
@@ -243,7 +260,8 @@ void gui()
     }
     ImGui::End();
 
-    model::gui(&showModels, physicSystem.particles, physicSystem.constraints, objects);
+    model::gui(&showModels, physicSystem.particles, physicSystem.constraints, objects, modelData);
+    scene->gui(&showSceneSelection);
 
     // Remove when all group members feel comfortable with how GUI works and what it can provide
     // Demo window
@@ -268,24 +286,22 @@ int main(void) {
 
     while (!glfwWindowShouldClose(window))
     {
-		int id = performance::startTimer("All but display()");
-
+        bPhysics = performance::startTimer("Before physics");
         // Calculate deltatime of current frame
         GLdouble currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
         glfwPollEvents();
-		camera.move(input::getKeys(), (float)deltaTime);
+        camera.move(input::getKeys(), (float)deltaTime);
 
         ImGui_ImplGlfwGL3_NewFrame();
 
         gui();
 
-		performance::stopTimer(id);
-
         display(deltaTime);
-		performance::next();
+        performance::stopTimer(aPhysics);
+        performance::next();
     }
 
     // Cleanup
