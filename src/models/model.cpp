@@ -324,8 +324,19 @@ void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints
 
         config.phase = 0;
 
-        loadPredefinedModel("Box", particles, constraints, config);
-        objects.push_back(std::make_tuple("Box", config));
+        if ((unsigned int)selected >= predefinedModels.size())
+        {
+            loadModel(models[selected], particles, constraints, config);
+        }
+        else
+        {
+            loadPredefinedModel(models[selected], particles, constraints, config);
+        }
+
+        std::cout << "# particles: " << particles.cardinality << std::endl << "# constraints: " << constraints.distanceConstraints.cardinality << std::endl;
+
+        objects.push_back(std::make_tuple(models[selected], config));
+
         config.phase++;
     }
 
