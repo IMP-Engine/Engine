@@ -30,6 +30,7 @@
 #include "models/ModelRenderer.h"
 
 #include "constraints/visualizeConstraint.h"
+#include "models/modelConfig.h"
 #include "models/model.h"
 #include "input.h"
 
@@ -63,6 +64,7 @@ int aPhysics;
 // Scene
 Scene *scene;
 Physics physicSystem;
+std::vector< std::tuple<std::string, model::ModelConfig> > objects;
 
 // Shaders and rendering 
 ParticleRenderer *particleRenderer;
@@ -78,10 +80,10 @@ const vec3 lightPosition = vec3(4.0f);
 // Simulation variables and parameters
 bool doPyshics = false;
 bool showModels = false;
+bool useVariableTimestep = false;
+float timestep = 0.01667f;
 bool showSceneSelection = false;
 bool showPerformance = false;
-bool useVariableTimestep = true;
-float timestep = 0.01667;
 
 
 static void errorCallback(int error, const char* description) {
@@ -149,21 +151,15 @@ void init() {
 
     scene->init();
 
-    model::loadModelNames();
+	model::loadModelNames();
 
     // Load some model to begin with, so that debugging is easier on us
-    model::modelConfig conf;
-    conf.centerPos = vec3(0.f);
-    conf.distanceThreshold = 2;
-    conf.invmass = 0.8f;
-    conf.phase = 0;
-    conf.scale = vec3(4.f);
-    conf.stiffness = 0.8f;
-    conf.numParticles = ivec3(4);
-    model::loadPredefinedModel("Box", physicSystem.particles, physicSystem.constraints, conf);
+    model::ModelConfig conf;
+    conf.setDefaults();
+	model::loadPredefinedModel("Box", physicSystem.particles, physicSystem.constraints, conf);
 
-    particleRenderer = new ParticleRenderer();
-    particleRenderer->init();
+	particleRenderer = new ParticleRenderer();
+	particleRenderer->init();
 
     modelRenderer = new ModelRenderer();
     modelRenderer->init();
@@ -200,7 +196,7 @@ void display(double deltaTime) {
 
     if (doPyshics)
     {
-        physicSystem.step(scene, useVariableTimestep ? deltaTime : timestep);
+        physicSystem.step(scene, useVariableTimestep ? (float)deltaTime : timestep);
     }
 
     aPhysics = performance::startTimer("After physics");
@@ -215,7 +211,8 @@ void display(double deltaTime) {
     {
         int viewport[4];
         glGetIntegerv(GL_VIEWPORT, viewport);
-        float heightOfNearPlane = (float)abs(viewport[3] - viewport[1]) / (2 * tan(0.5*camera.getFovy() * glm::pi<float>() / 180.0));
+
+        GLint heightOfNearPlane = (GLint)round(abs(viewport[3] - viewport[1]) / (2 * tan(0.5*camera.getFovy() * glm::pi<float>() / 180.0)));
 
         particleRenderer->render(physicSystem.particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix, heightOfNearPlane);
 
@@ -263,7 +260,7 @@ void gui()
     }
     ImGui::End();
 
-    model::gui(&showModels, physicSystem.particles, physicSystem.constraints, modelData);
+    model::gui(&showModels, physicSystem.particles, physicSystem.constraints, objects, modelData);
     scene->gui(&showSceneSelection);
 
     // Remove when all group members feel comfortable with how GUI works and what it can provide
