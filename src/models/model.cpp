@@ -128,7 +128,7 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
 			p.invmass = config.invmass;
 			p.numBoundConstraints = 0;
 			p.phase = config.phase;
-			p.radius = d / 2;
+			p.radius = d * min(config.scale.x, min(config.scale.y, config.scale.z))/ 2;
 
 			addParticle(p,particles);
 		}

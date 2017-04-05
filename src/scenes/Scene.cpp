@@ -102,42 +102,6 @@ void Scene::loadScene(std::string scene) {
     for (int i = 0; i < indices.size(); ++i) {
     }
 
-    std::cout << "loadedVertices.size() = " << loadedVertices.size() << std::endl;
-    printf("loadedVertices:\n");
-    for (int i = 0; i < loadedVertices.size(); ++i) {
-        printf("%f, %f, %f\n", loadedVertices[i].x, loadedVertices[i].y, loadedVertices[i].z);
-    }
-
-    std::cout << "\nindices.size() = " << indices.size() << std::endl;
-    printf("indices:\n");
-    for (int i = 0; i < indices.size(); i+=3) {
-        printf("%d, %d, %d\n", indices[i], indices[i+1], indices[i+2]);
-    }
-
-    std::cout << "\nnormalVectors.size() = " << normalVectors.size() << std::endl;
-    printf("normalVectors:\n");
-    for (int i = 0; i < normalVectors.size(); ++i) {
-        printf("%f, %f, %f\n", normalVectors[i].x, normalVectors[i].y, normalVectors[i].z);
-    }
-
-    std::cout << "\nnormalIndices.size() = " << normalIndices.size() << std::endl;
-    printf("normalIndices:\n");
-    for (int i = 0; i < normalIndices.size(); i += 3) {
-        printf("%d, %d, %d\n", normalIndices[i], normalIndices[i+1], normalIndices[i+2]);
-    }
-
-    std::cout << "\nvertices.size() = " << vertices.size() << std::endl;
-    printf("vertices:\n");
-    for (int i = 0; i < vertices.size(); i+=3) {
-        printf("%f, %f, %f\n", vertices[i], vertices[i+1], vertices[i+2]);
-    }
-
-    std::cout << "\nnormals.size() = " << normals.size() << std::endl;
-    printf("normals:\n");
-    for (int i = 0; i < normals.size(); i+=3) {
-        printf("%f, %f, %f\n", normals[i], normals[i+1], normals[i+2]);
-    }
-
     for (unsigned int i = 0; i < indices.size(); i+=3)
     {
         Triangle t = Triangle();
