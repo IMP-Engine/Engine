@@ -145,7 +145,6 @@ void Scene::gui(bool *show)
 
         if ((unsigned int)selectedScene >= predefinedScenes.size()) {
             loadScene(scenes[selectedScene]);
-            std::cout << "at least tried to load " << scenes[selectedScene] << std::endl;
         }
 
         Scene::init();
