@@ -27,6 +27,7 @@
 #include "physics.h"
 #include "particles/ParticleRenderer.h"
 #include "Scene.h"
+#include "models/ModelRenderer.h"
 
 #include "constraints/visualizeConstraint.h"
 #include "models/model.h"
@@ -66,7 +67,11 @@ Physics physicSystem;
 
 // Shaders and rendering 
 ParticleRenderer *particleRenderer;
+ModelRenderer *modelRenderer;
 bool renderSurfaces = false;
+
+// Models
+ModelData modelData;
 
 // Light
 const vec3 lightPosition = vec3(4.0f);
@@ -139,6 +144,9 @@ void init() {
     physicSystem.restitutionCoefficientT = 0.8f; 
     physicSystem.restitutionCoefficientN = 0.8f;
 
+    modelData = ModelData();
+    modelData.clear();
+
     scene->init();
 
 	model::loadModelNames();
@@ -156,6 +164,9 @@ void init() {
 
 	particleRenderer = new ParticleRenderer();
 	particleRenderer->init();
+
+    modelRenderer = new ModelRenderer();
+    modelRenderer->init();
 }
 
 void display(double deltaTime) {
@@ -195,8 +206,8 @@ void display(double deltaTime) {
 
     if (renderSurfaces)
     {
-       
-
+        int id = performance::startTimer("Render surfaces");
+        modelRenderer->render(physicSystem.particles, modelData, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
     }
     else // render particles
     {
@@ -249,7 +260,7 @@ void gui()
 	}
 	ImGui::End();
 
-	model::gui(&showModels, physicSystem.particles, physicSystem.constraints);
+	model::gui(&showModels, physicSystem.particles, physicSystem.constraints, modelData);
 
     // Remove when all group members feel comfortable with how GUI works and what it can provide
     // Demo window
