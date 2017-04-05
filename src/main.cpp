@@ -27,6 +27,7 @@
 #include "physics.h"
 #include "particles/ParticleRenderer.h"
 #include "Scene.h"
+#include "models/ModelRenderer.h"
 
 #include "constraints/visualizeConstraint.h"
 #include "models/model.h"
@@ -63,7 +64,11 @@ Physics physicSystem;
 
 // Shaders and rendering 
 ParticleRenderer *particleRenderer;
+ModelRenderer *modelRenderer;
 bool renderSurfaces = false;
+
+// Models
+ModelData modelData;
 
 // Light
 const vec3 lightPosition = vec3(4.0f);
@@ -134,6 +139,8 @@ void init() {
     physicSystem.overRelaxConst = 1.0f;
     physicSystem.restitutionCoefficient = 1.f; // 1 is Elastic collision
 
+    modelData = ModelData();
+    modelData.clear();
 
     scene->init();
 
@@ -152,6 +159,9 @@ void init() {
 
 	particleRenderer = new ParticleRenderer();
 	particleRenderer->init();
+
+    modelRenderer = new ModelRenderer();
+    modelRenderer->init();
 }
 
 void display(double deltaTime) {
@@ -194,7 +204,7 @@ void display(double deltaTime) {
     if (renderSurfaces)
     {
         id = performance::startTimer("Render surfaces");
-
+        modelRenderer->render(physicSystem.particles, modelData, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
     }
     else // render particles
     {
@@ -233,6 +243,7 @@ void gui()
 	if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	visualization::gui();
+    ImGui::Checkbox("Render surfaces", &renderSurfaces);
   ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
   ImGui::Checkbox("Timestep from framerate", &useVariableTimestep);
   ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
@@ -246,7 +257,7 @@ void gui()
 	}
 	ImGui::End();
 
-	model::gui(&showModels, physicSystem.particles, physicSystem.constraints);
+	model::gui(&showModels, physicSystem.particles, physicSystem.constraints, modelData);
 
     // Remove when all group members feel comfortable with how GUI works and what it can provide
     // Demo window
