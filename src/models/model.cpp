@@ -371,32 +371,32 @@ void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints
         ImGui::NextColumn();
 
         char centerPos[32];
-        sprintf_s(centerPos, 32, "%.6g, %.6g, %.6g", cfg.centerPos.x, cfg.centerPos.y, cfg.centerPos.z);
+        snprintf(centerPos, 32, "%.6g, %.6g, %.6g", cfg.centerPos.x, cfg.centerPos.y, cfg.centerPos.z);
         ImGui::Text(centerPos);
         ImGui::NextColumn();
 
         char scale[32];
-        sprintf_s(scale, 32, "%.6g, %.6g, %.6g", cfg.scale.x, cfg.scale.y, cfg.scale.z);
+        snprintf(scale, 32, "%.6g, %.6g, %.6g", cfg.scale.x, cfg.scale.y, cfg.scale.z);
         ImGui::Text(scale);
         ImGui::NextColumn();
 
         char invmass[32];
-        sprintf_s(invmass, 32, "%.6g", cfg.invmass);
+        snprintf(invmass, 32, "%.6g", cfg.invmass);
         ImGui::Text(invmass);
         ImGui::NextColumn();
 
         char distanceThreshold[32];
-        sprintf_s(distanceThreshold, 32, "%.6g", cfg.distanceThreshold);
+        snprintf(distanceThreshold, 32, "%.6g", cfg.distanceThreshold);
         ImGui::Text(distanceThreshold);
         ImGui::NextColumn();
 
         char stiffness[32];
-        sprintf_s(stiffness, 32, "%.6g", cfg.stiffness);
+        snprintf(stiffness, 32, "%.6g", cfg.stiffness);
         ImGui::Text(stiffness);
         ImGui::NextColumn();
 
         char phase[32];
-        sprintf_s(phase, 32, "%d", cfg.phase);
+        snprintf(phase, 32, "%d", cfg.phase);
         ImGui::Text(phase);
         ImGui::NextColumn();
 
