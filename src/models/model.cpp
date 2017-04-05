@@ -6,7 +6,7 @@
 #define MODEL_FOLDER "../src/models/"
 #endif 
 
-model::modelConfig config = { 0.8f, vec3(0), 0, 0.5f, 0.5, vec3(1), ivec3(4) };
+model::modelConfig config = { 0.8f, vec3(0), 0, 0.0001f, 0.5, vec3(1), ivec3(4) };
 std::vector<std::string> predefinedModels{ "Box" };
 std::vector<std::string> models;
 int selected = 0;
@@ -135,7 +135,7 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
                     DistanceConstraint constraint;
                     constraint.firstParticleIndex = i;
                     constraint.secondParticleIndex = j;
-                    constraint.stiffness = config.stiffness;
+                    constraint.elasticity = config.elasticity;
                     constraint.distance = glm::distance(position[i], position[j]);
                     constraint.threshold = config.distanceThreshold;
                     constraint.equality = true;
@@ -324,7 +324,7 @@ void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints
 	ImGui::DragFloat3("Scale", &config.scale.x, 1.f, -(std::numeric_limits<float>::max)(), (std::numeric_limits<float>::max)());
 	ImGui::DragFloat("Invmass", &config.invmass, 0.005f, 0, 1000);
 	ImGui::DragFloat("Distance treshold", &config.distanceThreshold, 0.001f, 0, 10, "%.7f");
-	ImGui::SliderFloat("Stiffness", &config.stiffness, 0, 1);
+	ImGui::SliderFloat("Stiffness", &config.elasticity, 0, .001f, "%.8f");
 	ImGui::InputInt("Phase", &config.phase);
 	if (selected == 0)
 	{

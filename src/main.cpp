@@ -153,7 +153,7 @@ void init() {
 	conf.invmass = 0.8f;
 	conf.phase = 0;
 	conf.scale = vec3(4.f);
-	conf.stiffness = 0.8f;
+	conf.elasticity = 0.0001f;
 	conf.numParticles = ivec3(4);
 	model::loadPredefinedModel("Box", physicSystem.particles, physicSystem.constraints, conf);
 

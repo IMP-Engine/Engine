@@ -11,12 +11,12 @@ public:
 	float thickness;
 	bool qAbove;
 
-	CollisionConstraint(Particle* q, Particle* p1, Particle* p2, Particle* p3, float stiffness, float thickness, bool qAbove, bool equality = true) {
+	CollisionConstraint(Particle* q, Particle* p1, Particle* p2, Particle* p3, float elasticity, float thickness, bool qAbove, bool equality = true) {
 		this->particles.push_back(q);
 		this->particles.push_back(p1);
 		this->particles.push_back(p2);
 		this->particles.push_back(p3);
-		this->stiffness = stiffness;
+		this->elasticity = elasticity;
 		this->thickness = thickness;
 		this->equality = equality;
 		this->qAbove = qAbove;

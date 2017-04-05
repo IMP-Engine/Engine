@@ -5,7 +5,7 @@
 DistanceConstraintData::DistanceConstraintData()
 {
     particles.reserve(MAX_DISTANCE_CONSTRAINTS);
-    stiffness.reserve(MAX_DISTANCE_CONSTRAINTS);
+    elasticity.reserve(MAX_DISTANCE_CONSTRAINTS);
     threshold.reserve(MAX_DISTANCE_CONSTRAINTS);
     distance.reserve(MAX_DISTANCE_CONSTRAINTS);
     equality.reserve(MAX_DISTANCE_CONSTRAINTS);
@@ -42,8 +42,10 @@ glm::vec3 DistanceConstraintData::gradient(int constraintIndex, int particleInde
     return (particleIndex == firstParticleIndex ? c : -c);
 }
 
-float DistanceConstraintData::scaleFactor(int constraintIndex, ParticleData &particleData)
+float DistanceConstraintData::scaleFactor(int constraintIndex, ParticleData &particleData, float lambda, double dt)
 {
+	float aDash = (elasticity[constraintIndex] / float(dt*dt));
+
     int firstParticleIndex = particles[constraintIndex].x;
     int secondParticleIndex = particles[constraintIndex].y;
 
@@ -52,13 +54,13 @@ float DistanceConstraintData::scaleFactor(int constraintIndex, ParticleData &par
 
     std::vector<float> &invmass = particleData.invmass;
 
-    return (length(p1 - p2) - distance[constraintIndex]) / (invmass[firstParticleIndex] + invmass[secondParticleIndex]);
+    return (length(p1 - p2) - distance[constraintIndex] + aDash*lambda) / (invmass[firstParticleIndex] + invmass[secondParticleIndex] + aDash);
 }
 
 void DistanceConstraintData::clear()
 {
     particles.clear();
-    stiffness.clear();
+    elasticity.clear();
     distance.clear();
     equality.clear();
     threshold.clear();
@@ -76,7 +78,7 @@ void DistanceConstraintData::removeBroken(ParticleData &particleData)
             }
 
             particles.erase(particles.begin() + i);
-            stiffness.erase(stiffness.begin() + i);
+            elasticity.erase(elasticity.begin() + i);
             distance.erase( distance.begin()  + i);
             equality.erase( equality.begin()  + i);
             threshold.erase(threshold.begin() + i);
@@ -91,7 +93,7 @@ void DistanceConstraintData::removeBroken(ParticleData &particleData)
 void addConstraint(DistanceConstraintData &data, DistanceConstraint &config)
 {
     data.particles.push_back({ config.firstParticleIndex, config.secondParticleIndex });
-    data.stiffness.push_back(config.stiffness);
+    data.elasticity.push_back(config.elasticity);
     data.distance.push_back(config.distance);
     data.equality.push_back(config.equality);
     data.threshold.push_back(config.threshold);

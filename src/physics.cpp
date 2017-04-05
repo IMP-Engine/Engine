@@ -6,6 +6,7 @@
 #define WORLD_MAX vec3( 20.f, 20.f, 20.f)
 #endif // !WORLD_MIN
 
+std::vector<float> lambda;
 
 
 void Physics::step(Scene *scene, float dt)
@@ -102,6 +103,9 @@ void Physics::step(Scene *scene, float dt)
             }
         }
     }
+	// Size is total amount of constraints
+	lambda.resize(constraints.distanceConstraints.cardinality);
+	for (size_t i = 0; i < lambda.size(); i++) lambda[i] = 0;
 	/* 
 	 * Stationary iterative linear solver - Gauss-Seidel 
 	 */
@@ -118,18 +122,19 @@ void Physics::step(Scene *scene, float dt)
 			if (distanceConstraints.evaluate(constraintIndex,particles))
 			{ 
                 ivec2 &constraintParticles = distanceConstraints.particles[constraintIndex];
+				float dLambda = distanceConstraints.scaleFactor(constraintIndex, particles, lambda[constraintIndex], dt);
 				for (int pIndex = 0; pIndex < 2; pIndex++)
 				{
                     int p = constraintParticles[pIndex];
-					// delta p_i = -w_i * s * grad_{p_i} C(p) * stiffness correction 
-                    pPosition[p] -= 
-                        invmass[p]
-                            * distanceConstraints.scaleFactor(constraintIndex,particles) 
-                            * distanceConstraints.gradient(constraintIndex, p, particles) 
-                            * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i)) 
-                            * overRelaxConst 
-                            / (float)numBoundConstraints[p];
+					// delta p_i = -w_i * s * grad_{p_i} C(p)  
+					pPosition[p] -=
+						invmass[p]
+						* dLambda
+						* distanceConstraints.gradient(constraintIndex, p, particles)
+						* overRelaxConst
+						/ (float)numBoundConstraints[p];
                 }
+				lambda[constraintIndex] += dLambda;
 			}
 		}
 	}
