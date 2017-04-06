@@ -173,28 +173,42 @@ void Physics::resolveCollisions(std::vector<glm::vec3> & position, std::vector<g
 
 void Physics::detectCollisions(Scene * scene, std::vector<int> & numBoundConstraints, PlaneCollisionConstraintData & planeConstraints, std::vector<int> & phase, std::vector<glm::vec3> & pPosition)
 {
-    int id = performance::startTimer("Detect scene collisions");
-    for (unsigned int i = 0; i != particles.cardinality; i++)
+    int id;
+    if (parallelDetectCollisions)
     {
-        // Check collisions with scene
-        for (std::vector<Triangle>::iterator t = scene->triangles.begin(); t != scene->triangles.end(); t++)
-        {
-            Intersection isect;
-            if (intersect((*t), particles, i, isect))
-            {
-                PlaneCollisionConstraint c;
-                c.particleIndex = i;
-                c.normal = isect.responseGradient;
-                c.distance = glm::dot(t->v0, isect.responseGradient) + particles.radius[i];
-                numBoundConstraints[i]++;
+        id = performance::startTimer("Detect scene collisions");
 
-                addConstraint(planeConstraints, c);
+        tbb::parallel_for(
+            tbb::blocked_range<size_t>(0, particles.cardinality),
+            PlaneCollisionConstraintData::PlaneCollisionDetection(scene, particles, planeConstraints));
+
+        performance::stopTimer(id);
+    }
+    else
+    {
+        int id = performance::startTimer("Detect scene collisions");
+        for (unsigned int i = 0; i != particles.cardinality; i++)
+        {
+            // Check collisions with scene
+            for (std::vector<Triangle>::iterator t = scene->triangles.begin(); t != scene->triangles.end(); t++)
+            {
+                Intersection isect;
+                if (intersect((*t), particles, i, isect))
+                {
+                    PlaneCollisionConstraint c;
+                    c.particleIndex = i;
+                    c.normal = isect.responseGradient;
+                    c.distance = glm::dot(t->v0, isect.responseGradient) + particles.radius[i];
+                    numBoundConstraints[i]++;
+
+                    planeConstraints.addConstraint(c);
+                }
             }
         }
+        performance::stopTimer(id);
     }
-    performance::stopTimer(id);
-    id = performance::startTimer("Detect particle collisions");
 
+    id = performance::startTimer("Detect particle collisions");
     for (unsigned int i = 0; i != particles.cardinality; i++)
     {
         // Check collisions with other particles
@@ -202,7 +216,7 @@ void Physics::detectCollisions(Scene * scene, std::vector<int> & numBoundConstra
         {
             Intersection isect;
             if (phase[i] != phase[j]
-                    && intersect(particles, i, j, isect))
+                && intersect(particles, i, j, isect))
             {
                 DistanceConstraint c;
                 c.firstParticleIndex = i;

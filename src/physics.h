@@ -27,6 +27,7 @@ public:
     float restitutionCoefficientN;
     float restitutionCoefficientT;
     bool parallelConstraintSolve;
+    bool parallelDetectCollisions;
 
     int iterations;
 	int collisionIterations;

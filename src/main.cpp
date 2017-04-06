@@ -141,6 +141,7 @@ void init() {
     physicSystem.restitutionCoefficientT = 0.8f; 
     physicSystem.restitutionCoefficientN = 0.8f;
     physicSystem.parallelConstraintSolve = false;
+    physicSystem.parallelDetectCollisions = false;
 
     modelData = ModelData();
     modelData.clear();
@@ -246,8 +247,9 @@ void gui()
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	visualization::gui();
 	ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
-    ImGui::Checkbox("Timestep from framerate", &useVariableTimestep); ImGui::SameLine();
-    ImGui::Checkbox("Parallel constraint solve", &physicSystem.parallelConstraintSolve);
+    ImGui::Checkbox("Timestep from framerate", &useVariableTimestep);
+    ImGui::Checkbox("Parallel constraint solve", &physicSystem.parallelConstraintSolve); ImGui::SameLine();
+    ImGui::Checkbox("Parallel collision detection", &physicSystem.parallelDetectCollisions);
     ImGui::Checkbox("Render surfaces", &renderSurfaces);
     ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
     ImGui::SliderInt("Collision Solver Iterations", &physicSystem.collisionIterations, 1, 32);
