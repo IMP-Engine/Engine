@@ -1,7 +1,7 @@
 #include "SphereIntersection.h"
 
 
-bool intersect(ParticleData & particles, int first, int second, Intersection &i) {
+bool intersect(ParticleData &particles, int first, int second, Intersection &i) {
     /**
      * Aliases 
      */

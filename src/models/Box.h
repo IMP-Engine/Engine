@@ -8,6 +8,6 @@
 
 
 namespace Box {
-	void makeBox(ParticleData &particles, ConstraintData &constraints, model::modelConfig config);
+	void makeBox(ParticleData &particles, ConstraintData &constraints, model::ModelConfig config);
 }
 
