@@ -49,7 +49,7 @@ using namespace std;
 GLFWwindow* window;
 ImVec4 clear_color = ImColor(30, 30, 30);;
 bool vsync = true;
-const GLuint WIDTH = 1280, HEIGHT = 720;
+const GLuint WIDTH = 1920, HEIGHT = 1080;
 
 // Camera
 Camera camera;
@@ -99,7 +99,7 @@ void init() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-    window = glfwCreateWindow(WIDTH, HEIGHT, "Simple example", NULL, NULL);
+    window = glfwCreateWindow(WIDTH, HEIGHT, "IMP Engine", NULL, NULL);
 #if _DEBUG
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
 #endif
