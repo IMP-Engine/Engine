@@ -23,7 +23,7 @@ float FixedPointConstraintData::evaluate(int constraintIndex, ParticleData &part
 }
 
 
-bool FixedPointConstraintData::solveDistanceConstraint(int constraintIndex, glm::vec3 & delta1, ParticleData & particleData)
+bool FixedPointConstraintData::solveDistanceConstraint(int constraintIndex, glm::vec3 & delta, ParticleData & particleData)
 {
     int firstParticleIndex = particle[constraintIndex];
 
@@ -36,7 +36,7 @@ bool FixedPointConstraintData::solveDistanceConstraint(int constraintIndex, glm:
     
     vec3 grad = glm::normalize(diff);
 
-    delta1 = c * grad;
+    delta = c * grad;
 
     return true;
 }

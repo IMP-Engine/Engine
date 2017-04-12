@@ -35,10 +35,12 @@ void model::makeClothModel(ModelConfig & config, bool hasFixedCorners, ParticleD
                 c.firstParticleIndex = start + i*config.numParticles.z + j;
                 c.secondParticleIndex = start + (i-1)*config.numParticles.z + j;
                 c.threshold = config.distanceThreshold;
-                c.equality = false;
+                c.equality = true;
                 c.stiffness = config.stiffness;
 
                 addConstraint(constraints.distanceConstraints, c);
+                particles.numBoundConstraints[c.firstParticleIndex]++;
+                particles.numBoundConstraints[c.secondParticleIndex]++;
             }
 
             if (j > 0) {
@@ -47,14 +49,53 @@ void model::makeClothModel(ModelConfig & config, bool hasFixedCorners, ParticleD
                 c.firstParticleIndex = start + i*config.numParticles.z + j;
                 c.secondParticleIndex = start + i*config.numParticles.z + (j-1);
                 c.threshold = config.distanceThreshold;
-                c.equality = false;
+                c.equality = true;
                 c.stiffness = config.stiffness;
+                
 
                 addConstraint(constraints.distanceConstraints, c);
+                particles.numBoundConstraints[c.firstParticleIndex]++;
+                particles.numBoundConstraints[c.secondParticleIndex]++;
+            }
+
+            if (j > 0 && i > 0) {
+                DistanceConstraint c;
+                c.distance = sqrt(dx*dx + dz*dz);
+                c.firstParticleIndex = start + i*config.numParticles.z + j;
+                c.secondParticleIndex = start + (i - 1)*config.numParticles.z + (j - 1);
+                c.threshold = config.distanceThreshold;
+                c.equality = true;
+                c.stiffness = config.stiffness;
+
+
+                addConstraint(constraints.distanceConstraints, c);
+                particles.numBoundConstraints[c.firstParticleIndex]++;
+                particles.numBoundConstraints[c.secondParticleIndex]++;
+            }
+
+
+            if (j < config.numParticles.z-1 && i > 0) {
+                DistanceConstraint c;
+                c.distance = sqrt(dx*dx + dz*dz);
+                c.firstParticleIndex = start + i*config.numParticles.z + j;
+                c.secondParticleIndex = start + (i - 1)*config.numParticles.z + (j + 1);
+                c.threshold = config.distanceThreshold;
+                c.equality = true;
+                c.stiffness = config.stiffness;
+
+
+                addConstraint(constraints.distanceConstraints, c);
+                particles.numBoundConstraints[c.firstParticleIndex]++;
+                particles.numBoundConstraints[c.secondParticleIndex]++;
             }
         }
     }
 
-
+    if (hasFixedCorners) {
+        FixedPointConstraint c;
+        c.particle = start;
+        c.position = particles.position[start];
+        addConstraint(constraints.fixedPointConstraints, c);
+    }
     
 }

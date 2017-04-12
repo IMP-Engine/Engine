@@ -25,3 +25,6 @@ struct FixedPointConstraint {
     int particle;
     glm::vec3 position;
 };
+
+
+void addConstraint(FixedPointConstraintData &data, FixedPointConstraint &config);
