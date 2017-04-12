@@ -14,6 +14,7 @@ ConstraintData::~ConstraintData()
 void ConstraintData::clear()
 {
     distanceConstraints.clear();
+    fixedPointConstraints.clear();
 }
 
 void ConstraintData::removeBroken(ParticleData &particleData)
