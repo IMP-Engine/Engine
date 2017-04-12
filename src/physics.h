@@ -21,6 +21,8 @@ public:
     Physics() {};
     ~Physics() {};
 
+    bool useGS;
+
     float overRelaxConst;
     float pSleeping;
     float restitutionCoefficientN;

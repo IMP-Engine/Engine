@@ -109,4 +109,8 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::M
         numBoundConstraints[i]++;
         numBoundConstraints[j]++;
     }
+
+    for (int i = 0; i < particles.position.size(); ++i) {
+        particles.position[i] *= 4;
+    }
 }

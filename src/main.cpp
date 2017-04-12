@@ -139,6 +139,7 @@ void init() {
     scene = new Scene;
     physicSystem = Physics();
 
+    physicSystem.useGS = true;
     physicSystem.iterations = 5;
     physicSystem.collisionIterations = 3;
     physicSystem.pSleeping = 0.0001f;
@@ -237,7 +238,8 @@ void gui()
 
     ImGui::Begin("IMPEngine");
     ImGui::ColorEdit3("clear color", (float*)&clear_color);
-    ImGui::Checkbox("Vsync", &vsync);
+    ImGui::Checkbox("Vsync", &vsync); ImGui::SameLine();
+    ImGui::Checkbox("Use GS (else Jacobi)", &physicSystem.useGS);
     if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
     if (ImGui::Button("Models")) showModels ^= 1; ImGui::SameLine();
     if (ImGui::Button("Scenes")) showSceneSelection ^= 1; ImGui::SameLine();
