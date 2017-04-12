@@ -29,14 +29,15 @@ void model::makeClothModel(ModelConfig & config, bool hasFixedCorners, ParticleD
 
             addParticle(p, particles);
             
+            DistanceConstraint c;
+            c.threshold = config.distanceThreshold;
+            c.equality = true;
+            c.stiffness = config.stiffness;
+
             if (i > 0) {
-                DistanceConstraint c;
                 c.distance = dx;
                 c.firstParticleIndex = start + i*config.numParticles.z + j;
                 c.secondParticleIndex = start + (i-1)*config.numParticles.z + j;
-                c.threshold = config.distanceThreshold;
-                c.equality = true;
-                c.stiffness = config.stiffness;
 
                 addConstraint(constraints.distanceConstraints, c);
                 particles.numBoundConstraints[c.firstParticleIndex]++;
@@ -44,29 +45,22 @@ void model::makeClothModel(ModelConfig & config, bool hasFixedCorners, ParticleD
             }
 
             if (j > 0) {
-                DistanceConstraint c;
                 c.distance = dx;
                 c.firstParticleIndex = start + i*config.numParticles.z + j;
                 c.secondParticleIndex = start + i*config.numParticles.z + (j-1);
-                c.threshold = config.distanceThreshold;
-                c.equality = true;
-                c.stiffness = config.stiffness;
                 
-
                 addConstraint(constraints.distanceConstraints, c);
                 particles.numBoundConstraints[c.firstParticleIndex]++;
                 particles.numBoundConstraints[c.secondParticleIndex]++;
             }
 
+
+            c.stiffness = config.stiffness*0.01;
+
             if (j > 0 && i > 0) {
-                DistanceConstraint c;
                 c.distance = sqrt(dx*dx + dz*dz);
                 c.firstParticleIndex = start + i*config.numParticles.z + j;
                 c.secondParticleIndex = start + (i - 1)*config.numParticles.z + (j - 1);
-                c.threshold = config.distanceThreshold;
-                c.equality = true;
-                c.stiffness = config.stiffness;
-
 
                 addConstraint(constraints.distanceConstraints, c);
                 particles.numBoundConstraints[c.firstParticleIndex]++;
@@ -75,14 +69,9 @@ void model::makeClothModel(ModelConfig & config, bool hasFixedCorners, ParticleD
 
 
             if (j < config.numParticles.z-1 && i > 0) {
-                DistanceConstraint c;
                 c.distance = sqrt(dx*dx + dz*dz);
                 c.firstParticleIndex = start + i*config.numParticles.z + j;
                 c.secondParticleIndex = start + (i - 1)*config.numParticles.z + (j + 1);
-                c.threshold = config.distanceThreshold;
-                c.equality = true;
-                c.stiffness = config.stiffness;
-
 
                 addConstraint(constraints.distanceConstraints, c);
                 particles.numBoundConstraints[c.firstParticleIndex]++;
