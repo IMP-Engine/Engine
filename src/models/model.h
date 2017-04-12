@@ -23,6 +23,7 @@
 #include "../models/ModelData.h"
 
 #include "Box.h"
+#include "Cloth.h"
 
 //http://www.softagalleria.net/download/dirent/
 #include <dirent.h>

@@ -7,7 +7,7 @@
 #endif 
 
 model::ModelConfig config = { 0.8f, vec3(0), 0, 0.5f, 0.5, vec3(1), ivec3(4) };
-std::vector<std::string> predefinedModels{ "Box" };
+std::vector<std::string> predefinedModels{ "Box" ,"Cloth"};
 std::vector<std::string> models;
 int selected = 0;
 
@@ -33,7 +33,11 @@ void model::loadPredefinedModel(std::string model, ParticleData &particles, Cons
 	if (model == "Box")
 	{
 		Box::makeBox(particles, constraints, config);
-	}
+    }
+    else if (model == "Cloth")
+    {
+        model::makeClothModel(config, true, particles, constraints);
+    }
 }
 
 void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vector<short> &elements)
