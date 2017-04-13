@@ -105,10 +105,13 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
 	for (int i = -imax/2; i < imax/2; i++) for (int j = -jmax/2; j < jmax/2; j++) for (int k = -kmax/2; k < kmax/2; k++)
 	{
 		std::getline(file, line);
+        std::stringstream data(line);
+        float value;
+        data >> value;
 		// Negative inside, positive outside
-		if (line[0] == '-')
+		if ( value < 2*d )
 		{
-			std::stringstream data(line);
+			
 			Particle p;
 			p.pos = config.centerPos + origin + vec3(i*d, j*d, k*d) * config.scale;
 			p.invmass = config.invmass;
