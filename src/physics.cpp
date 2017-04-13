@@ -7,7 +7,8 @@
 #define WORLD_MAX vec3( 20.f, 20.f, 20.f)
 #endif // !WORLD_MIN
 
-void Physics::step(Scene *scene, float dt)
+
+void Physics::step(Scene *scene, float dt, bool &isRunning)
 {
 
     /* Aliases */
@@ -53,7 +54,7 @@ void Physics::step(Scene *scene, float dt)
        */
 
     id = performance::startTimer("Solve constraints");
-    resolveConstraints(pPosition, invmass, numBoundConstraints);
+    resolveConstraints(pPosition, invmass, numBoundConstraints, isRunning);
     performance::stopTimer(id);
 
     for (std::vector<glm::vec3>::size_type i = 0; i != particles.cardinality; i++) 
@@ -94,7 +95,7 @@ void Physics::step(Scene *scene, float dt)
 
 }
 
-void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector<float> & invmass, std::vector<int> & numBoundConstraints)
+void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector<float> & invmass, std::vector<int> & numBoundConstraints, bool &isRunning)
 {
     for (int i = 0; i < iterations; i++)
     {
@@ -110,11 +111,12 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector
         for (int l = 0; l < pPosition.size(); ++l) {
             metaPosition[l] = pPosition[l];
         }
-        vec3 deltas[pPosition.size()];
+
         for (int constraintIndex = 0; constraintIndex < distanceConstraints.cardinality; constraintIndex++)
         {
             if (distanceConstraints.solveDistanceConstraint(delta1, delta2, constraintIndex, particles))
             {
+                // TODO print c from constraint with iteration to file, plot
                 // delta p_i = -w_i * s * grad_{p_i} C(p) * stiffness correction 
                 if (useGS) // Use Gauss-Seidel
                 {

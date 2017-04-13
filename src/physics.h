@@ -22,6 +22,7 @@ public:
     ~Physics() {};
 
     bool useGS;
+    float sumC;
 
     float overRelaxConst;
     float pSleeping;
@@ -34,13 +35,13 @@ public:
     ParticleData particles;
     ConstraintData constraints;
 
-	void step(Scene *scene, float dt);
+	void step(Scene *scene, float dt, bool &isRunning);
 
 private:
     /*
         Stationary iterative linear solver - Gauss-Seidel
     */
-    void resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector<float> & invmass, std::vector<int> & numBoundConstraints);
+    void resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector<float> & invmass, std::vector<int> & numBoundConstraints, bool &isRunning);
 
     void dampPlaneCollision(std::vector<int> & numBoundConstraints, std::vector<glm::vec3> & velocity, PlaneCollisionConstraintData & triangleConstraints);
 

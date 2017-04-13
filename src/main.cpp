@@ -78,9 +78,9 @@ ModelData modelData;
 const vec3 lightPosition = vec3(4.0f);
 
 // Simulation variables and parameters
-bool doPyshics = false;
-bool showModels = false;
-bool useVariableTimestep = false;
+bool doPhysics = false;
+bool showModels = true;
+bool useVariableTimestep = true;
 float timestep = 0.01667f;
 bool showSceneSelection = false;
 bool showPerformance = false;
@@ -140,6 +140,7 @@ void init() {
     physicSystem = Physics();
 
     physicSystem.useGS = true;
+    physicSystem.sumC = 0;
     physicSystem.iterations = 5;
     physicSystem.collisionIterations = 3;
     physicSystem.pSleeping = 0.0001f;
@@ -195,9 +196,9 @@ void display(double deltaTime) {
 
     performance::stopTimer(bPhysics);
 
-    if (doPyshics)
+    if (doPhysics)
     {
-        physicSystem.step(scene, useVariableTimestep ? (float)deltaTime : timestep);
+        physicSystem.step(scene, useVariableTimestep ? (float)deltaTime : timestep, doPhysics);
     }
 
     aPhysics = performance::startTimer("After physics");
@@ -246,7 +247,7 @@ void gui()
     if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     visualization::gui();
-    ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
+    ImGui::Checkbox("Physics", &doPhysics); ImGui::SameLine();
     ImGui::Checkbox("Timestep from framerate", &useVariableTimestep);
     ImGui::Checkbox("Render surfaces", &renderSurfaces);
     ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);

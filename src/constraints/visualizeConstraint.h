@@ -17,7 +17,7 @@ namespace visualization {
 	GLuint constraintShader;
 	std::vector<vec3> pos;
 	GLuint pos_buf;
-	bool draw = false;
+	bool draw = true;
 
 	void initialize() {
 		constraintShader = glHelper::loadShader(VERT_CONSTRAINT_SHADER_PATH, FRAG_CONSTRAINT_SHADER_PATH);
