@@ -61,13 +61,20 @@ void calculateVertices(ParticleData &particles, ModelData &data, std::vector<glm
     normals.resize(positions.size(), glm::vec3(0.0, 0.0, 0.0));
     for (uint i = 0; i < data.elements.size(); i += 3)
     {
-        short ia = data.elements[i];
-        short ib = data.elements[i + 1];
-        short ic = data.elements[i + 2];
-        glm::vec3 normal = glm::normalize(glm::cross(
-            positions[ib] -positions[ia],
-            positions[ic] - positions[ia]));
-        normals[ia] = normals[ib] = normals[ic] = normal;
+        int ia = data.elements[i];
+        int ib = data.elements[i + 1];
+        int ic = data.elements[i + 2];
+        glm::vec3 normal = glm::cross(
+            positions[ib] - positions[ia],
+            positions[ic] - positions[ia]);
+        normals[ia] += normal;
+        normals[ib] += normal;
+        normals[ic] += normal;
+    }
+
+    for (int i=0; i < normals.size(); i++)
+    {
+        normals[i] = normalize(normals[i]);
     }
 }
 
@@ -85,7 +92,7 @@ void ModelRenderer::render(ParticleData &particles, ModelData &data, glm::mat4 &
     glBindBuffer(GL_ARRAY_BUFFER, nbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * normals.size(), &(normals[0]), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(short) * data.elements.size(), &(data.elements[0]), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * data.elements.size(), &(data.elements[0]), GL_STATIC_DRAW);
 
     // Send uniforms to shader
 	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
@@ -95,8 +102,7 @@ void ModelRenderer::render(ParticleData &particles, ModelData &data, glm::mat4 &
 
     // Draw
     glPolygonMode(GL_FRONT, GL_FILL);
-	glDrawElements(GL_TRIANGLES, data.elements.size(), GL_UNSIGNED_SHORT, 0);
-
+	glDrawElements(GL_TRIANGLES, data.elements.size(), GL_UNSIGNED_INT, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 	glUseProgram(0);

@@ -36,7 +36,7 @@ void model::loadPredefinedModel(std::string model, ParticleData &particles, Cons
 	}
 }
 
-void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vector<short> &elements)
+void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vector<int> &elements)
 {
     int pos;
     if ((pos = filename.rfind("_")) != std::string::npos) { filename = filename.substr(0, pos); }
@@ -59,7 +59,7 @@ void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vecto
         else if (line.substr(0, 2) == "f ")
         {
             std::istringstream s(line.substr(2));
-            short a, b, c;
+            int a, b, c;
             s >> a; s >> b; s >> c;
             a--; b--; c--;
             elements.push_back(a); elements.push_back(b); elements.push_back(c);
@@ -152,7 +152,7 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
     // Load Mesh
     std::vector<glm::vec4> vertices;
     std::vector<glm::vec3> normals;
-    std::vector<short> elements;
+    std::vector<int> elements;
     loadMesh(model, vertices, elements);
 
     // Find three closest particles and calculate barycentric coordinates for all vertices
