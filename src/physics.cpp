@@ -25,8 +25,8 @@ void Physics::step(Scene *scene, float dt, bool &isRunning)
         // * Apply forces			v_i = v_i + dt * f_ext(x_i)
         // * Damp velocities		-- Skip for now -- TODO --
         // * Predict position		x_i^* = x_i + dt * v_i
-        velocity[i] = velocity[i] - glm::vec3(0.f, dt * GRAVITY, 0.f); // Gravity
-        pPosition[i] = position[i] + dt * velocity[i]; // symplectic Euler
+        //velocity[i] = velocity[i] - glm::vec3(0.f, dt * GRAVITY, 0.f); // Gravity
+        pPosition[i] = position[i];// + dt * velocity[i]; // symplectic Euler
         // ******************************************************************************
         // * Clamp positions so that we do not lose any particles
         pPosition[i] = (min)((max)(WORLD_MIN, pPosition[i]), WORLD_MAX);
