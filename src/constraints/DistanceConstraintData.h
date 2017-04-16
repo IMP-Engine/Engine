@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <cmath>
 #include "glm/glm.hpp"
 
 #include "../particles/ParticleData.h"
@@ -26,7 +27,7 @@ public:
 
     float evaluate(int constraintIndex, ParticleData &particleData);
 
-    bool solveDistanceConstraint(glm::vec3 &delta1, glm::vec3 &delta2, int constraintIndex, ParticleData &particleData);
+    bool solveDistanceConstraint(glm::vec3 &delta1, glm::vec3 &delta2, int constraintIndex, ParticleData &particleData, float &sumC);
 
     void clear();
     void removeBroken(ParticleData &particleData);

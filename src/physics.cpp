@@ -106,6 +106,8 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector
         DistanceConstraintData &distanceConstraints = constraints.distanceConstraints;
         vec3 delta1(0);
         vec3 delta2(0);
+        sumC = 0;
+        ++iter;
 
         vec3 metaPosition[particles.position.size()];
         for (int l = 0; l < pPosition.size(); ++l) {
@@ -114,10 +116,10 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector
 
         for (int constraintIndex = 0; constraintIndex < distanceConstraints.cardinality; constraintIndex++)
         {
-            if (distanceConstraints.solveDistanceConstraint(delta1, delta2, constraintIndex, particles))
+            if (distanceConstraints.solveDistanceConstraint(delta1, delta2, constraintIndex, particles, sumC))
             {
-                // TODO print c from constraint with iteration to file, plot
                 // delta p_i = -w_i * s * grad_{p_i} C(p) * stiffness correction 
+                
                 if (useGS) // Use Gauss-Seidel
                 {
                     ivec2 &constraintParticles = distanceConstraints.particles[constraintIndex];
@@ -160,6 +162,7 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector
                 pPosition[j] = metaPosition[j];
             }
         }
+        printf("%i\t%f\n", iter,  sumC);
     }
 }
 
@@ -198,6 +201,7 @@ void Physics::resolveCollisons(std::vector<glm::vec3> & position, std::vector<gl
 
         for (int i = 0; i < particleConstraints.cardinality; i++)
         {
+            /*
             if (particleConstraints.solveDistanceConstraint(delta1, delta2, i, particles))
             {
                 int p1 = particleConstraints.particles[i][0];
@@ -205,6 +209,7 @@ void Physics::resolveCollisons(std::vector<glm::vec3> & position, std::vector<gl
                 pPosition[p1] -= delta1 * overRelaxConst;
                 pPosition[p2] -= delta2 * overRelaxConst;
             }
+            */
         }
     }
 }

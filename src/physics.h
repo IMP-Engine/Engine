@@ -23,6 +23,7 @@ public:
 
     bool useGS;
     float sumC;
+    int iter;
 
     float overRelaxConst;
     float pSleeping;

@@ -5,6 +5,7 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw_gl3.h"
 #include <iostream>
+#include <time.h>
 #include "debug.h"
 
 // Example of path
@@ -44,6 +45,14 @@ using namespace std;
 /**************************************************************************
  ********************** Global variables **********************************
  **************************************************************************/
+
+/*
+// Sleep time
+int ms = 10;
+const struct timespec;
+req.tv_sec = 0;
+req.tv_nsec = ms * 1000000L;
+*/
 
 // Application
 GLFWwindow* window;
@@ -140,7 +149,7 @@ void init() {
     physicSystem = Physics();
 
     physicSystem.useGS = true;
-    physicSystem.sumC = 0;
+    physicSystem.iter = 0;
     physicSystem.iterations = 5;
     physicSystem.collisionIterations = 3;
     physicSystem.pSleeping = 0.0001f;
@@ -199,6 +208,7 @@ void display(double deltaTime) {
     if (doPhysics)
     {
         physicSystem.step(scene, useVariableTimestep ? (float)deltaTime : timestep, doPhysics);
+        nanosleep((const struct timespec[]){{0, 40000000L}}, NULL);
     }
 
     aPhysics = performance::startTimer("After physics");
