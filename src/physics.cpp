@@ -109,9 +109,9 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector
         sumC = 0;
         ++iter;
 
-        vec3 metaPosition[particles.position.size()];
-        for (int l = 0; l < pPosition.size(); ++l) {
-            metaPosition[l] = pPosition[l];
+        metaPos.clear();
+        for (int j = 0; j < pPosition.size(); ++j) {
+            metaPos.push_back(pPosition[j]);
         }
 
         for (int constraintIndex = 0; constraintIndex < distanceConstraints.cardinality; constraintIndex++)
@@ -120,11 +120,12 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector
             {
                 // delta p_i = -w_i * s * grad_{p_i} C(p) * stiffness correction 
                 
+                ivec2 &constraintParticles = distanceConstraints.particles[constraintIndex];
+                int p1 = constraintParticles[0];
+                int p2 = constraintParticles[1];
+
                 if (useGS) // Use Gauss-Seidel
                 {
-                    ivec2 &constraintParticles = distanceConstraints.particles[constraintIndex];
-                    int p1 = constraintParticles[0];
-                    int p2 = constraintParticles[1];
                     pPosition[p1] -= 
                         delta1
                         * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
@@ -139,16 +140,13 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector
                 }
                 else // Use Jacobi
                 {
-                    ivec2 &constraintParticles = distanceConstraints.particles[constraintIndex];
-                    int p1 = constraintParticles[0];
-                    int p2 = constraintParticles[1];
-                    metaPosition[p1] -= 
+                    metaPos[p1] -= 
                         delta1
                         * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
                         * overRelaxConst
                         / (float)numBoundConstraints[p1];
 
-                    metaPosition[p2] -= 
+                    metaPos[p2] -= 
                         delta2 
                         * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
                         * overRelaxConst
@@ -159,7 +157,7 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector
         if (!useGS)
         {
             for (int j = 0; j < pPosition.size(); ++j) {
-                pPosition[j] = metaPosition[j];
+                pPosition[j] = metaPos[j];
             }
         }
         printf("%i\t%f\n", iter,  sumC);

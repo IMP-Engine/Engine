@@ -25,6 +25,8 @@ public:
     float sumC;
     int iter;
 
+    std::vector<vec3> metaPos;
+
     float overRelaxConst;
     float pSleeping;
     float restitutionCoefficientN;
