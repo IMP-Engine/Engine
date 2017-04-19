@@ -53,7 +53,7 @@ void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vecto
         if (line.substr(0, 2) == "v ")
         {
             std::istringstream s(line.substr(2));
-            glm::vec4 v; s >> v.x; s >> v.y; s >> v.z; v.w = 1.0f;
+            glm::vec4 v; s >> v.z; s >> v.y; s >> v.x; v.w = 1.0f;
             vertices.push_back(vec4(origin, 0.0f) + v * vec4(scale, 1.0f));
         }
         else if (line.substr(0, 2) == "f ")
@@ -62,7 +62,7 @@ void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vecto
             int a, b, c;
             s >> a; s >> b; s >> c;
             a--; b--; c--;
-            elements.push_back(a); elements.push_back(b); elements.push_back(c);
+            elements.push_back(c); elements.push_back(b); elements.push_back(a);
         }
     }
 }
