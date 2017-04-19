@@ -204,7 +204,7 @@ void display(double deltaTime) {
     if (renderSurfaces)
     {
         int id = performance::startTimer("Render surfaces");
-        modelRenderer->render(physicSystem.particles, modelData, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix);
+        modelRenderer->render(physicSystem.particles, modelData, modelViewProjectionMatrix, modelViewMatrix, lightPosition, projectionMatrix);
 
     }
     else // render particles

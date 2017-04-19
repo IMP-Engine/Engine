@@ -78,7 +78,7 @@ void calculateVertices(ParticleData &particles, ModelData &data, std::vector<glm
     }
 }
 
-void ModelRenderer::render(ParticleData &particles, ModelData &data, glm::mat4 &modelViewProjectionMatrix, glm::mat4 &modelViewMatrix, glm::vec3 &viewSpaceLightPosition, glm::mat4 &projectionMatrix)
+void ModelRenderer::render(ParticleData &particles, ModelData &data, glm::mat4 &modelViewProjectionMatrix, glm::mat4 &modelViewMatrix, const glm::vec3 &lightPosition, glm::mat4 &projectionMatrix)
 {
     std::vector<glm::vec3> positions;
     std::vector<glm::vec3> normals;
@@ -97,8 +97,8 @@ void ModelRenderer::render(ParticleData &particles, ModelData &data, glm::mat4 &
     // Send uniforms to shader
 	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
 	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
-	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "projectionM4atrix"), 1, false, &projectionMatrix[0].x);
-	glUniform3fv(glGetUniformLocation(simpleShader, "viewSpaceLightPos"), 1, &viewSpaceLightPosition.x);
+	//glUniformMatrix4fv(glGetUniformLocation(simpleShader, "projectionM4atrix"), 1, false, &projectionMatrix[0].x);
+	glUniform3fv(glGetUniformLocation(simpleShader, "lightPos"), 1, &lightPosition.x);
 
     // Draw
     glPolygonMode(GL_FRONT, GL_FILL);
