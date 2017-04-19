@@ -153,15 +153,13 @@ void Scene::gui(bool *show)
     ImGui::End();
 }
 
-void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix, const glm::vec3 &lightPosition)
+void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &modelViewProjectionMatrix, const glm::vec3 &lightPosition)
 {
-    glm::mat4 modelViewMatrix = viewMatrix * modelMatrix;
-    glm::mat4 modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
 
     // Send uniforms to shader
     glUseProgram(shader);
     glUniformMatrix4fv(glGetUniformLocation(shader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
-    glUniformMatrix4fv(glGetUniformLocation(shader, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
+    glUniformMatrix4fv(glGetUniformLocation(shader, "modelViewMatrix"), 1, false, &viewMatrix[0].x);
     glUniform3fv(glGetUniformLocation(shader, "lightPos"), 1, &lightPosition.x);
 
     // Draw cube

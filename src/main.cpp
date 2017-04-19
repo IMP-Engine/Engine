@@ -177,20 +177,19 @@ void display(double deltaTime) {
     glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    mat4 modelMatrix(1.0f); // Identity matrix
-
     viewMatrix = camera.getViewMatrix();
     // Set up a projection matrix
     float nearPlane = 0.01f;
     float farPlane = 1000.0f;
 
-    modelViewMatrix = viewMatrix * modelMatrix;
+    // Model matrix is identity
+    modelViewMatrix = viewMatrix;
     projectionMatrix = perspective(radians(camera.getFovy()), ratio, nearPlane, farPlane);
     modelViewProjectionMatrix = projectionMatrix * modelViewMatrix;
 
     vec3 viewSpaceLightPosition = vec3(viewMatrix * vec4(lightPosition, 1.0));
 
-    scene->render(viewMatrix, projectionMatrix, vec3(lightPosition));
+    scene->render(viewMatrix, modelViewProjectionMatrix, vec3(lightPosition));
 
     performance::stopTimer(bPhysics);
 
