@@ -61,17 +61,24 @@ void calculateVertices(ParticleData &particles, ModelData &data, std::vector<glm
     normals.resize(positions.size(), glm::vec3(0.0, 0.0, 0.0));
     for (uint i = 0; i < data.elements.size(); i += 3)
     {
-        short ia = data.elements[i];
-        short ib = data.elements[i + 1];
-        short ic = data.elements[i + 2];
-        glm::vec3 normal = glm::normalize(glm::cross(
-            positions[ib] -positions[ia],
-            positions[ic] - positions[ia]));
-        normals[ia] = normals[ib] = normals[ic] = normal;
+        int ia = data.elements[i];
+        int ib = data.elements[i + 1];
+        int ic = data.elements[i + 2];
+        glm::vec3 normal = glm::cross(
+            positions[ib] - positions[ia],
+            positions[ic] - positions[ia]);
+        normals[ia] += normal;
+        normals[ib] += normal;
+        normals[ic] += normal;
+    }
+
+    for (int i=0; i < normals.size(); i++)
+    {
+        normals[i] = normalize(normals[i]);
     }
 }
 
-void ModelRenderer::render(ParticleData &particles, ModelData &data, glm::mat4 &modelViewProjectionMatrix, glm::mat4 &modelViewMatrix, glm::vec3 &viewSpaceLightPosition, glm::mat4 &projectionMatrix)
+void ModelRenderer::render(ParticleData &particles, ModelData &data, glm::mat4 &modelViewProjectionMatrix, glm::mat4 &modelViewMatrix, const glm::vec3 &lightPosition, glm::mat4 &projectionMatrix)
 {
     std::vector<glm::vec3> positions;
     std::vector<glm::vec3> normals;
@@ -85,18 +92,17 @@ void ModelRenderer::render(ParticleData &particles, ModelData &data, glm::mat4 &
     glBindBuffer(GL_ARRAY_BUFFER, nbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * normals.size(), &(normals[0]), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(short) * data.elements.size(), &(data.elements[0]), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * data.elements.size(), &(data.elements[0]), GL_STATIC_DRAW);
 
     // Send uniforms to shader
 	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
 	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
-	glUniformMatrix4fv(glGetUniformLocation(simpleShader, "projectionM4atrix"), 1, false, &projectionMatrix[0].x);
-	glUniform3fv(glGetUniformLocation(simpleShader, "viewSpaceLightPos"), 1, &viewSpaceLightPosition.x);
+	//glUniformMatrix4fv(glGetUniformLocation(simpleShader, "projectionM4atrix"), 1, false, &projectionMatrix[0].x);
+	glUniform3fv(glGetUniformLocation(simpleShader, "lightPos"), 1, &lightPosition.x);
 
     // Draw
     glPolygonMode(GL_FRONT, GL_FILL);
-	glDrawElements(GL_TRIANGLES, data.elements.size(), GL_UNSIGNED_SHORT, 0);
-
+	glDrawElements(GL_TRIANGLES, data.elements.size(), GL_UNSIGNED_INT, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 	glUseProgram(0);

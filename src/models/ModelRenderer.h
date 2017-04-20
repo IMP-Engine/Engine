@@ -30,6 +30,6 @@ public:
     unsigned int *particleCount;
 
 	void init();
-	void render(ParticleData &particles, ModelData &data, glm::mat4 &modelViewProjectionMatrix, glm::mat4 &modelViewMatrix, glm::vec3 &viewSpaceLightPosition, glm::mat4 &projectionMatrix);
+	void render(ParticleData &particles, ModelData &data, glm::mat4 &modelViewProjectionMatrix, glm::mat4 &modelViewMatrix, const glm::vec3 &lightPosition, glm::mat4 &projectionMatrix);
 };
 
