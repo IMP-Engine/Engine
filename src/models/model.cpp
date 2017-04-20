@@ -7,9 +7,10 @@
 #endif 
 
 model::ModelConfig config = { 0.8f, vec3(0), 0, 0.5f, 0.5, vec3(1), ivec3(4) };
-std::vector<std::string> predefinedModels{ "Box" };
+std::vector<std::string> predefinedModels{ "Box" ,"Cloth"};
 std::vector<std::string> models;
 int selected = 0;
+bool fixedCorners = false;
 
 // Temporary solution. Reconsider when cleaning code/changing way that particles and constraints are handled
 
@@ -33,7 +34,11 @@ void model::loadPredefinedModel(std::string model, ParticleData &particles, Cons
 	if (model == "Box")
 	{
 		Box::makeBox(particles, constraints, config);
-	}
+    }
+    else if (model == "Cloth")
+    {
+        model::makeClothModel(config, fixedCorners, particles, constraints);
+    }
 }
 
 void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vector<short> &elements)
@@ -349,12 +354,17 @@ void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints
 	ImGui::DragFloat("Distance treshold", &config.distanceThreshold, 0.001f, 0, 10, "%.7f");
 	ImGui::SliderFloat("Stiffness", &config.stiffness, 0, 1);
 	ImGui::InputInt("Phase", &config.phase);
-	if (selected == 0)
-	{
-		ImGui::SliderInt("Particles x", &config.numParticles.x, 1, 10);
-		ImGui::SliderInt("Particles y", &config.numParticles.y, 1, 10);
-		ImGui::SliderInt("Particles z", &config.numParticles.z, 1, 10);
-	}
+    if (selected == 1)
+    {
+        ImGui::Checkbox("Fixed Corners", &fixedCorners);
+    }
+
+    if (selected == 0 || selected == 1)
+    {
+        ImGui::SliderInt("Particles x", &config.numParticles.x, 1, 10);
+        ImGui::SliderInt("Particles y", &config.numParticles.y, 1, 10);
+        ImGui::SliderInt("Particles z", &config.numParticles.z, 1, 10);
+    }
 
     std::stringstream headerText;
     headerText << "Objects (Particles: " << particles.cardinality << " Constraints: " << constraints.distanceConstraints.cardinality << ")";
