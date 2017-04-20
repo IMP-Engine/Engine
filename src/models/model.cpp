@@ -41,7 +41,7 @@ void model::loadPredefinedModel(std::string model, ParticleData &particles, Cons
     }
 }
 
-void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vector<short> &elements)
+void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vector<int> &elements, vec3 origin, vec3 scale)
 {
     int pos;
     if ((pos = filename.rfind("_")) != std::string::npos) { filename = filename.substr(0, pos); }
@@ -58,16 +58,16 @@ void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vecto
         if (line.substr(0, 2) == "v ")
         {
             std::istringstream s(line.substr(2));
-            glm::vec4 v; s >> v.x; s >> v.y; s >> v.z; v.w = 1.0f;
-            vertices.push_back(v);
+            glm::vec4 v; s >> v.z; s >> v.y; s >> v.x; v.w = 1.0f;
+            vertices.push_back(vec4(origin, 0.0f) + v * vec4(scale, 1.0f));
         }
         else if (line.substr(0, 2) == "f ")
         {
             std::istringstream s(line.substr(2));
-            short a, b, c;
+            int a, b, c;
             s >> a; s >> b; s >> c;
             a--; b--; c--;
-            elements.push_back(a); elements.push_back(b); elements.push_back(c);
+            elements.push_back(c); elements.push_back(b); elements.push_back(a);
         }
     }
 }
@@ -102,18 +102,24 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
 	std::stringstream data3(line);
 	data3 >> spacing;
 
-	// Normalize lengths 
-	// TODO Particle radius? 
-	float d = spacing / glm::length(origin);
-	origin /= glm::length(origin);
+	
+    // Normalize lengths - Removed for now
+    float d = spacing;// / glm::length(origin);
+	//origin /= glm::length(origin);
 
-	for (int i = -imax/2; i < imax/2; i++) for (int j = -jmax/2; j < jmax/2; j++) for (int k = -kmax/2; k < kmax/2; k++)
+    // Make sure particle representation is centered
+    origin *= config.scale;
+
+    for (int i = 0; i < imax; i++) for (int j = 0; j < jmax; j++) for (int k = 0; k < kmax; k++)
 	{
 		std::getline(file, line);
+        std::stringstream data(line);
+        float value;
+        data >> value;
 		// Negative inside, positive outside
-		if (line[0] == '-')
+		if ( value < d/ glm::length(origin))
 		{
-			std::stringstream data(line);
+			
 			Particle p;
 			p.pos = config.centerPos + origin + vec3(i*d, j*d, k*d) * config.scale;
 			p.invmass = config.invmass;
@@ -157,8 +163,8 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
     // Load Mesh
     std::vector<glm::vec4> vertices;
     std::vector<glm::vec3> normals;
-    std::vector<short> elements;
-    loadMesh(model, vertices, elements);
+    std::vector<int> elements;
+    loadMesh(model, vertices, elements, config.centerPos, config.scale);
 
     // Find three closest particles and calculate barycentric coordinates for all vertices
     std::vector<float[3]> bcCoords(vertices.size());
@@ -168,7 +174,7 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
     for (uint i = 0; i < vertices.size(); i++)
     {
         // Take three arbitrary particles to start with
-        vec3 vertex = origin + config.centerPos + vec3(vertices[i]) * config.scale * vec3(0.5);
+        vec3 vertex = vec3(vertices[i]);
         closestParticles[i][0] = 0;
         closestParticles[i][1] = 1;
         closestParticles[i][2] = particles.cardinality-1; // To prevent three particles in a row
