@@ -6,7 +6,7 @@
 #define MODEL_FOLDER "../src/models/"
 #endif 
 
-model::ModelConfig config = { 0.8f, vec3(0), 0, 0.4f, 0.5, vec3(1), ivec3(4) };
+model::ModelConfig config = { 0.8f, vec3(0), 0, 0.8f, 0.5, vec3(1), ivec3(4) };
 std::vector<std::string> predefinedModels{ "Box" };
 std::vector<std::string> models;
 int selected = 0;

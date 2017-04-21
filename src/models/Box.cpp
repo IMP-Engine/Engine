@@ -19,6 +19,9 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::M
 
     // Get the "minimum" corner to use as base position
     vec3 base_pos = config.centerPos - (config.scale * 0.5f);
+    if (config.numParticles.y == 1) {
+        dy = 0;       
+    }
 
     // Create particles
     for (int i = 0; i < config.numParticles.x; i++) {
@@ -46,7 +49,7 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::M
     // Create constraints
     float stiffness = config.stiffness;
     float distanceThreshold = config.distanceThreshold;
-	float maxDist = sqrt(dx*dx + dy*dy + dz*dz);
+	float maxDist = sqrt(dx*dx + dy*dy + dz*dz) + 0.0001;
 
     std::vector<vec3> &position = particles.position;
     std::vector<int> &numBoundConstraints = particles.numBoundConstraints;
@@ -81,6 +84,7 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::M
 
 
 
+    /*
     ivec3 n = config.numParticles;
  
 
@@ -109,6 +113,7 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::M
         numBoundConstraints[i]++;
         numBoundConstraints[j]++;
     }
+    */
 
     for (int i = 0; i < particles.position.size(); ++i) {
         particles.position[i] *= 4;

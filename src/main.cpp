@@ -150,7 +150,7 @@ void init() {
 
     physicSystem.useGS = true;
     physicSystem.iter = 0;
-    physicSystem.iterations = 5;
+    physicSystem.iterations = 1;
     physicSystem.collisionIterations = 3;
     physicSystem.pSleeping = 0.0001f;
     physicSystem.overRelaxConst = 1.0f;
@@ -208,7 +208,6 @@ void display(double deltaTime) {
     if (doPhysics)
     {
         physicSystem.step(scene, useVariableTimestep ? (float)deltaTime : timestep, doPhysics);
-        nanosleep((const struct timespec[]){{0, 40000000L}}, NULL);
     }
 
     aPhysics = performance::startTimer("After physics");

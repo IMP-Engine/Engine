@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <algorithm>
 #include <stdio.h>
+#include <cmath>
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
 #include <glm/gtx/norm.hpp>

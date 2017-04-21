@@ -64,10 +64,10 @@ void Physics::step(Scene *scene, float dt, bool &isRunning)
          * v_i = (x_i^* - x_i) / dt
          * x_i = x_i^*
          */
-        velocity[i] = (pPosition[i] - position[i]) / dt;
+        //velocity[i] = (pPosition[i] - position[i]) / dt;
 
         // rough attempt at particle sleeping implementation in order to make particles stay in one place - most likely needs proper friction to work
-        if (glm::length(position[i] - pPosition[i]) > pSleeping)
+        if (glm::length(position[i] - pPosition[i]) > pSleeping && useGS)
         {
             position[i] = pPosition[i];
         }
@@ -109,14 +109,15 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector
         sumC = 0;
         ++iter;
 
-        metaPos.clear();
-        for (int j = 0; j < pPosition.size(); ++j) {
-            metaPos.push_back(pPosition[j]);
+        for (int constraintIndex = 0; constraintIndex < distanceConstraints.cardinality; constraintIndex++)
+        {
+            sumC += std::abs(distanceConstraints.evaluate(constraintIndex, particles));
         }
+        printf("%i\t%f\n", iter,  sumC);
 
         for (int constraintIndex = 0; constraintIndex < distanceConstraints.cardinality; constraintIndex++)
         {
-            if (distanceConstraints.solveDistanceConstraint(delta1, delta2, constraintIndex, particles, sumC))
+            if (distanceConstraints.solveDistanceConstraint(delta1, delta2, constraintIndex, particles))
             {
                 // delta p_i = -w_i * s * grad_{p_i} C(p) * stiffness correction 
                 
@@ -128,39 +129,32 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector
                 {
                     pPosition[p1] -= 
                         delta1
-                        * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
-                        * overRelaxConst
-                        / (float)numBoundConstraints[p1];
+                        * distanceConstraints.stiffness[constraintIndex]
+                        //* (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
+                        * overRelaxConst;
 
                     pPosition[p2] -= 
                         delta2 
-                        * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
-                        * overRelaxConst
-                        / (float)numBoundConstraints[p2];
+                        * distanceConstraints.stiffness[constraintIndex]
+                        //* (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
+                        * overRelaxConst;
                 }
                 else // Use Jacobi
                 {
-                    metaPos[p1] -= 
+                    particles.position[p1] -= 
                         delta1
-                        * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
-                        * overRelaxConst
-                        / (float)numBoundConstraints[p1];
+                        * distanceConstraints.stiffness[constraintIndex]
+                        //* (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
+                        * overRelaxConst;
 
-                    metaPos[p2] -= 
+                    particles.position[p2] -= 
                         delta2 
-                        * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
-                        * overRelaxConst
-                        / (float)numBoundConstraints[p2];
+                        * distanceConstraints.stiffness[constraintIndex]
+                        //* (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
+                        * overRelaxConst;
                 }
             }
         }
-        if (!useGS)
-        {
-            for (int j = 0; j < pPosition.size(); ++j) {
-                pPosition[j] = metaPos[j];
-            }
-        }
-        printf("%i\t%f\n", iter,  sumC);
     }
 }
 

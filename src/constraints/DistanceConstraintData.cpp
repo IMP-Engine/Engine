@@ -26,7 +26,7 @@ float DistanceConstraintData::evaluate(int constraintIndex, ParticleData &partic
     return length(p1 - p2) - distance[constraintIndex];
 }
 
-bool DistanceConstraintData::solveDistanceConstraint(glm::vec3 & delta1, glm::vec3 & delta2, int constraintIndex, ParticleData & particleData, float &sumC)
+bool DistanceConstraintData::solveDistanceConstraint(glm::vec3 & delta1, glm::vec3 & delta2, int constraintIndex, ParticleData & particleData)
 {
     int firstParticleIndex = particles[constraintIndex].x;
     int secondParticleIndex = particles[constraintIndex].y;
@@ -37,8 +37,6 @@ bool DistanceConstraintData::solveDistanceConstraint(glm::vec3 & delta1, glm::ve
     vec3 diff = p1 - p2;
 
     float c = length(diff) - distance[constraintIndex];
-
-    sumC += std::abs(c);
 
     if (!equality[constraintIndex] && c > 0)
         return false;
