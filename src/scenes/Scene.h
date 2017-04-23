@@ -7,8 +7,9 @@
 #include <fstream>
 #include <algorithm>
 #include <dirent.h>
-
+#ifndef __gl_h_
 #include "../glad/glad.h"
+#endif
 #include <GLFW/glfw3.h>
 #include "glm/glm.hpp"
 #include "../imgui/imgui.h"
@@ -35,11 +36,13 @@ public:
     unsigned int normalBuffer;
     unsigned int shader;
 
+    bool windActive;
+
     std::vector<glm::vec3> loadedVertices;
-    std::vector<float> vertices;
-    std::vector<int> indices;
     std::vector<glm::vec3> normalVectors;
+    std::vector<float> vertices;
     std::vector<float> normals;
+    std::vector<int> indices;
     std::vector<int> normalIndices;
     std::vector<Triangle> triangles;
     int numTriangles;

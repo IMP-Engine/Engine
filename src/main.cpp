@@ -85,6 +85,9 @@ float timestep = 0.01667f;
 bool showSceneSelection = false;
 bool showPerformance = false;
 
+bool boxSpawned = false;
+bool boxhold = false;
+
 
 static void errorCallback(int error, const char* description) {
     std::cerr << "Error: " << description << std::endl;
@@ -131,6 +134,7 @@ void init() {
     ImGui_ImplGlfwGL3_Init(window, true); 
 
     input::initialize(window);
+    camera.physicSystem = &physicSystem;
 
     visualization::initialize();
 
@@ -245,6 +249,7 @@ void gui()
     visualization::gui();
     ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
     ImGui::Checkbox("Timestep from framerate", &useVariableTimestep);
+    ImGui::Checkbox("Apply windlike force", &scene->windActive);
     ImGui::Checkbox("Render surfaces", &renderSurfaces);
     ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
     ImGui::SliderInt("Collision Solver Iterations", &physicSystem.collisionIterations, 1, 32);
