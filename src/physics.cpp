@@ -97,7 +97,7 @@ void Physics::step(Scene *scene, float dt, bool &isRunning)
 
 void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector<float> & invmass, std::vector<int> & numBoundConstraints, bool &isRunning)
 {
-    for (int i = 0; i < iterations; i++)
+    for (int i = 1; i < iterations + 1; i++)
     {
 
         /**
@@ -129,29 +129,29 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector
                 {
                     pPosition[p1] -= 
                         delta1
-                        * distanceConstraints.stiffness[constraintIndex]
-                        //* (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
+                        * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
                         * overRelaxConst;
 
                     pPosition[p2] -= 
                         delta2 
-                        * distanceConstraints.stiffness[constraintIndex]
-                        //* (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
+                        * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
                         * overRelaxConst;
                 }
                 else // Use Jacobi
                 {
                     particles.position[p1] -= 
                         delta1
-                        * distanceConstraints.stiffness[constraintIndex]
-                        //* (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
-                        * overRelaxConst;
+                        //* distanceConstraints.stiffness[constraintIndex]
+                        * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
+                        * overRelaxConst
+                        / (float)numBoundConstraints[p1];
 
                     particles.position[p2] -= 
                         delta2 
-                        * distanceConstraints.stiffness[constraintIndex]
-                        //* (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
-                        * overRelaxConst;
+                        //* distanceConstraints.stiffness[constraintIndex]
+                        * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
+                        * overRelaxConst
+                        / (float)numBoundConstraints[p2];
                 }
             }
         }
