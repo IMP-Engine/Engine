@@ -8,6 +8,7 @@
 #include <glm/geometric.hpp>
 #include <glm/gtx/norm.hpp>
 
+#include "collision\octree.h"
 #include "scenes/Scene.h"
 #include "particles/ParticleData.h"
 #include "constraints/ConstraintData.h"
@@ -28,6 +29,9 @@ public:
 
     int iterations;
 	int collisionIterations;
+
+    float minVolume;
+    int minParticles;
 
     ParticleData particles;
     ConstraintData constraints;

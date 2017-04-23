@@ -7,6 +7,27 @@
 #define WORLD_MAX vec3( 20.f, 20.f, 20.f)
 #endif // !WORLD_MIN
 
+int largestInSubTree(Octree::Node * n) {
+    if (n->children[0] == nullptr)
+        return n->particles.size();
+    int i = 0;
+    for (int j = 0; j < 8; j++) {
+        int k = largestInSubTree(n->children[j]);
+        i = i > k ? i : k;
+    }
+    return i;
+}
+
+int particlesInSubTree(Octree::Node * n) {
+    if (n->children[0] == nullptr)
+        return n->particles.size();
+    int i = 0;
+    for (int j = 0; j < 8; j++) {
+        i += particlesInSubTree(n->children[j]);
+       
+    }
+    return i;
+}
 
 
 void Physics::step(Scene *scene, float dt)
@@ -37,9 +58,15 @@ void Physics::step(Scene *scene, float dt)
         pPosition[i] = (min)((max)(WORLD_MIN, pPosition[i]), WORLD_MAX);
 		// ******************************************************************************************************************
 	}
-
+    int id = performance::startTimer("Build Octree");
+    Octree *tree = new Octree();
+    tree->construct(particles, BoundingVolume(vec3(-10, -10, -10), 20.f), minParticles, minVolume);
+    performance::stopTimer(id);
+    int larg = largestInSubTree( tree->getRoot());
+    int tot = particlesInSubTree(tree->getRoot());
+    delete tree;
 	// Breakable constraints
-    int id = performance::startTimer("Remove broken constraints");
+    id = performance::startTimer("Remove broken constraints");
 	constraints.removeBroken(particles);
     performance::stopTimer(id);
     

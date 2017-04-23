@@ -145,6 +145,8 @@ void init() {
     physicSystem.overRelaxConst = 1.0f;
     physicSystem.restitutionCoefficientT = 0.8f; 
     physicSystem.restitutionCoefficientN = 0.8f;
+    physicSystem.minParticles = 1;
+    physicSystem.minVolume = 0.1;
 
     modelData = ModelData();
     modelData.clear();
@@ -257,6 +259,8 @@ void gui()
         ImGui::SliderFloat("Timestep", &timestep, 0, .05f, "%.5f"); ImGui::SameLine();
         ImGui::Text((std::to_string(1 / timestep) + " \"FPS\"").c_str());
     }
+    ImGui::SliderInt("min particles", &physicSystem.minParticles, 1, 10);
+    ImGui::SliderFloat("min volume", &physicSystem.minVolume, 0.0001, 1);
     ImGui::End();
 
     model::gui(&showModels, physicSystem.particles, physicSystem.constraints, objects, modelData);
