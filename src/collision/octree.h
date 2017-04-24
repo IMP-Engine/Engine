@@ -7,8 +7,8 @@
 
 #include "../primitives/BoundingVolume.h"
 #include "../particles/ParticleData.h"
-#include "../constraints/ConstraintData.h"
 #include "../constraints/DistanceConstraintData.h"
+#include "../intersections.h"
 
 class Octree 
 {
@@ -23,6 +23,8 @@ public:
         Node(BoundingVolume bv) { this->bv = bv; for (int i = 0; i < 8; i++) children[i] = nullptr; }
 
         void construct(std::vector<glm::vec3> & positions, std::vector<float> & radii, std::vector<int> containedIndices);
+        void findCollisions(ParticleData & particledata, DistanceConstraintData & constraints);
+
         ~Node() {
    
             for (int i = 0; i < 8; i++) {
@@ -35,10 +37,8 @@ public:
     Node *root;
     
     Node* getRoot() { return root; }
-    /* Construct tree, add collisions to constraints*/
-    void collide(ParticleData & particles, ConstraintData & constraints, BoundingVolume bv) { construct(particles, bv, 0, 0); findCollisions(constraints); };
-    void construct(ParticleData & particles, BoundingVolume bv, int numParticles, float minVolume);
-    void findCollisions(ConstraintData & constraints);
+    void construct(ParticleData & particles, BoundingVolume bv, int numParticles, float minVolume, bool ignorePhase);
+    void findCollisions(ParticleData & particledata, DistanceConstraintData & constraints);
 	
     ~Octree() { delete root; }
 };

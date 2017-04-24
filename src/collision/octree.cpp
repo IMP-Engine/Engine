@@ -2,11 +2,13 @@
 
 int numParticles= 1;
 float minVolume = 0.1;
+bool igPhase = true;
 
-void Octree::construct(ParticleData & particles, BoundingVolume bv, int a, float b)
+void Octree::construct(ParticleData & particles, BoundingVolume bv, int a, float b, bool ignorePhase)
 {
     numParticles = a;
     minVolume = b;
+    igPhase = ignorePhase;
     this->root = new Node(bv);
     std::vector<int> containedIndices(particles.cardinality);
     for (int i = 0; i < particles.cardinality; i++) {
@@ -16,12 +18,18 @@ void Octree::construct(ParticleData & particles, BoundingVolume bv, int a, float
     this->root->construct(particles.pPosition, particles.radius, containedIndices);
 }
 
+void Octree::findCollisions(ParticleData & particledata, DistanceConstraintData & constraints)
+{
+    this->getRoot()->findCollisions(particledata, constraints);
+}
+
 void Octree::Node::construct(std::vector<glm::vec3> & positions, std::vector<float> & radii, std::vector<int> containedIndices)
 {
-    // When to stop
-    if (containedIndices.size() < numParticles)
+    if (containedIndices.size() < numParticles) {
+        this->particles.swap(containedIndices);
         return;
-    // How many particles are lost here? TODO set contained indices to our list?
+    }
+        
     if (bv.getVolume() < minVolume) {
         this->particles.swap(containedIndices);
         return;
@@ -59,5 +67,41 @@ void Octree::Node::construct(std::vector<glm::vec3> & positions, std::vector<flo
     // Recurse
     for (int i = 0; i < 8; i++) {
         children[i]->construct(positions, radii, containedIndicesList[i]);
+    }
+}
+
+void Octree::Node::findCollisions(ParticleData & particledata, DistanceConstraintData & constraints)
+{
+    if (children[0] == nullptr)
+    {
+        for (int i = 0; i < this->particles.size(); i++)
+        {
+            for (int j = i+1; j < this->particles.size(); j++)
+            {
+                Intersection isect;
+                int idx1 = this->particles[i];
+                int idx2 = this->particles[j];
+                if ((igPhase || particledata.phase[idx1] != particledata.phase[idx2])
+                    && ::intersect(particledata, idx1, idx2, isect))
+                {
+                    DistanceConstraint c;
+                    c.firstParticleIndex = idx1;
+                    c.secondParticleIndex = idx2;
+                    c.equality = false;
+                    c.distance = particledata.radius[idx1] + particledata.radius[idx2];
+                    particledata.numBoundConstraints[idx1]++;
+                    particledata.numBoundConstraints[idx2]++;
+
+                    addConstraint(constraints, c);
+                }
+            }
+        }
+    } 
+    else
+    {
+        for (int i = 0; i < 8; i++) 
+        {
+            children[i]->findCollisions(particledata, constraints);
+        }
     }
 }

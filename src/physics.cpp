@@ -7,29 +7,6 @@
 #define WORLD_MAX vec3( 20.f, 20.f, 20.f)
 #endif // !WORLD_MIN
 
-int largestInSubTree(Octree::Node * n) {
-    if (n->children[0] == nullptr)
-        return n->particles.size();
-    int i = 0;
-    for (int j = 0; j < 8; j++) {
-        int k = largestInSubTree(n->children[j]);
-        i = i > k ? i : k;
-    }
-    return i;
-}
-
-int particlesInSubTree(Octree::Node * n) {
-    if (n->children[0] == nullptr)
-        return n->particles.size();
-    int i = 0;
-    for (int j = 0; j < 8; j++) {
-        i += particlesInSubTree(n->children[j]);
-       
-    }
-    return i;
-}
-
-
 void Physics::step(Scene *scene, float dt)
 {
 
@@ -58,20 +35,18 @@ void Physics::step(Scene *scene, float dt)
         pPosition[i] = (min)((max)(WORLD_MIN, pPosition[i]), WORLD_MAX);
 		// ******************************************************************************************************************
 	}
-    int id = performance::startTimer("Build Octree");
-    Octree *tree = new Octree();
-    tree->construct(particles, BoundingVolume(vec3(-10, -10, -10), 20.f), minParticles, minVolume);
-    performance::stopTimer(id);
-    int larg = largestInSubTree( tree->getRoot());
-    int tot = particlesInSubTree(tree->getRoot());
-    delete tree;
+
 	// Breakable constraints
-    id = performance::startTimer("Remove broken constraints");
+    int id = performance::startTimer("Remove broken constraints");
 	constraints.removeBroken(particles);
     performance::stopTimer(id);
     
-    id = performance::startTimer("Detect collisions");
+    id = performance::startTimer("Scene collision detection");
     detectCollisions(scene, numBoundConstraints, constraints.planeCollisionConstraints, phase, pPosition);
+    performance::stopTimer(id);
+
+    id = performance::startTimer("Detect collisions");
+    collision::createCollisionConstraints(particles, constraints.particleCollisionConstraints);
     performance::stopTimer(id);
 
     id = performance::startTimer("Solve collisions");
@@ -235,25 +210,6 @@ void Physics::detectCollisions(Scene * scene, std::vector<int> & numBoundConstra
                 numBoundConstraints[i]++;
 
                 addConstraint(planeConstraints, c);
-            }
-        }
-
-        // Check collisions with other particles
-        for (unsigned int j = 0; j < i; j++)
-        {
-            Intersection isect;
-            if (phase[i] != phase[j]
-                && intersect(particles, i, j, isect))
-            {
-                DistanceConstraint c;
-                c.firstParticleIndex = i;
-                c.secondParticleIndex = j;
-                c.equality = false;
-                c.distance = particles.radius[i] + particles.radius[j];
-                numBoundConstraints[i]++;
-                numBoundConstraints[j]++;
-                
-                addConstraint(constraints.particleCollisionConstraints, c);
             }
         }
     }

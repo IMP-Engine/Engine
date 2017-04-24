@@ -23,6 +23,7 @@
 #define WORLD_MIN vec3(-20.f,-20.f,-20.f)
 #define WORLD_MAX vec3( 20.f, 20.f, 20.f)
 
+#include "collision\collision.h"
 #include "performance.h"
 #include "physics.h"
 #include "particles/ParticleRenderer.h"
@@ -80,6 +81,7 @@ const vec3 lightPosition = vec3(4.0f);
 // Simulation variables and parameters
 bool doPyshics = false;
 bool showModels = false;
+bool showCollision = false;
 bool useVariableTimestep = false;
 float timestep = 0.01667f;
 bool showSceneSelection = false;
@@ -145,8 +147,6 @@ void init() {
     physicSystem.overRelaxConst = 1.0f;
     physicSystem.restitutionCoefficientT = 0.8f; 
     physicSystem.restitutionCoefficientN = 0.8f;
-    physicSystem.minParticles = 1;
-    physicSystem.minVolume = 0.1;
 
     modelData = ModelData();
     modelData.clear();
@@ -242,7 +242,8 @@ void gui()
     if (ImGui::Button("Demo Window")) show_demo_window ^= 1;
     if (ImGui::Button("Models")) showModels ^= 1; ImGui::SameLine();
     if (ImGui::Button("Scenes")) showSceneSelection ^= 1; ImGui::SameLine();
-    if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1;
+    if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1; ImGui::SameLine();
+    if (ImGui::Button("Collision detection")) showCollision ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     visualization::gui();
     ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
@@ -259,10 +260,9 @@ void gui()
         ImGui::SliderFloat("Timestep", &timestep, 0, .05f, "%.5f"); ImGui::SameLine();
         ImGui::Text((std::to_string(1 / timestep) + " \"FPS\"").c_str());
     }
-    ImGui::SliderInt("min particles", &physicSystem.minParticles, 1, 10);
-    ImGui::SliderFloat("min volume", &physicSystem.minVolume, 0.0001, 1);
     ImGui::End();
 
+    collision::gui(&showCollision);
     model::gui(&showModels, physicSystem.particles, physicSystem.constraints, objects, modelData);
     scene->gui(&showSceneSelection);
 
