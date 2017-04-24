@@ -25,6 +25,8 @@ public:
     float pSleeping;
     float restitutionCoefficientN;
     float restitutionCoefficientT;
+    float frictionCoefficientK; // kinetic
+    float frictionCoefficientS; // static
 
     int iterations;
 	int collisionIterations;
@@ -45,7 +47,7 @@ private:
     /*
         Project position and predicted positions to valid states as specified by the planeCollisions constraints
     */
-    void resolveCollisons(std::vector<glm::vec3> & position, std::vector<glm::vec3> & pPosition, PlaneCollisionConstraintData & planeConstraints, DistanceConstraintData & particleConstraints);
+    void resolveCollisions(std::vector<glm::vec3> & position, std::vector<glm::vec3> & pPosition, std::vector<glm::float32> & invmass, PlaneCollisionConstraintData & planeConstraints, DistanceConstraintData & particleConstraints);
 
     /*
         If there is a collision with the scene, add that constraint to triangleConstraints.
