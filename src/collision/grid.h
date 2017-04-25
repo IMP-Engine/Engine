@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include "../../tbb/include/tbb/parallel_for.h"
 #include "../particles/ParticleData.h"
 #include "../constraints/DistanceConstraintData.h"
 #include "../intersections.h"
@@ -14,6 +15,6 @@ class Grid
         int numCellsSide;
 
         Grid(int numCellsSide);
-        void buildGrid(ParticleData &particles, BoundingVolume bv);
-        void findCollisions(DistanceConstraintData &constraints, ParticleData &particles, bool &ignorePhase);
+        void buildGrid(ParticleData &particles, BoundingVolume bv, bool parallel);
+        void findCollisions(DistanceConstraintData &constraints, ParticleData &particles, bool &ignorePhase, bool parallel);
 };

@@ -3,6 +3,7 @@
 collision::collisionDetectionType currentType = collision::BruteForce;
 bool showTreeDiagnostics = false;
 bool ignorePhase = false;
+bool parallel = false;
 float smallestVolume = 0.1;
 int minParticles = 1;
 int numCellsSide = 20;
@@ -56,7 +57,8 @@ void collision::gui(bool * show)
         ImGui::End();
         return;
     }
-    ImGui::Checkbox("Ignore phase", &ignorePhase);
+    ImGui::Checkbox("Ignore phase", &ignorePhase); ImGui::SameLine();
+    ImGui::Checkbox("Parallel", &parallel);
     ImGui::Text("Collision detection type.");
     ImGui::RadioButton("Brute force", reinterpret_cast<int*>(&currentType), static_cast<int>(BruteForce)); ImGui::SameLine();
     ImGui::RadioButton("Octree", reinterpret_cast<int*>(&currentType), static_cast<int>(Octree)); ImGui::SameLine();
@@ -107,8 +109,8 @@ void collision::createCollisionConstraints(ParticleData & particles, DistanceCon
         octree->findCollisions(particles, constraints);
         break;
     case Grid:
-        grid->buildGrid(particles, BoundingVolume(vec3(-11, -11, -11), 22.f));
-        grid->findCollisions(constraints, particles, ignorePhase);
+        grid->buildGrid(particles, BoundingVolume(vec3(-11, -11, -11), 22.f), parallel);
+        grid->findCollisions(constraints, particles, ignorePhase, parallel);
         break;
     }
 }
