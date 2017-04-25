@@ -11,8 +11,8 @@ bool intersect(ParticleData &particles, int first, int second, Intersection &i) 
 
     vec3 delta = pPos[first] - pPos[second];
     float deltaLength = glm::length2(delta);
-	float totalRadius = radius[first] + radius[second];
+    float totalRadius = radius[first] + radius[second];
     
 
-    return (deltaLength*deltaLength < totalRadius);
+    return (deltaLength < totalRadius*totalRadius);
 }
