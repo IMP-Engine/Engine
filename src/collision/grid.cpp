@@ -1,22 +1,19 @@
 #include "grid.h"
+#include <iostream>
 
 Grid::Grid(int numCellsSide)
 {
     this->numCellsSide = numCellsSide;
     this->numCells = numCellsSide * numCellsSide * numCellsSide;
-    for (int i = 0; i < this->numCells; ++i) {
-        if (i % numCellsSide == 0)
-        {
-            grid.push_back(std::vector<int>());
-            grid.push_back(std::vector<int>());
-        }
+    int paddedSide = numCellsSide + 2;
+    for (int i = 0; i < paddedSide * paddedSide * paddedSide; ++i) {
         grid.push_back(std::vector<int>());
     }
 }
 
 void Grid::buildGrid(ParticleData &particles, BoundingVolume bv)
 {
-    for (int i = 0; i < numCells; ++i)
+    for (int i = 0; i < grid.size(); ++i)
     {
         grid[i].clear();
     }

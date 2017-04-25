@@ -107,7 +107,7 @@ void collision::createCollisionConstraints(ParticleData & particles, DistanceCon
         octree->findCollisions(particles, constraints);
         break;
     case Grid:
-        grid->buildGrid(particles, BoundingVolume(vec3(-10, -10, -10), 20.f));
+        grid->buildGrid(particles, BoundingVolume(vec3(-11, -11, -11), 22.f));
         grid->findCollisions(constraints, particles, ignorePhase);
         break;
     }
