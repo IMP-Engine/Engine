@@ -1,4 +1,4 @@
-#include "Octree.h"
+#include "octree.h"
 
 int numParticles= 1;
 float minVolume = 0.1;

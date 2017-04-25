@@ -5,7 +5,9 @@ bool showTreeDiagnostics = false;
 bool ignorePhase = false;
 float smallestVolume = 0.1;
 int minParticles = 1;
+int numCellsSide = 100;
 
+Grid *grid;
 Octree *octree;
 
 int largestLeaf(Octree::Node * n) {
@@ -58,6 +60,7 @@ void collision::gui(bool * show)
     ImGui::Text("Collision detection type.");
     ImGui::RadioButton("Brute force", reinterpret_cast<int*>(&currentType), static_cast<int>(BruteForce)); ImGui::SameLine();
     ImGui::RadioButton("Octree", reinterpret_cast<int*>(&currentType), static_cast<int>(Octree));
+    ImGui::RadioButton("Grid", reinterpret_cast<int*>(&currentType), static_cast<int>(Grid));
 
     switch (currentType)
     {
@@ -71,6 +74,17 @@ void collision::gui(bool * show)
             ImGui::Text("Largest leaf: "); ImGui::SameLine(); ImGui::Text(std::to_string(largestLeaf(octree->getRoot())).c_str());
             ImGui::Text("Total particles in tree: "); ImGui::SameLine(); ImGui::Text(std::to_string(particlesInTree(octree->getRoot())).c_str());
             ImGui::Text("Total nodes in tree: "); ImGui::SameLine(); ImGui::Text(std::to_string(numberOfNodes(octree->getRoot())).c_str());
+        }
+        break;
+    case Grid:
+        int newNumCellsSide;
+        ImGui::SliderInt("Num cells side", &newNumCellsSide, 10, 1000);
+        if (!grid || newNumCellsSide != numCellsSide)
+        {
+            if (grid)
+                delete grid;
+            numCellsSide = newNumCellsSide;
+            grid = new ::Grid(numCellsSide);
         }
         break;
     }
@@ -91,6 +105,10 @@ void collision::createCollisionConstraints(ParticleData & particles, DistanceCon
         octree = new ::Octree();
         octree->construct(particles, BoundingVolume(vec3(-10, -10, -10), 20.f), minParticles, smallestVolume, ignorePhase);
         octree->findCollisions(particles, constraints);
+        break;
+    case Grid:
+        grid->buildGrid(particles, BoundingVolume(vec3(-10, -10, -10), 20.f));
+        grid->findCollisions(constraints, particles, ignorePhase);
         break;
     }
 }
