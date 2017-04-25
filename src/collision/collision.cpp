@@ -5,7 +5,7 @@ bool showTreeDiagnostics = false;
 bool ignorePhase = false;
 float smallestVolume = 0.1;
 int minParticles = 1;
-int numCellsSide = 100;
+int numCellsSide = 20;
 
 Grid *grid;
 Octree *octree;
@@ -78,7 +78,7 @@ void collision::gui(bool * show)
         break;
     case Grid:
         int newNumCellsSide = numCellsSide;
-        ImGui::SliderInt("Num cells side", &newNumCellsSide, 10, 1000);
+        ImGui::SliderInt("Num cells side", &newNumCellsSide, 10, 100);
         if (!grid || newNumCellsSide != numCellsSide)
         {
             if (grid)
