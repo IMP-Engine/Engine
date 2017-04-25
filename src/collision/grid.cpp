@@ -34,11 +34,11 @@ void Grid::buildGrid(ParticleData &particles, BoundingVolume bv)
         if (z < 0)
             z = 0;
         if (x > numCellsSide)
-            x = numCellsSide;
+            x = numCellsSide - 1;
         if (y > numCellsSide)
-            y = numCellsSide;
+            y = numCellsSide - 1;
         if (z > numCellsSide)
-            z = numCellsSide;
+            z = numCellsSide - 1;
         ++x;
         ++y;
         ++z;
@@ -63,7 +63,7 @@ void Grid::findCollisions(DistanceConstraintData &constraints, ParticleData &par
                 {
                     for (int j = 0; j < grid[i].size(); ++j) {
                         int xyz = i + x + y * numCellsSide + z * numCellsSide * numCellsSide;
-                        for (int k = 0; k < grid[xyz].size(); ++k)
+                        for (int k = i==xyz?j+1:0; k < grid[xyz].size(); ++k)
                         {
                             Intersection isect;
                             int idx1 = grid[i][j];
