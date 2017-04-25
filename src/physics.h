@@ -25,8 +25,8 @@ public:
     float pSleeping;
     float restitutionCoefficientN;
     float restitutionCoefficientT;
-    float frictionCoefficientK; // kinetic
-    float frictionCoefficientS; // static
+    float kineticFC; // kinetic friction coefficient
+    float staticFC; // static friction coefficient
 
     int iterations;
 	int collisionIterations;

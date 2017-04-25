@@ -188,18 +188,17 @@ void Physics::resolveCollisions(std::vector<glm::vec3> & position, std::vector<g
                 pPosition[p2] -= delta2 * overRelaxConst;
 
                 // Friction
-                // d is supposed to be the distance along the collision normal that the particles are projected,
-                // so it might include delta2, might not. To be found out!
-                float d = length((-delta1) * overRelaxConst); // - delta2
-                glm::vec3 contactNormal = (pPosition[p1] - pPosition[p2]) / length(pPosition[p1] - pPosition[p2]);
-                vec3 tangentialDelta = dot(((pPosition[p1] - position[p1]) - (pPosition[p2] - position[p2])), normalize(contactNormal))
-                    * contactNormal; // [(px[i] - x[i]) - (px[j] - x[j])] tangential to n
-                vec3 frictionalPosDelta = (invmass[p1] / (invmass[p1] + invmass[p2])) *
-                    length(contactNormal) < (frictionCoefficientS * d) ? tangentialDelta :
-                        (tangentialDelta * min(frictionCoefficientK*d/length(tangentialDelta), 1));
+                glm::vec3 contactNormal = (pPosition[p1] - pPosition[p2]) / length(pPosition[p1] - pPosition[p2]); //-delta1 / d;
+                // d = distance along the collision normal that the particles are projected
+                float d = length(delta1 * overRelaxConst);
+                glm::vec3 v = (pPosition[p1] - position[p1]) - (pPosition[p2] - position[p2]);
+                glm::vec3 tangentialDelta = v - (dot(v, contactNormal) * contactNormal); // [(px[i] - x[i]) - (px[j] - x[j])] tangential to n
+                glm::vec3 frictionalPosDelta = (invmass[p1] / (invmass[p1] + invmass[p2])) * tangentialDelta;
+                if (length(tangentialDelta) >= (staticFC * d)) // Is particles relative velocity above traction threshold?
+                    frictionalPosDelta *= min(kineticFC * d / length(tangentialDelta), 1); // if so, apply Columb friction
                 
                 pPosition[p1] += frictionalPosDelta;
-                pPosition[p2] -= invmass[p2] * frictionalPosDelta / (invmass[p1] + invmass[p2]);
+                pPosition[p2] -= frictionalPosDelta * invmass[p2] / (invmass[p1] + invmass[p2]);
             }
         }
     }
