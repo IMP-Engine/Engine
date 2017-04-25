@@ -24,10 +24,24 @@ void Grid::buildGrid(ParticleData &particles, BoundingVolume bv)
     int x, y, z;
     for (int i = 0; i < particles.cardinality; ++i)
     {
-        x = (particles.pPosition[i].x * numCellsSide / bv.length) - bv.corner.x;
-        y = (particles.pPosition[i].y * numCellsSide / bv.length) - bv.corner.y;
-        z = (particles.pPosition[i].z * numCellsSide / bv.length) - bv.corner.z;
-
+        x = numCellsSide / bv.length * (particles.pPosition[i].x - bv.corner.x);
+        y = numCellsSide / bv.length * (particles.pPosition[i].y - bv.corner.y);
+        z = numCellsSide / bv.length * (particles.pPosition[i].z - bv.corner.z);
+        if (x < 0)
+            x = 0;
+        if (y < 0)
+            y = 0;
+        if (z < 0)
+            z = 0;
+        if (x > numCellsSide)
+            x = numCellsSide;
+        if (y > numCellsSide)
+            y = numCellsSide;
+        if (z > numCellsSide)
+            z = numCellsSide;
+        ++x;
+        ++y;
+        ++z;
         grid[x + numCellsSide * y + numCellsSide * numCellsSide * z].push_back(i);
     }
 }

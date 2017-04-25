@@ -77,7 +77,7 @@ void collision::gui(bool * show)
         }
         break;
     case Grid:
-        int newNumCellsSide;
+        int newNumCellsSide = numCellsSide;
         ImGui::SliderInt("Num cells side", &newNumCellsSide, 10, 1000);
         if (!grid || newNumCellsSide != numCellsSide)
         {
