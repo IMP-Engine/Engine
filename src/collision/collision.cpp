@@ -59,7 +59,7 @@ void collision::gui(bool * show)
     ImGui::Checkbox("Ignore phase", &ignorePhase);
     ImGui::Text("Collision detection type.");
     ImGui::RadioButton("Brute force", reinterpret_cast<int*>(&currentType), static_cast<int>(BruteForce)); ImGui::SameLine();
-    ImGui::RadioButton("Octree", reinterpret_cast<int*>(&currentType), static_cast<int>(Octree));
+    ImGui::RadioButton("Octree", reinterpret_cast<int*>(&currentType), static_cast<int>(Octree)); ImGui::SameLine();
     ImGui::RadioButton("Grid", reinterpret_cast<int*>(&currentType), static_cast<int>(Grid));
 
     switch (currentType)
