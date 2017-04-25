@@ -3,6 +3,7 @@
 #include <vector>
 #include "glm/glm.hpp"
 
+#include "../../tbb/include/tbb/mutex.h"
 #include "../particles/ParticleData.h"
 
 #ifndef MAX_DISTANCE_CONSTRAINTS
@@ -18,6 +19,7 @@ public:
 
     int cardinality;
 
+    tbb::mutex mutex;
     std::vector<ivec2> particles; // Assume there is 2 particles 
     std::vector<float> stiffness;
     std::vector<float> distance;

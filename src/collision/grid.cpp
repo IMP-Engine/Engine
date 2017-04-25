@@ -76,7 +76,7 @@ void Grid::buildGrid(ParticleData &particles, BoundingVolume bv, bool parallel)
 
 void Grid::findCollisions(DistanceConstraintData &constraints, ParticleData &particles, bool &ignorePhase, bool parallel)
 {
-    if (false && parallel)
+    if (parallel)
     {
         tbb::parallel_for(tbb::blocked_range<size_t>(0, particles.cardinality),
                 [&](const tbb::blocked_range<size_t>& r) {
@@ -147,6 +147,9 @@ void Grid::findCollisions(DistanceConstraintData &constraints, ParticleData &par
                                     c.equality = false;
                                     c.distance = particles.radius[idx1] + particles.radius[idx2];
                                     particles.numBoundConstraints[idx1]++;
+                                    particles.numBoundConstraints[idx2]++;
+
+                                    addConstraint(constraints, c);
                                 }
                             }
                         }
