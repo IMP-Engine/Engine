@@ -61,9 +61,9 @@ void Grid::findCollisions(DistanceConstraintData &constraints, ParticleData &par
                                 c.firstParticleIndex = idx1;
                                 c.secondParticleIndex = idx2;
                                 c.equality = false;
-                                c.distance = particledata.radius[idx1] + particledata.radius[idx2];
-                                particledata.numBoundConstraints[idx1]++;
-                                particledata.numBoundConstraints[idx2]++;
+                                c.distance = particles.radius[idx1] + particles.radius[idx2];
+                                particles.numBoundConstraints[idx1]++;
+                                particles.numBoundConstraints[idx2]++;
 
                                 addConstraint(constraints, c);
                             }

@@ -4,6 +4,7 @@
 #include "../particles/ParticleData.h"
 #include "../constraints/DistanceConstraintData.h"
 #include "../intersections.h"
+#include "../primitives/BoundingVolume.h"
 
 class Grid
 {
