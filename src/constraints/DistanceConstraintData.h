@@ -19,7 +19,6 @@ public:
 
     int cardinality;
 
-    tbb::mutex mutex;
     std::vector<ivec2> particles; // Assume there is 2 particles 
     std::vector<float> stiffness;
     std::vector<float> distance;

@@ -1,6 +1,6 @@
 #include "DistanceConstraintData.h"
 
-
+tbb::mutex mutex;
 
 DistanceConstraintData::DistanceConstraintData()
 {
