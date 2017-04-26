@@ -38,7 +38,7 @@ bool DistanceConstraintData::solveDistanceConstraint(glm::vec3 & delta1, glm::ve
 
     float c = length(diff) - distance[constraintIndex];
 
-    if (!equality[constraintIndex] && c > 0)
+    if (!equality[constraintIndex] && c >= 0)
         return false;
 
     vec3 grad = glm::normalize(diff);
