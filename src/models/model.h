@@ -10,6 +10,7 @@
 #include <algorithm>
 
 #include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
 #include "../imgui/imgui.h"
 #include "../glad/glad.h"
 
@@ -23,6 +24,7 @@
 #include "../models/ModelData.h"
 
 #include "Box.h"
+#include "Cloth.h"
 
 //http://www.softagalleria.net/download/dirent/
 #include <dirent.h>

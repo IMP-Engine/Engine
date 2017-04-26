@@ -18,7 +18,7 @@ void ModelData::clear()
     closestParticles.clear();
 }
 
-void ModelData::addVertices(std::vector<short> &e, std::vector<float[3]> &bc, std::vector<int[3]> &particles, ModelData &data)
+void ModelData::addVertices(std::vector<int> &e, std::vector<float[3]> &bc, std::vector<int[3]> &particles, ModelData &data)
 {
     for (unsigned int i = 0; i < bc.size(); ++i)
     {

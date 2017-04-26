@@ -35,8 +35,6 @@ public:
     unsigned int normalBuffer;
     unsigned int shader;
 
-    glm::mat4 modelMatrix;
-
     std::vector<glm::vec3> loadedVertices;
     std::vector<float> vertices;
     std::vector<int> indices;
