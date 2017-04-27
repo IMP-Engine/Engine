@@ -87,19 +87,19 @@ void Scene::loadScene(std::string scene) {
         }
     }
 
-    for (int i = 0; i < normalIndices.size(); ++i) {
+    for (unsigned int i = 0; i < normalIndices.size(); ++i) {
         normals.push_back(normalVectors[normalIndices[i]].x);
         normals.push_back(normalVectors[normalIndices[i]].y);
         normals.push_back(normalVectors[normalIndices[i]].z);
     }
 
-    for (int i = 0; i < indices.size(); ++i) {
+    for (unsigned int i = 0; i < indices.size(); ++i) {
         vertices.push_back(loadedVertices[indices[i]].x);
         vertices.push_back(loadedVertices[indices[i]].y);
         vertices.push_back(loadedVertices[indices[i]].z);
     }
 
-    for (int i = 0; i < indices.size(); ++i) {
+    for (unsigned int i = 0; i < indices.size(); ++i) {
     }
 
     for (unsigned int i = 0; i < indices.size(); i+=3)
@@ -177,7 +177,10 @@ void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &modelViewProjectionMatrix, 
     glEnable(GL_CULL_FACE);
 }
 
-void Scene::init() {
+void Scene::init() 
+{
+
+    windActive = false;
 
     // Shader setup
     shader = glHelper::loadShader(VERT_SHADER_PATH, FRAG_SHADER_PATH);

@@ -7,7 +7,7 @@
 #define WORLD_MAX vec3( 20.f, 20.f, 20.f)
 #endif // !WORLD_MIN
 
-
+#define WIND 4.f
 
 void Physics::step(Scene *scene, float dt)
 {
@@ -28,7 +28,12 @@ void Physics::step(Scene *scene, float dt)
 		* Damp velocities		-- Skip for now -- TODO --
 		* Predict position		x_i^* = x_i + dt * v_i
 		*/
-		velocity[i] = velocity[i] - glm::vec3(0.f, dt * GRAVITY, 0.f); // Gravity
+		velocity[i] -= glm::vec3(0.f, dt * GRAVITY, 0.f); // Gravity
+
+        if (scene->windActive) {
+            velocity[i] += glm::vec3(dt * WIND, 0.f, 0.f);
+        }
+
 		pPosition[i] = position[i] + dt * velocity[i]; // symplectic Euler
 		// ******************************************************************************************************************
 		/*
@@ -131,7 +136,7 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector
             FixedPointConstraintData &fixedPosConstraints = constraints.fixedPointConstraints;
             vec3 delta(0);
 
-            for (int constraintIndex = 0; constraintIndex < fixedPosConstraints.cardinality; constraintIndex++)
+            for (unsigned int constraintIndex = 0; constraintIndex < fixedPosConstraints.cardinality; constraintIndex++)
             {
                 if (fixedPosConstraints.solveDistanceConstraint(constraintIndex, delta, particles))
                 {
@@ -147,7 +152,7 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector
 
 void Physics::dampPlaneCollision(std::vector<int> & numBoundConstraints, std::vector<glm::vec3> & velocity, PlaneCollisionConstraintData & planeConstraints)
 {
-    for (int i = 0; i < planeConstraints.particles.size(); i++)
+    for (unsigned int i = 0; i < planeConstraints.particles.size(); i++)
     {
         // Split into tangential and normal velocity
         vec3 nVel = dot(planeConstraints.normals[i], velocity[planeConstraints.particles[i]]) * planeConstraints.normals[i];
@@ -215,8 +220,8 @@ void Physics::detectCollisions(Scene * scene, std::vector<int> & numBoundConstra
         for (unsigned int j = 0; j < i; j++)
         {
             Intersection isect;
-            if (phase[i] != phase[j]
-                && intersect(particles, i, j, isect))
+            if (//phase[i] != phase[j] && 
+                intersect(particles, i, j, isect))
             {
                 DistanceConstraint c;
                 c.firstParticleIndex = i;
