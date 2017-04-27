@@ -12,7 +12,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include "../imgui/imgui.h"
+#ifndef __gl_h_
 #include "../glad/glad.h"
+#endif // !__gl_h_
 
 #ifndef _MODEL_CONFIG
 #include "modelConfig.h"

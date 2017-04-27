@@ -9,9 +9,9 @@ void model::makeClothModel(ModelConfig & config, bool hasFixedCorners, ParticleD
     float radius = min(dx,dz) / 2;
     glm::vec3 base = config.centerPos - (config.scale / 2.f);
 
-    for (unsigned int i = 0;i < config.numParticles.x;i++) 
+    for (int i = 0;i < config.numParticles.x;i++) 
     {
-        for (unsigned int j = 0; j < config.numParticles.z; j++)
+        for (int j = 0; j < config.numParticles.z; j++)
         {
             Particle p;
             p.invmass = config.invmass;
@@ -84,6 +84,11 @@ void model::makeClothModel(ModelConfig & config, bool hasFixedCorners, ParticleD
         FixedPointConstraint c;
         c.particle = start;
         c.position = particles.position[start];
+        addConstraint(constraints.fixedPointConstraints, c);
+
+
+        c.particle = start+ config.numParticles.x-1;
+        c.position = particles.position[c.particle];
         addConstraint(constraints.fixedPointConstraints, c);
     }
     

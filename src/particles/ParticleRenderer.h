@@ -1,7 +1,10 @@
 #pragma once
 
 #include <vector>
+#ifndef __gl_h_
 #include "../glad/glad.h"
+#endif // !__gl_h_
+
 #include <GLFW/glfw3.h>
 #include "glm/glm.hpp"
 #include "../glHelper.h"

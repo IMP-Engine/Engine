@@ -50,13 +50,38 @@ void Camera::mouseCallback(GLFWwindow* window, double newx, double newy)
 
 void Camera::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
-	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-		double x, y;
-		glfwGetCursorPos(window, &x, &y);
-		this->lastX = (float)x;
-		this->lastY = (float)y;
-	}
-	
+    switch (button) {
+    case GLFW_MOUSE_BUTTON_LEFT:
+	    if (action == GLFW_PRESS) {
+		    double x, y;
+		    glfwGetCursorPos(window, &x, &y);
+		    this->lastX = (float)x;
+		    this->lastY = (float)y;
+	    }
+        break;
+    case GLFW_MOUSE_BUTTON_RIGHT:
+        if (action == GLFW_RELEASE) {
+            
+            uint base = physicSystem->particles.cardinality;
+
+            model::ModelConfig config;
+            config.setDefaults();
+            config.invmass = 0.05f;
+            config.phase = 0;
+            config.numParticles = ivec3(2);
+            config.distanceThreshold = 2.f;
+            config.scale = vec3(1);
+            config.stiffness = 1;
+            config.centerPos = cameraPos + 5.f*cameraFront;
+
+            Box::makeBox(physicSystem->particles, physicSystem->constraints, config);
+            for (uint i = base;i < physicSystem->particles.cardinality;i++) {
+                physicSystem->particles.velocity[i] = 20.f*cameraFront;
+            }
+        }
+        break;
+    default: break;
+    }
 }
 
 void Camera::mouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset)

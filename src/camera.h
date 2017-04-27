@@ -3,6 +3,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <GLFW/glfw3.h>
 #include "input.h"
+#include "physics.h"
+#include "models/Box.h"
+#include "models/modelConfig.h"
 
 using namespace glm;
 
@@ -26,6 +29,8 @@ public:
 	void move(bool keys[], float deltaTime);
 
 	float getFovy() { return this->fovy; }
+
+    Physics *physicSystem;
 
 private:
 	vec3 cameraPos;

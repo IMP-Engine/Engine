@@ -9,6 +9,7 @@
 #include <glm/gtx/norm.hpp>
 
 #include "../tbb/include/tbb/parallel_for.h"
+#include "collision/collision.h"
 #include "scenes/Scene.h"
 #include "particles/ParticleData.h"
 #include "constraints/ConstraintData.h"

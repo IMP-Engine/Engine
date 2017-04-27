@@ -150,7 +150,7 @@ namespace performance {
 
         // Find maximum value so that we can scale our graph
         max = graphData[0][graphData[0].size()];
-		for (int i = 1; i < graphData.size(); i++)
+		for (unsigned int i = 1; i < graphData.size(); i++)
 		{
 			max = max > graphData[i][graphData[i].size()] ? max : graphData[i][graphData[i].size()];
 		}
