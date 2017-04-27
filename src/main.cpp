@@ -23,7 +23,7 @@
 #define WORLD_MIN vec3(-20.f,-20.f,-20.f)
 #define WORLD_MAX vec3( 20.f, 20.f, 20.f)
 
-#include "collision\collision.h"
+#include "collision/collision.h"
 #include "performance.h"
 #include "physics.h"
 #include "particles/ParticleRenderer.h"
