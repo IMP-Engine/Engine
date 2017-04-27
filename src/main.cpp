@@ -151,6 +151,8 @@ void init() {
     physicSystem.overRelaxConst = 1.0f;
     physicSystem.restitutionCoefficientT = 0.8f; 
     physicSystem.restitutionCoefficientN = 0.8f;
+    physicSystem.kineticFC = 0.2f;
+    physicSystem.staticFC = 0.2f;
 
     modelData = ModelData();
     modelData.clear();
@@ -260,6 +262,8 @@ void gui()
     ImGui::SliderFloat("Particle Sleeping (squared)", &physicSystem.pSleeping, 0, 1, "%.9f", 10.f);
     ImGui::SliderFloat("Tangential COR", &physicSystem.restitutionCoefficientT, -1, 1);
     ImGui::SliderFloat("Normal COR", &physicSystem.restitutionCoefficientN, 0, 1);
+    ImGui::SliderFloat("Kinetic Friction Coefficient", &physicSystem.kineticFC, 0, 1);
+    ImGui::SliderFloat("Static Friction Coefficient", &physicSystem.staticFC, 0, 1);
     if (!useVariableTimestep) 
     {
         ImGui::SliderFloat("Timestep", &timestep, 0, .05f, "%.5f"); ImGui::SameLine();
