@@ -48,6 +48,7 @@ void Physics::step(Scene *scene, float dt)
     
     id = performance::startTimer("Scene collision detection");
     detectCollisions(scene, numBoundConstraints, constraints.planeCollisionConstraints, phase, pPosition);
+    performance::stopTimer(id);
 
     id = performance::startTimer("Detect collisions");
     collision::createCollisionConstraints(particles, constraints.particleCollisionConstraints);
@@ -216,17 +217,12 @@ void Physics::detectCollisions(Scene * scene, std::vector<int> & numBoundConstra
     int id;
     if (parallelDetectCollisions)
     {
-        id = performance::startTimer("Detect scene collisions");
-
         tbb::parallel_for(
             tbb::blocked_range<size_t>(0, particles.cardinality),
             PlaneCollisionConstraintData::PlaneCollisionDetection(scene, particles, planeConstraints));
-
-        performance::stopTimer(id);
     }
     else
     {
-        int id = performance::startTimer("Detect scene collisions");
         for (unsigned int i = 0; i != particles.cardinality; i++)
         {
             // Check collisions with scene
