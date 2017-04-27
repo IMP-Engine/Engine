@@ -3,6 +3,7 @@
 #include <vector>
 #include "glm/glm.hpp"
 
+#include "../../tbb/include/tbb/mutex.h"
 #include "../particles/ParticleData.h"
 
 #ifndef MAX_DISTANCE_CONSTRAINTS

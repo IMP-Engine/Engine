@@ -1,6 +1,6 @@
 #include "DistanceConstraintData.h"
 
-
+tbb::mutex mutex;
 
 DistanceConstraintData::DistanceConstraintData()
 {
@@ -85,10 +85,13 @@ void DistanceConstraintData::removeBroken(ParticleData &particleData)
 
 void addConstraint(DistanceConstraintData &data, DistanceConstraint &config)
 {
+    {
+        tbb::mutex::scoped_lock lock(mutex);
     data.particles.push_back({ config.firstParticleIndex, config.secondParticleIndex });
     data.stiffness.push_back(config.stiffness);
     data.distance.push_back(config.distance);
     data.equality.push_back(config.equality);
     data.threshold.push_back(config.threshold);
     data.cardinality++;
+    }
 }
