@@ -1,6 +1,5 @@
 #include "SphereIntersection.h"
 
-
 bool intersect(ParticleData &particles, int first, int second, Intersection &i) {
     /**
      * Aliases 
@@ -11,17 +10,9 @@ bool intersect(ParticleData &particles, int first, int second, Intersection &i) 
 
 
     vec3 delta = pPos[first] - pPos[second];
-    float deltaLength = length(delta);
-	float totalRadius = radius[first] + radius[second];
+    float deltaLength = glm::length2(delta);
+    float totalRadius = radius[first] + radius[second];
+    
 
-
-    if (deltaLength < totalRadius) 
-    {
-        float diff = (deltaLength - totalRadius) / (deltaLength * (invmass[first] + invmass[second]));
-
-        i.point            = -invmass[first]  * delta * diff;
-        i.responseGradient =  invmass[second] * delta * diff;
-        return true;
-    }
-    return false;
+    return (deltaLength < totalRadius*totalRadius);
 }
