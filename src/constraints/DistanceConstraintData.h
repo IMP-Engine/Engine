@@ -3,6 +3,7 @@
 #include <vector>
 #include "glm/glm.hpp"
 
+#include "../../tbb/include/tbb/mutex.h"
 #include "../particles/ParticleData.h"
 #include "../tbb/include/tbb/parallel_for.h"
 

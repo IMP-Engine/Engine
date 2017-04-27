@@ -11,10 +11,11 @@
 
 #include "bruteforce.h"
 #include "octree.h"
+#include "grid.h"
 
 namespace collision
 {
-    enum collisionDetectionType {BruteForce, Octree};
+    enum collisionDetectionType {BruteForce, Octree, Grid};
 
     void gui(bool* show);
     void createCollisionConstraints(ParticleData & particles, DistanceConstraintData & constraints);

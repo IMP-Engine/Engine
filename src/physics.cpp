@@ -54,7 +54,7 @@ void Physics::step(Scene *scene, float dt)
     performance::stopTimer(id);
 
     id = performance::startTimer("Solve collisions");
-    resolveCollisions(position, pPosition, constraints.planeCollisionConstraints, constraints.particleCollisionConstraints);
+    resolveCollisions(position, pPosition, invmass, constraints.planeCollisionConstraints, constraints.particleCollisionConstraints);
     performance::stopTimer(id);
 
     id = performance::startTimer("Solve constraints");
@@ -76,7 +76,7 @@ void Physics::step(Scene *scene, float dt)
     }
 
     id = performance::startTimer("Damp collisions");
-    // Update velocities according to friction and restituition coefficients
+    // Update velocities according to friction and restitution coefficients
     dampPlaneCollision(numBoundConstraints, velocity, constraints.planeCollisionConstraints);
     performance::stopTimer(id);
 
@@ -170,7 +170,7 @@ void Physics::dampPlaneCollision(std::vector<int> & numBoundConstraints, std::ve
     }
 }
 
-void Physics::resolveCollisions(std::vector<glm::vec3> & position, std::vector<glm::vec3> & pPosition, PlaneCollisionConstraintData & planeConstraints, DistanceConstraintData & particleConstraints)
+void Physics::resolveCollisions(std::vector<glm::vec3> & position, std::vector<glm::vec3> & pPosition, std::vector<glm::float32> & invmass, PlaneCollisionConstraintData & planeConstraints, DistanceConstraintData & particleConstraints)
 {
     vec3 delta1(0);
     vec3 delta2(0);
@@ -193,6 +193,19 @@ void Physics::resolveCollisions(std::vector<glm::vec3> & position, std::vector<g
                 int p2 = particleConstraints.particles[i][1];
                 pPosition[p1] -= delta1 * overRelaxConst;
                 pPosition[p2] -= delta2 * overRelaxConst;
+
+                // Friction
+                glm::vec3 contactNormal = (pPosition[p1] - pPosition[p2]) / length(pPosition[p1] - pPosition[p2]); //-delta1 / d;
+                // d = distance along the collision normal that the particles are projected
+                float d = length(delta1 * overRelaxConst);
+                glm::vec3 v = (pPosition[p1] - position[p1]) - (pPosition[p2] - position[p2]);
+                glm::vec3 tangentialDelta = v - (dot(v, contactNormal) * contactNormal); // [(px[i] - x[i]) - (px[j] - x[j])] tangential to n
+                glm::vec3 frictionalPosDelta = (invmass[p1] / (invmass[p1] + invmass[p2])) * tangentialDelta;
+                if (length(tangentialDelta) >= (staticFC * d)) // Is particles relative velocity above traction threshold?
+                    frictionalPosDelta *= min(kineticFC * d / length(tangentialDelta), 1); // if so, apply Columb friction
+                
+                pPosition[p1] += frictionalPosDelta;
+                pPosition[p2] -= frictionalPosDelta * invmass[p2] / (invmass[p1] + invmass[p2]);
             }
         }
     }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glm/gtx/norm.hpp>
+
 #include "../primitives.h"
 #include "Intersection.h"
 

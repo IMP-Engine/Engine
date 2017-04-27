@@ -1,6 +1,6 @@
 #include "DistanceConstraintData.h"
 
-
+tbb::mutex mutex;
 
 DistanceConstraintData::DistanceConstraintData()
 {
@@ -38,7 +38,7 @@ bool DistanceConstraintData::solveDistanceConstraint(glm::vec3 & delta1, glm::ve
 
     float c = length(diff) - distance[constraintIndex];
 
-    if (!equality[constraintIndex] && c > 0)
+    if (!equality[constraintIndex] && c >= 0)
         return false;
 
     vec3 grad = glm::normalize(diff);
@@ -85,10 +85,13 @@ void DistanceConstraintData::removeBroken(ParticleData &particleData)
 
 void addConstraint(DistanceConstraintData &data, DistanceConstraint &config)
 {
+    {
+        tbb::mutex::scoped_lock lock(mutex);
     data.particles.push_back({ config.firstParticleIndex, config.secondParticleIndex });
     data.stiffness.push_back(config.stiffness);
     data.distance.push_back(config.distance);
     data.equality.push_back(config.equality);
     data.threshold.push_back(config.threshold);
     data.cardinality++;
+    }
 }
