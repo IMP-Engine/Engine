@@ -145,8 +145,8 @@ void init() {
     physicSystem.overRelaxConst = 1.0f;
     physicSystem.restitutionCoefficientT = 0.8f; 
     physicSystem.restitutionCoefficientN = 0.8f;
-    physicSystem.kineticFC = 0.5f;
-    physicSystem.staticFC = 0.6f;
+    physicSystem.kineticFC = 0.2f;
+    physicSystem.staticFC = 0.2f;
 
     modelData = ModelData();
     modelData.clear();
