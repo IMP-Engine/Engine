@@ -48,8 +48,12 @@ void Physics::step(Scene *scene, float dt)
 	constraints.removeBroken(particles);
     performance::stopTimer(id);
     
-    id = performance::startTimer("Detect collisions");
+    id = performance::startTimer("Scene collision detection");
     detectCollisions(scene, numBoundConstraints, constraints.planeCollisionConstraints, phase, pPosition);
+    performance::stopTimer(id);
+
+    id = performance::startTimer("Detect collisions");
+    collision::createCollisionConstraints(particles, constraints.particleCollisionConstraints);
     performance::stopTimer(id);
 
     id = performance::startTimer("Solve collisions");
@@ -213,25 +217,6 @@ void Physics::detectCollisions(Scene * scene, std::vector<int> & numBoundConstra
                 numBoundConstraints[i]++;
 
                 addConstraint(planeConstraints, c);
-            }
-        }
-
-        // Check collisions with other particles
-        for (unsigned int j = 0; j < i; j++)
-        {
-            Intersection isect;
-            if (//phase[i] != phase[j] && 
-                intersect(particles, i, j, isect))
-            {
-                DistanceConstraint c;
-                c.firstParticleIndex = i;
-                c.secondParticleIndex = j;
-                c.equality = false;
-                c.distance = particles.radius[i] + particles.radius[j];
-                numBoundConstraints[i]++;
-                numBoundConstraints[j]++;
-                
-                addConstraint(constraints.particleCollisionConstraints, c);
             }
         }
     }
