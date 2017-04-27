@@ -43,7 +43,7 @@ void ModelRenderer::init()
 
 void calculateVertices(ParticleData &particles, ModelData &data, std::vector<glm::vec3> &positions, std::vector<glm::vec3> &normals)
 {
-    for (int i = 0; i < data.closestParticles.size(); i += 3)
+    for (uint i = 0; i < data.closestParticles.size(); i += 3)
     {
         glm::vec3 p1 = particles.position[data.closestParticles[i]];
         glm::vec3 p2 = particles.position[data.closestParticles[i+1]];
@@ -72,7 +72,7 @@ void calculateVertices(ParticleData &particles, ModelData &data, std::vector<glm
         normals[ic] += normal;
     }
 
-    for (int i=0; i < normals.size(); i++)
+    for (uint i=0; i < normals.size(); i++)
     {
         normals[i] = normalize(normals[i]);
     }

@@ -1,6 +1,8 @@
 #pragma once
 #include <vector>
+#ifndef __gl_h_
 #include "../glad/glad.h"
+#endif
 
 #define MAX_VERTICES 200000
 
