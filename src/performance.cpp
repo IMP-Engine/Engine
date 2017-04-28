@@ -76,11 +76,11 @@ std::vector<ImColor> colors = {
 	ImColor(152, 35, 149),
 	ImColor(0, 135, 203),
 	ImColor(37, 9, 99),
-	ImColor(213, 155, 17),
 	ImColor(142, 8, 14),
+    ImColor(0.f,0.f,0.f,1.f),
 	ImColor(7, 210, 26),
-	ImColor(0.f,0.f,0.f,1.f),
-	ImColor(0.f,0.f,0.f,1.f),
+    ImColor(213, 155, 17),
+    ImColor(255,0,255),
 	ImColor(0.f,0.f,0.f,1.f),
 	ImColor(0.f,0.f,0.f,1.f) };
 

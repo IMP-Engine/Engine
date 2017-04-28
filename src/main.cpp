@@ -7,9 +7,6 @@
 #include <iostream>
 #include "debug.h"
 
-// Example of path
-#include "../tbb/include/tbb/parallel_for.h"
-
 #include "performance.h"
 #include "camera.h"
 
@@ -151,6 +148,8 @@ void init() {
     physicSystem.overRelaxConst = 1.0f;
     physicSystem.restitutionCoefficientT = 0.8f; 
     physicSystem.restitutionCoefficientN = 0.8f;
+    physicSystem.parallelConstraintSolve = false;
+    physicSystem.parallelDetectCollisions = false;
     physicSystem.kineticFC = 0.2f;
     physicSystem.staticFC = 0.2f;
 
@@ -251,9 +250,11 @@ void gui()
     if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1; ImGui::SameLine();
     if (ImGui::Button("Collision detection")) showCollision ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-    visualization::gui();
-    ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
+	visualization::gui();
+	ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
     ImGui::Checkbox("Timestep from framerate", &useVariableTimestep);
+    ImGui::Checkbox("Parallel constraint solve", &physicSystem.parallelConstraintSolve); ImGui::SameLine();
+    //ImGui::Checkbox("Parallel collision detection", &physicSystem.parallelDetectCollisions);
     ImGui::Checkbox("Apply windlike force", &scene->windActive);
     ImGui::Checkbox("Render surfaces", &renderSurfaces);
     ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
