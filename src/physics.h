@@ -8,6 +8,7 @@
 #include <glm/geometric.hpp>
 #include <glm/gtx/norm.hpp>
 
+#include "../tbb/include/tbb/parallel_for.h"
 #include "collision/collision.h"
 #include "scenes/Scene.h"
 #include "particles/ParticleData.h"
@@ -26,6 +27,8 @@ public:
     float pSleeping;
     float restitutionCoefficientN;
     float restitutionCoefficientT;
+    bool parallelConstraintSolve;
+    bool parallelDetectCollisions;
     float kineticFC; // kinetic friction coefficient
     float staticFC; // static friction coefficient
 
@@ -38,6 +41,7 @@ public:
 	void step(Scene *scene, float dt);
 
 private:
+
     /*
         Stationary iterative linear solver - Gauss-Seidel
     */

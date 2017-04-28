@@ -28,10 +28,10 @@ void PlaneCollisionConstraintData::clear()
 	cardinality = 0;
 }
 
-void addConstraint(PlaneCollisionConstraintData & data, PlaneCollisionConstraint & config)
+void PlaneCollisionConstraintData::addConstraint(PlaneCollisionConstraint & config)
 {
-	data.particles.push_back(config.particleIndex);
-	data.normals.push_back(config.normal);
-	data.distances.push_back(config.distance);
-	data.cardinality++;
+	particles.push_back(config.particleIndex);
+	normals.push_back(config.normal);
+	distances.push_back(config.distance);
+	cardinality++;
 }
