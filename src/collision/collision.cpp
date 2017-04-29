@@ -4,12 +4,13 @@ collision::collisionDetectionType currentType = collision::BruteForce;
 bool showTreeDiagnostics = false;
 bool ignorePhase = false;
 bool parallel = false;
-float smallestVolume = 0.1;
+float smallestVolume = 0.1f;
 int minParticles = 1;
 int numCellsSide = 20;
 
 Grid *grid;
 Octree *octree;
+KDTree *kdtree;
 
 int largestLeaf(Octree::Node * n) {
     if (n->children[0] == nullptr)
@@ -62,7 +63,8 @@ void collision::gui(bool * show)
     ImGui::Text("Collision detection type.");
     ImGui::RadioButton("Brute force", reinterpret_cast<int*>(&currentType), static_cast<int>(BruteForce)); ImGui::SameLine();
     ImGui::RadioButton("Octree", reinterpret_cast<int*>(&currentType), static_cast<int>(Octree)); ImGui::SameLine();
-    ImGui::RadioButton("Grid", reinterpret_cast<int*>(&currentType), static_cast<int>(Grid));
+    ImGui::RadioButton("Grid", reinterpret_cast<int*>(&currentType), static_cast<int>(Grid)); ImGui::SameLine();
+    ImGui::RadioButton("k-d tree", reinterpret_cast<int*>(&currentType), static_cast<int>(KDTree));
 
     switch (currentType)
     {
@@ -70,7 +72,7 @@ void collision::gui(bool * show)
         break;
     case Octree: 
         ImGui::SliderInt("min particles", &minParticles, 1, 500);
-        ImGui::SliderFloat("min volume", &smallestVolume, 0.001, 100);
+        ImGui::SliderFloat("min volume", &smallestVolume, 0.001f, 100.f);
         ImGui::Checkbox("Show tree diagnostics", &showTreeDiagnostics);
         if (showTreeDiagnostics && octree) {
             ImGui::Text("Largest leaf: "); ImGui::SameLine(); ImGui::Text(std::to_string(largestLeaf(octree->getRoot())).c_str());
@@ -112,5 +114,18 @@ void collision::createCollisionConstraints(ParticleData & particles, DistanceCon
         grid->buildGrid(particles, BoundingVolume(vec3(-11, -11, -11), 22.f), parallel);
         grid->findCollisions(constraints, particles, ignorePhase, parallel);
         break;
+    case KDTree:
+        if (kdtree) {
+            delete kdtree;
+        }
+        kdtree = new ::KDTree();
+        kdtree->maxTreeDepth = 50;
+        kdtree->numParticlesInLeafBreakpoint = 5;
+        kdtree->root = kdtree->build(particles);
+        kdtree->findCollisions(particles, constraints, ignorePhase);
+        if (true) {
+            int tmp = 12;
+            tmp++;
+        }
     }
 }

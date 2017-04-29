@@ -2,51 +2,58 @@
 #include <algorithm>
 #include "../particles/ParticleData.h"
 #include "../constraints/DistanceConstraintData.h"
+#include "../intersections/SphereIntersection.h"
 #include "../primitives/BoundingVolume.h"
+#include <iostream>
 #include "glm/glm.hpp"
 
-
-
-class KDNode {
-public:
-	KDNode();
-	~KDNode();
-
-    static int KDNode::MAX_TREE_DEPTH;
-    static int KDNode::NUM_TRIANGLE_LEAF_BREAKPOINT;
-
-
-	bool leaf;
-	KDNode *left;
-	KDNode *right;
-	std::vector<int> particles;
-    glm::vec3 boxMin, boxMax;
-
-
-	void subdivide(ParticleData &particleData);
-	void subdivide(int depth, ParticleData &particleData);
-	bool intersect(int particleIndex, ParticleData &particleData, DistanceConstraintData &constraints);
-
-	int KDNode::getDepth();
-	int KDNode::getDepth(int current);
-
-	int KDNode::getNumInLargestLeaf();
-
-};
 
 class KDTree
 {
 public:
+
+    class KDNode {
+    public:
+        KDNode(int maxDepth, unsigned int breakpoint) 
+            : maxTreeDepth(maxDepth),
+              numParticlesInLeafBreakpoint(breakpoint)
+        {};
+        ~KDNode() {};
+
+        int maxTreeDepth;
+        unsigned int numParticlesInLeafBreakpoint;
+
+
+	    bool leaf;
+	    KDNode *left;
+	    KDNode *right;
+        float mid;
+
+	    std::vector<int> particles;
+        glm::vec3 boxMin, boxMax;
+
+
+	    void subdivide(ParticleData &particleData);
+	    void subdivide(int depth, ParticleData &particleData);
+	    void findCollisionsForParticle(int particleIndex, ParticleData &particleData, DistanceConstraintData &constraints, bool ignorePhase, int depth);
+        void print(int depth);
+
+	    int KDNode::getDepth();
+	    int KDNode::getDepth(int current);
+
+	    int KDNode::getNumInLargestLeaf();
+
+    };
+
 	 KDTree() {};
 	~KDTree() {};
 
-	bool build(ParticleData &particles);
-	bool intersect(int particleIndex, ParticleData particleData, DistanceConstraintData constraints);
+    KDNode *build(ParticleData &particles);
+    void findCollisions(ParticleData &particles, DistanceConstraintData &constraints, bool ignorePhase);
 
     int maxTreeDepth;
-    int numParticlesInLeafBreakpoint;
+    int unsigned numParticlesInLeafBreakpoint;
 
-private:
 	KDNode *root;
 };
 

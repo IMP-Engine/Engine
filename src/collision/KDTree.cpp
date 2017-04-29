@@ -4,23 +4,33 @@
 #define KD_AXIS_Y 1
 #define KD_AXIS_Z 2
 
-#define DEBUG_PRINT_ 1
+// #define DEBUG_PRINT 1
 
-int KDNode::MAX_TREE_DEPTH = 50;
-int KDNode::NUM_TRIANGLE_LEAF_BREAKPOINT = 3;
-
-
-KDNode::KDNode() {
+void indent(int k) {
+    for (int i = 0; i < k; i++)
+    {
+        std::cout << "    |";
+    }
 }
 
-KDNode::~KDNode() {
+void KDTree::KDNode::print(int depth) {
+    std::cout << "Node: " << particles.size() << std::endl;
+    if (!leaf) {
+        indent(depth);
+        std::cout << "Left ";
+        left->print(depth + 1);
+
+        indent(depth);
+        std::cout << "Right ";
+        right->print(depth + 1);
+    }
 }
 
-int KDNode::getDepth() {
+int KDTree::KDNode::getDepth() {
 	return getDepth(0);
 }
 
-int KDNode::getDepth(int current) {
+int KDTree::KDNode::getDepth(int current) {
 	if (leaf) {
 		return current;
 	}
@@ -31,7 +41,7 @@ int KDNode::getDepth(int current) {
 	);
 }
 
-int KDNode::getNumInLargestLeaf() {
+int KDTree::KDNode::getNumInLargestLeaf() {
 	if (leaf) {
 		return particles.size();
 	}
@@ -43,11 +53,11 @@ int KDNode::getNumInLargestLeaf() {
 	}
 }
 
-void KDNode::subdivide(ParticleData &particleData) {
+void KDTree::KDNode::subdivide(ParticleData &particleData) {
 	return subdivide(0, particleData);
 }
 
-void KDNode::subdivide(int depth, ParticleData &particleData)
+void KDTree::KDNode::subdivide(int depth, ParticleData &particleData)
 {
 	//cout << "Subdividing " << triangles.size() << " triangles at depth " << depth << "\n";
     int axis = depth % 3;
@@ -60,14 +70,14 @@ void KDNode::subdivide(int depth, ParticleData &particleData)
 		return;
 	}
 
-	bool stopSubdivision = particles.size() < NUM_TRIANGLE_LEAF_BREAKPOINT 
-                        || depth            > MAX_TREE_DEPTH;
+	bool stopSubdivision = particles.size() < numParticlesInLeafBreakpoint
+                        || depth            > maxTreeDepth;
 	if (particles.size() == 1 || stopSubdivision) {
 		
-		left = new KDNode();
+		left = new KDNode(maxTreeDepth, numParticlesInLeafBreakpoint);
 		left->particles = std::vector<int>();
 		
-		right = new KDNode();
+		right = new KDNode(maxTreeDepth, numParticlesInLeafBreakpoint);
 		right->particles = std::vector<int>();
 
 		return;
@@ -99,10 +109,10 @@ void KDNode::subdivide(int depth, ParticleData &particleData)
 
 
     unsigned int n = temp.size();
-    float mid = temp[n].second;
+    mid = temp[n/2].second;
 
     if (n % 2 == 0) {
-        mid += temp[n + 1].second;
+        mid += temp[n/2 + 1].second;
         mid /= 2;
     }
 
@@ -118,8 +128,8 @@ void KDNode::subdivide(int depth, ParticleData &particleData)
 
 	}
 
-	left = new KDNode();
-	right = new KDNode();
+	left = new KDNode(maxTreeDepth, numParticlesInLeafBreakpoint);
+	right = new KDNode(maxTreeDepth, numParticlesInLeafBreakpoint);
 
     left->boxMin = boxMin;
     left->boxMax = boxMax;
@@ -136,7 +146,7 @@ void KDNode::subdivide(int depth, ParticleData &particleData)
 
 	bool equalFactor = false;
 
-	if (leftParticles.size() > 0) {
+	if (left->particles.size() > 0) {
 		left->subdivide(depth + 1, particleData);
 	}
 	else {
@@ -144,7 +154,7 @@ void KDNode::subdivide(int depth, ParticleData &particleData)
 	}
 
 
-	if (rightParticles.size() > 0) { 
+	if (right->particles.size() > 0) {
 		right->subdivide(depth + 1, particleData);
 	}
 	else {
@@ -153,44 +163,55 @@ void KDNode::subdivide(int depth, ParticleData &particleData)
 }
 
 
-bool KDNode::intersect(int particleIndex, ParticleData &particleData, DistanceConstraintData &constraints) {
+void KDTree::KDNode::findCollisionsForParticle(int firstIndex, ParticleData &particleData, DistanceConstraintData &constraints, bool ignorePhase, int depth) {
 	bool hit = false;
-	/*
-    if (!aabb.intersect(r)) {
-		return false;
-	}
-	if (!leaf) {
+    if (!leaf)
+    {
+        float particleCoord = particleData.position[firstIndex][depth % 3];
+        if (particleCoord < mid || mid - particleCoord <= particleData.radius[firstIndex]) {
+#ifdef DEBUG_PRINT
+            std::cout << "Checking left at depth " << depth << std::endl;
+#endif // DEBUG_PRINT
+		    left->findCollisionsForParticle(firstIndex,  particleData, constraints, ignorePhase, depth + 1);
 
-		bool hitLeft = left->aabb.intersect(r);
-		bool hitRight = right->aabb.intersect(r);
-		bool hit = false;
+        }
+        if (particleCoord >= mid || particleCoord - mid <= particleData.radius[firstIndex]) {
+#ifdef DEBUG_PRINT
+            std::cout << "Checking right at depth " << depth << std::endl;
+#endif // DEBUG_PRINT
+            right->findCollisionsForParticle(firstIndex, particleData, constraints, ignorePhase, depth + 1);
+        }
+    }
+    else
+    {
+        for (auto secondIndex : particles)
+        {
+            Intersection isect;
 
-		if (hitLeft) {
-			hit |= left->intersect(r, isect);
-		}
-		if (hitRight) {
-			hit |= right->intersect(r, isect);
-		}
-		return hit;
-	}
+            if ((ignorePhase || particleData.phase[firstIndex] != particleData.phase[secondIndex])
+                && ::intersect(particleData, firstIndex, secondIndex, isect))
+            {
+                DistanceConstraint c;
+                c.firstParticleIndex = firstIndex;
+                c.secondParticleIndex = secondIndex;
+                c.equality = false;
+                c.distance = particleData.radius[firstIndex] + particleData.radius[secondIndex];
+                particleData.numBoundConstraints[firstIndex]++;
+                particleData.numBoundConstraints[secondIndex]++;
 
-	for (auto &it : triangles)
-	{
-		hit |= it->intersect(r, isect);
-	}
-    */
-	return hit;
+                addConstraint(constraints, c);
+            }
+        }
+    }
 }
 
-bool KDTree::build(ParticleData &particles) {
+KDTree::KDNode *KDTree::build(ParticleData &particles) {
 #ifdef DEBUG_PRINT
     std::cout << "Building k-d tree";
 #endif // DEBUG_PRINT
 
-	KDNode::MAX_TREE_DEPTH = maxTreeDepth;
-	KDNode::NUM_TRIANGLE_LEAF_BREAKPOINT = numParticlesInLeafBreakpoint;
 
-	root = new KDNode(); 
+	root = new KDNode(maxTreeDepth, numParticlesInLeafBreakpoint);
 	root->particles = std::vector<int>();
 
 	for (unsigned int i = 1; i < particles.cardinality; i++)
@@ -201,15 +222,28 @@ bool KDTree::build(ParticleData &particles) {
 
 	root->subdivide(particles);
 #ifdef DEBUG_PRINT
-	cout << "Tree max depth: " << root->getDepth() << "\n";
-	cout << "Biggest leaf: " << root->getNumInLargestLeaf() << "\n";
+	std::cout << "Tree max depth: " << root->getDepth() << "\n";
+	std::cout << "Biggest leaf: " << root->getNumInLargestLeaf() << "\n";
+    root->print(0);
 #endif
-
-	return true;
+    return root;
 }
 
-bool KDTree::intersect(int particleIndex, ParticleData particleData, DistanceConstraintData constraints)
+
+void KDTree::findCollisions(ParticleData &particles, DistanceConstraintData &constraints, bool ignorePhase)
 {
-	return root->intersect(particleIndex, particleData, constraints);
+    for (unsigned int i = 0; i < particles.cardinality; i++)
+    {
+#ifdef DEBUG_PRINT
+        std::cout << "Finding collisions for patricle " << i << std::endl;
+        int before = constraints.cardinality;
+#endif // DEBUG_PRINT
+
+	    root->findCollisionsForParticle(i, particles, constraints, ignorePhase, 0);
+
+#ifdef DEBUG_PRINT
+        std::cout << "Collisions found: " << constraints.cardinality - before << std::endl;
+#endif // DEBUG_PRINT
+    }
 }
 

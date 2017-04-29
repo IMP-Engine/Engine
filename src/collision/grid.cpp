@@ -12,7 +12,7 @@ Grid::Grid(int numCellsSide)
 
 void Grid::buildGrid(ParticleData &particles, BoundingVolume bv, bool parallel)
 {
-    for (int i = 0; i < grid.size(); ++i)
+    for (unsigned int i = 0; i < grid.size(); ++i)
     {
         grid[i].clear();
     }
@@ -48,7 +48,7 @@ void Grid::buildGrid(ParticleData &particles, BoundingVolume bv, bool parallel)
     }
     else
     {
-        for (int i = 0; i < particles.cardinality; ++i)
+        for (unsigned int i = 0; i < particles.cardinality; ++i)
         {
             int x, y, z;
             x = numCellsSide / bv.length * (particles.pPosition[i].x - bv.corner.x);
@@ -87,12 +87,12 @@ void Grid::findCollisions(DistanceConstraintData &constraints, ParticleData &par
                 if (i % numCellsSide + 2 == 0)
                     continue;
 
-                for (int x = -1; x < 2; x++) for (int y = -1; y < 2; y++) for (int z = -1; z < 2; z++)
+                for (unsigned int x = -1; x < 2; x++) for (int y = -1; y < 2; y++) for (int z = -1; z < 2; z++)
                 {
-                    for (int j = 0; j < grid[i].size(); ++j)
+                    for (unsigned int j = 0; j < grid[i].size(); ++j)
                     {
                         int xyz = i + x + y * numCellsSide + z * numCellsSide * numCellsSide;
-                        for (int k = i==xyz?j+1:0; k < grid[xyz].size(); ++k)
+                        for (unsigned int k = i==xyz?j+1:0; k < grid[xyz].size(); ++k)
                         {
                             Intersection isect;
                             int idx1 = grid[i][j];
@@ -118,22 +118,22 @@ void Grid::findCollisions(DistanceConstraintData &constraints, ParticleData &par
     }
     else
     {
-        for (int i = 0; i < grid.size(); ++i)
+        for (unsigned int i = 0; i < grid.size(); ++i)
         {
             if (i % numCellsSide == 0)
                 continue;
             if (i % numCellsSide + 2 == 0)
                 continue;
 
-            for (int x = -1; x < 2; x++)
+            for (unsigned int x = -1; x < 2; x++)
             {
-                for (int y = -1; y < 2; y++)
+                for (unsigned int y = -1; y < 2; y++)
                 {
-                    for (int z = -1; z < 2; z++)
+                    for (unsigned int z = -1; z < 2; z++)
                     {
-                        for (int j = 0; j < grid[i].size(); ++j) {
+                        for (unsigned int j = 0; j < grid[i].size(); ++j) {
                             int xyz = i + x + y * numCellsSide + z * numCellsSide * numCellsSide;
-                            for (int k = i==xyz?j+1:0; k < grid[xyz].size(); ++k)
+                            for (unsigned int k = i==xyz?j+1:0; k < grid[xyz].size(); ++k)
                             {
                                 Intersection isect;
                                 int idx1 = grid[i][j];

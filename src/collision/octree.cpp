@@ -1,6 +1,6 @@
 #include "octree.h"
 
-int numParticles= 1;
+unsigned int numParticles= 1;
 float minVolume = 0.1;
 bool igPhase = true;
 
@@ -11,7 +11,7 @@ void Octree::construct(ParticleData & particles, BoundingVolume bv, int a, float
     igPhase = ignorePhase;
     this->root = new Node(bv);
     std::vector<int> containedIndices(particles.cardinality);
-    for (int i = 0; i < particles.cardinality; i++) {
+    for (unsigned int i = 0; i < particles.cardinality; i++) {
         containedIndices[i] = i;
     }
 
@@ -74,9 +74,9 @@ void Octree::Node::findCollisions(ParticleData & particledata, DistanceConstrain
 {
     if (children[0] == nullptr)
     {
-        for (int i = 0; i < this->particles.size(); i++)
+        for (unsigned int i = 0; i < this->particles.size(); i++)
         {
-            for (int j = i+1; j < this->particles.size(); j++)
+            for (unsigned int j = i+1; j < this->particles.size(); j++)
             {
                 Intersection isect;
                 int idx1 = this->particles[i];
