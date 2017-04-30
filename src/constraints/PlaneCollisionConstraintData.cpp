@@ -9,12 +9,15 @@ PlaneCollisionConstraintData::PlaneCollisionConstraintData()
 	cardinality = 0;
 }
 
-bool PlaneCollisionConstraintData::solvePlaneCollision(glm::vec3 & delta, const int idx, ParticleData & particleData)
+bool PlaneCollisionConstraintData::solvePlaneCollision(glm::vec3 & delta, const int idx, ParticleData & particleData, bool stabilize)
 {
 	float c = glm::dot(normals[idx], particleData.pPosition[particles[idx]]) - distances[idx];
 
 	if (c > 0)
 		return false;
+
+    if (stabilize)
+        c = glm::dot(normals[idx], particleData.position[particles[idx]]) - distances[idx];
 
 	delta = c * normals[idx];
 	return true;

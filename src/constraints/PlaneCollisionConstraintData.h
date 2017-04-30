@@ -30,7 +30,7 @@ public:
 	std::vector<glm::vec3> normals;
 	std::vector<float> distances;
 
-	bool solvePlaneCollision(glm::vec3 &delta, const int idx, ParticleData &particleData);
+	bool solvePlaneCollision(glm::vec3 &delta, const int idx, ParticleData &particleData, bool stabilize);
 
     void addConstraint(PlaneCollisionConstraint &config);
 

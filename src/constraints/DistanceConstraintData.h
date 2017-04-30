@@ -28,7 +28,7 @@ public:
 
     float evaluate(int constraintIndex, ParticleData &particleData);
 
-    bool solveDistanceConstraint(glm::vec3 &delta1, glm::vec3 &delta2, int constraintIndex, ParticleData &particleData);
+    bool solveDistanceConstraint(glm::vec3 &delta1, glm::vec3 &delta2, int constraintIndex, ParticleData &particleData, bool stabilize);
 
     void clear();
     void removeBroken(ParticleData &particleData);
@@ -50,7 +50,7 @@ public:
             std::vector<vec3> &pPosition = particles.pPosition;
             for (size_t constraintIndex = r.begin(); constraintIndex != r.end(); ++constraintIndex)
             {
-                if (distanceConstraints.solveDistanceConstraint(delta1, delta2, constraintIndex, particles))
+                if (distanceConstraints.solveDistanceConstraint(delta1, delta2, constraintIndex, particles, false))
                 {
                     ivec2 &constraintParticles = distanceConstraints.particles[constraintIndex];
                     int p1 = constraintParticles[0];
