@@ -143,7 +143,7 @@ void init() {
     physicSystem = Physics();
 
     physicSystem.iterations = 4;
-    physicSystem.collisionIterations = 2;
+    physicSystem.stabilizationIterations = 2;
     physicSystem.pSleeping = 0.0001f;
     physicSystem.overRelaxConst = 1.0f;
     physicSystem.restitutionCoefficientT = 0.8f;
@@ -258,7 +258,7 @@ void gui()
     ImGui::Checkbox("Apply windlike force", &scene->windActive);
     ImGui::Checkbox("Render surfaces", &renderSurfaces);
     ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
-    ImGui::SliderInt("Collision Solver Iterations", &physicSystem.collisionIterations, 1, 32);
+    ImGui::SliderInt("Collision Stabilization Iterations", &physicSystem.stabilizationIterations, 0, 32);
     ImGui::SliderFloat("Over-relax-constant", &physicSystem.overRelaxConst, 1, 5);
     ImGui::SliderFloat("Particle Sleeping (squared)", &physicSystem.pSleeping, 0, 1, "%.9f", 10.f);
     ImGui::SliderFloat("Tangential COR", &physicSystem.restitutionCoefficientT, -1, 1);
