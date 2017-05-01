@@ -33,7 +33,7 @@ public:
     float staticFC; // static friction coefficient
 
     int iterations;
-	int collisionIterations;
+	int stabilizationIterations;
 
     ParticleData particles;
     ConstraintData constraints;
