@@ -78,9 +78,6 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::M
         The following code is a bit of a hack to att corner to corner constraints
         These help alot in preventing "folding" of the cube.
     */
-
-
-
     ivec3 n = config.numParticles;
  
 

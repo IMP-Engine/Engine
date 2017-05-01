@@ -142,11 +142,11 @@ void init() {
     scene = new Scene;
     physicSystem = Physics();
 
-    physicSystem.iterations = 5;
-    physicSystem.collisionIterations = 3;
+    physicSystem.iterations = 4;
+    physicSystem.collisionIterations = 2;
     physicSystem.pSleeping = 0.0001f;
     physicSystem.overRelaxConst = 1.0f;
-    physicSystem.restitutionCoefficientT = 0.8f; 
+    physicSystem.restitutionCoefficientT = 0.8f;
     physicSystem.restitutionCoefficientN = 0.8f;
     physicSystem.parallelConstraintSolve = false;
     physicSystem.parallelDetectCollisions = false;
@@ -275,14 +275,6 @@ void gui()
     collision::gui(&showCollision);
     model::gui(&showModels, physicSystem.particles, physicSystem.constraints, objects, modelData);
     scene->gui(&showSceneSelection);
-
-    // Remove when all group members feel comfortable with how GUI works and what it can provide
-    // Demo window
-    if (show_demo_window)
-    {
-        ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
-        ImGui::ShowTestWindow(&show_demo_window);
-    }
 }
 
 int main(void) {

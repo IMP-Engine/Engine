@@ -6,7 +6,6 @@
 #include <glm/glm.hpp>
 
 namespace model {
-	// TODO Radius?
 	class ModelConfig {
     public:
 		float invmass;            // Particle mass

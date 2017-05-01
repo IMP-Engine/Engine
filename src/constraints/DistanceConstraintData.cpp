@@ -62,11 +62,12 @@ void DistanceConstraintData::clear()
 
 void DistanceConstraintData::removeBroken(ParticleData &particleData)
 {
-
-    for (int i = cardinality-1; i >= 0; i--) {
-        if (evaluate(i, particleData) > threshold[i]) {
-
-            for (unsigned int p = 0; p < 2; p++) {
+    for (int i = cardinality-1; i >= 0; i--)
+    {
+        if (evaluate(i, particleData) > threshold[i])
+        {
+            for (unsigned int p = 0; p < 2; p++)
+            {
                 particleData.numBoundConstraints[particles[i][p]]--;
             }
 
@@ -77,7 +78,6 @@ void DistanceConstraintData::removeBroken(ParticleData &particleData)
             threshold.erase(threshold.begin() + i);
             cardinality--;
         }
-
     }
 }
 

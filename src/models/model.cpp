@@ -6,14 +6,13 @@
 #define MODEL_FOLDER "../src/models/"
 #endif 
 
-model::ModelConfig config = { 0.8f, vec3(0), 0, 0.5f, 0.5, vec3(1), ivec3(4) };
+model::ModelConfig config = { 1.f, vec3(0), 0, 0.5f, 0.5f, vec3(4), ivec3(4) };
 std::vector<std::string> predefinedModels{ "Box" ,"Cloth"};
 std::vector<std::string> models;
 int selected = 0;
 bool fixedCorners = false;
 
 // Temporary solution. Reconsider when cleaning code/changing way that particles and constraints are handled
-
 void model::loadModelNames() {
 	models.clear();
 	models.insert(models.end(), predefinedModels.begin(), predefinedModels.end());
@@ -28,7 +27,6 @@ void model::loadModelNames() {
 	closedir(dir);
 }
 
-// This 
 void model::loadPredefinedModel(std::string model, ParticleData &particles, ConstraintData &constraints, ModelConfig config)
 {
 	if (model == "Box")
