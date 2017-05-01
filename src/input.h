@@ -7,18 +7,18 @@
 
 namespace input {
 
-	class Observer {
-	public:
-		virtual void keyCallback(GLFWwindow*, int, int, int, int) = 0;
-		virtual void mouseCallback(GLFWwindow*, double, double) = 0;
-		virtual void mouseButtonCallback(GLFWwindow*, int, int, int) = 0;
-		virtual void mouseScrollCallback(GLFWwindow*, double, double) = 0;
-	};
+    class Observer {
+    public:
+        virtual void keyCallback(GLFWwindow*, int, int, int, int) = 0;
+        virtual void mouseCallback(GLFWwindow*, double, double) = 0;
+        virtual void mouseButtonCallback(GLFWwindow*, int, int, int) = 0;
+        virtual void mouseScrollCallback(GLFWwindow*, double, double) = 0;
+    };
 
-	void initialize(GLFWwindow*);
+    void initialize(GLFWwindow*);
 
-	void subscribeObserver(Observer*);
+    void subscribeObserver(Observer*);
 
-	bool (&getKeys())[512];
+    bool (&getKeys())[512];
 
 }

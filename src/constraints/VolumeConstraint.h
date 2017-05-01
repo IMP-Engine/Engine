@@ -4,30 +4,30 @@
 #include <glm/vec3.hpp>
 
 class VolumeConstraint :
-	public Constraint
+    public Constraint
 {
 public:
-	float volume;
+    float volume;
 
-	VolumeConstraint(Particle* p1, Particle* p2, float stiffness, float volume, bool equality = true) {
-		this->particles.push_back(p1);
-		this->particles.push_back(p2);
-		this->stiffness = stiffness;
-		this->volume = volume;
-		this->equality = equality;
-	}
+    VolumeConstraint(Particle* p1, Particle* p2, float stiffness, float volume, bool equality = true) {
+        this->particles.push_back(p1);
+        this->particles.push_back(p2);
+        this->stiffness = stiffness;
+        this->volume = volume;
+        this->equality = equality;
+    }
 
-	bool evaluate() {
-		return equality || 1 < 0;
-	}
+    bool evaluate() {
+        return equality || 1 < 0;
+    }
 
-	float evaluateScaleFactor() {
-		return 0.0f;
-	}
+    float evaluateScaleFactor() {
+        return 0.0f;
+    }
 
-	vec3 evaluateGradient(std::vector<Particle*>::iterator p) {
-		return vec3();
-	}
+    vec3 evaluateGradient(std::vector<Particle*>::iterator p) {
+        return vec3();
+    }
 
 };
 

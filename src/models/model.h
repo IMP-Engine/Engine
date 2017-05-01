@@ -33,24 +33,24 @@
 
 namespace model {
 
-	/*
-		Loads modelnames into memory
-	*/
-	void loadModelNames();
+    /*
+        Loads modelnames into memory
+    */
+    void loadModelNames();
 
-	/*
-		Loads a non sdf model into particles and adds object specific constraints.
-	*/
-	void loadPredefinedModel(std::string model, ParticleData &particles, ConstraintData &constraints, ModelConfig config);
+    /*
+        Loads a non sdf model into particles and adds object specific constraints.
+    */
+    void loadPredefinedModel(std::string model, ParticleData &particles, ConstraintData &constraints, ModelConfig config);
 
-	/*
-		Loads the object located at path into particles and adds simple 
-		distance constraints to (potential) 26 nearest neighbours into constraints.
-	*/
-	void loadModel(std::string name, ParticleData &particles, ConstraintData &constraints, ModelConfig c, ModelData &modelData);
+    /*
+        Loads the object located at path into particles and adds simple 
+        distance constraints to (potential) 26 nearest neighbours into constraints.
+    */
+    void loadModel(std::string name, ParticleData &particles, ConstraintData &constraints, ModelConfig c, ModelData &modelData);
 
-	/*
-		Displays a window where the user can select different type of models.
-	*/
-	void gui(bool *show, ParticleData &particles, ConstraintData &constraints, std::vector< std::tuple<std::string, ModelConfig> > &objects, ModelData &modelData);
+    /*
+        Displays a window where the user can select different type of models.
+    */
+    void gui(bool *show, ParticleData &particles, ConstraintData &constraints, std::vector< std::tuple<std::string, ModelConfig> > &objects, ModelData &modelData);
 }

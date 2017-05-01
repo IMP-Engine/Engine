@@ -33,12 +33,12 @@ public:
     float staticFC; // static friction coefficient
 
     int iterations;
-	int stabilizationIterations;
+    int stabilizationIterations;
 
     ParticleData particles;
     ConstraintData constraints;
 
-	void step(Scene *scene, float dt);
+    void step(Scene *scene, float dt);
 
 private:
 
