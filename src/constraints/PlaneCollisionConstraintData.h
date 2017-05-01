@@ -22,19 +22,19 @@ struct PlaneCollisionConstraint {
 class PlaneCollisionConstraintData
 {
 public:
-	PlaneCollisionConstraintData();
+    PlaneCollisionConstraintData();
 
-	int cardinality;
+    int cardinality;
 
-	std::vector<unsigned int> particles;
-	std::vector<glm::vec3> normals;
-	std::vector<float> distances;
+    std::vector<unsigned int> particles;
+    std::vector<glm::vec3> normals;
+    std::vector<float> distances;
 
-	bool solvePlaneCollision(glm::vec3 &delta, const int idx, ParticleData &particleData);
+    bool solvePlaneCollision(glm::vec3 &delta, const int idx, ParticleData &particleData, bool stabilize);
 
     void addConstraint(PlaneCollisionConstraint &config);
 
-	void clear();
+    void clear();
 
     /*
     Used for parallelizing plane collision detection

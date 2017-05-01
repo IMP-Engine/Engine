@@ -4,7 +4,7 @@ collision::collisionDetectionType currentType = collision::BruteForce;
 bool showTreeDiagnostics = false;
 bool ignorePhase = false;
 bool parallel = false;
-float smallestVolume = 0.1;
+float smallestVolume = 0.1f;
 int minParticles = 1;
 int numCellsSide = 20;
 
@@ -70,7 +70,7 @@ void collision::gui(bool * show)
         break;
     case Octree: 
         ImGui::SliderInt("min particles", &minParticles, 1, 500);
-        ImGui::SliderFloat("min volume", &smallestVolume, 0.001, 100);
+        ImGui::SliderFloat("min volume", &smallestVolume, 0.001f, 100.0f);
         ImGui::Checkbox("Show tree diagnostics", &showTreeDiagnostics);
         if (showTreeDiagnostics && octree) {
             ImGui::Text("Largest leaf: "); ImGui::SameLine(); ImGui::Text(std::to_string(largestLeaf(octree->getRoot())).c_str());

@@ -3,7 +3,7 @@
 
 void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::ModelConfig config) {
  
-	unsigned int start = particles.cardinality;
+    unsigned int start = particles.cardinality;
 
     float dx = config.scale.x, dy = config.scale.y, dz = config.scale.z;
 
@@ -25,7 +25,7 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::M
         for (int j = 0; j < config.numParticles.y; j++) {
             for (int k = 0; k < config.numParticles.z; k++) {
                 
-				Particle p;
+                Particle p;
 
                 // Offset from base
                 p.pos = base_pos + vec3(i*dx, j*dy, k*dz);
@@ -34,8 +34,8 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::M
                 p.invmass = config.invmass;
                 p.velocity = vec3(0.f, 0.f, 0.f);
                 p.phase = config.phase;
-				p.numBoundConstraints = 0;
-				p.radius = min(dx, min(dy, dz)) / 2;
+                p.numBoundConstraints = 0;
+                p.radius = min(dx, min(dy, dz)) / 2;
 
                 addParticle(p, particles);
             }
@@ -46,10 +46,10 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::M
     // Create constraints
     float stiffness = config.stiffness;
     float distanceThreshold = config.distanceThreshold;
-	float maxDist = sqrt(dx*dx + dy*dy + dz*dz);
+    float maxDist = sqrt(dx*dx + dy*dy + dz*dz);
 
     std::vector<vec3> &position = particles.position;
-    std::vector<int> &numBoundConstraints = particles.numBoundConstraints;
+    std::vector<tbb::atomic<int>> &numBoundConstraints = particles.numBoundConstraints;
 
     for (unsigned int i = start; i < particles.cardinality; i++) 
     {
@@ -78,9 +78,6 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::M
         The following code is a bit of a hack to att corner to corner constraints
         These help alot in preventing "folding" of the cube.
     */
-
-
-
     ivec3 n = config.numParticles;
  
 

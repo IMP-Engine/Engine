@@ -18,25 +18,25 @@ void Physics::step(Scene *scene, float dt)
     std::vector<int>   &phase     = particles.phase;
     std::vector<tbb::atomic<int>>   &numBoundConstraints = particles.numBoundConstraints;
 
-	const float GRAVITY = 6.0f;
-	for (std::vector<glm::vec3>::size_type i = 0; i != particles.cardinality; i++) {
-		/*
-		* For all particles i
-		* Apply forces			v_i = v_i + dt * f_ext(x_i)
-		* Damp velocities		-- Skip for now -- TODO --
-		* Predict position		x_i^* = x_i + dt * v_i
-		*/
-		velocity[i] -= glm::vec3(0.f, dt * GRAVITY, 0.f); // Gravity
+    const float GRAVITY = 6.0f;
+    for (std::vector<glm::vec3>::size_type i = 0; i != particles.cardinality; i++) {
+        /*
+        * For all particles i
+        * Apply forces            v_i = v_i + dt * f_ext(x_i)
+        * Damp velocities        -- Skip for now -- TODO --
+        * Predict position        x_i^* = x_i + dt * v_i
+        */
+        velocity[i] -= glm::vec3(0.f, dt * GRAVITY, 0.f); // Gravity
 
         if (scene->windActive) {
             velocity[i] += glm::vec3(dt * WIND, 0.f, 0.f);
         }
 
-		pPosition[i] = position[i] + dt * velocity[i]; // symplectic Euler
-		// ******************************************************************************************************************
-		/*
-		* Clamp positions so that we do not lose any particles
-		*/
+        pPosition[i] = position[i] + dt * velocity[i]; // symplectic Euler
+        // ******************************************************************************************************************
+        /*
+        * Clamp positions so that we do not lose any particles
+        */
         pPosition[i] = (min)((max)(WORLD_MIN, pPosition[i]), WORLD_MAX);
         // ********************************************************************************
     }
@@ -59,7 +59,7 @@ void Physics::step(Scene *scene, float dt)
     performance::stopTimer(id);
 
     id = performance::startTimer("Solve constraints");
-    resolveConstraints(pPosition, invmass, numBoundConstraints);
+    resolveConstraints(position, pPosition, invmass, numBoundConstraints, constraints.planeCollisionConstraints, constraints.particleCollisionConstraints);
     performance::stopTimer(id);
 
     for (std::vector<glm::vec3>::size_type i = 0; i != particles.cardinality; i++) 
@@ -69,7 +69,7 @@ void Physics::step(Scene *scene, float dt)
          * v_i = (x_i^* - x_i) / dt
          * x_i = x_i^*
          */
-        velocity[i] = (pPosition[i] - position[i]) / dt;	
+        velocity[i] = (pPosition[i] - position[i]) / dt;    
         if (glm::length(position[i] - pPosition[i]) > pSleeping)
         {
             position[i] = pPosition[i];
@@ -96,7 +96,7 @@ void Physics::step(Scene *scene, float dt)
 
 }
 
-void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector<float> & invmass, std::vector<tbb::atomic<int>> & numBoundConstraints)
+void Physics::resolveConstraints(std::vector<glm::vec3> & position, std::vector<glm::vec3> & pPosition, std::vector<float> & invmass, std::vector<tbb::atomic<int>> & numBoundConstraints, PlaneCollisionConstraintData & planeConstraints, DistanceConstraintData & particleConstraints)
 {
     DistanceConstraintData &distanceConstraints = constraints.distanceConstraints;
     for (int i = 0; i < iterations; i++)
@@ -114,7 +114,7 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector
             vec3 delta2(0);
             for (int constraintIndex = 0; constraintIndex < distanceConstraints.cardinality; constraintIndex++)
             {
-                if (distanceConstraints.solveDistanceConstraint(delta1, delta2, constraintIndex, particles))
+                if (distanceConstraints.solveDistanceConstraint(delta1, delta2, constraintIndex, particles, false))
                 {
                     // delta p_i = -w_i * s * grad_{p_i} C(p) * stiffness correction 
                     ivec2 &constraintParticles = distanceConstraints.particles[constraintIndex];
@@ -150,6 +150,46 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector
                 pPosition[p] -= delta * overRelaxConst / (float)numBoundConstraints[p];
             }
         }
+
+        /**
+        * Plane Collision Constraints
+        */
+        vec3 delta1(0);
+        vec3 delta2(0);
+        for (int i = 0; i < planeConstraints.cardinality; i++)
+        {
+            if (planeConstraints.solvePlaneCollision(delta1, i, particles, false))
+            {
+                int p = planeConstraints.particles[i];
+                pPosition[p] -= delta1 * overRelaxConst;
+            }
+        }
+
+        /**
+        * Particle Collision Constraints
+        */
+        for (int i = 0; i < particleConstraints.cardinality; i++)
+        {
+            if (particleConstraints.solveDistanceConstraint(delta1, delta2, i, particles, false))
+            {
+                int p1 = particleConstraints.particles[i][0];
+                int p2 = particleConstraints.particles[i][1];
+                pPosition[p1] -= delta1 * overRelaxConst;
+                pPosition[p2] -= delta2 * overRelaxConst;
+
+                // Friction
+                glm::vec3 contactNormal = (pPosition[p1] - pPosition[p2]) / length(pPosition[p1] - pPosition[p2]); //-delta1 / d;
+                float d = length(delta1 * overRelaxConst); // distance along the collision normal that the particles are projected
+                glm::vec3 v = (pPosition[p1] - position[p1]) - (pPosition[p2] - position[p2]);
+                glm::vec3 tangentialDelta = v - (dot(v, contactNormal) * contactNormal); // [(px[i] - x[i]) - (px[j] - x[j])] tangential to n
+                glm::vec3 frictionalPosDelta = (invmass[p1] / (invmass[p1] + invmass[p2])) * tangentialDelta;
+                if (length(tangentialDelta) >= (staticFC * d)) // Is particles relative velocity above traction threshold?
+                    frictionalPosDelta *= min(kineticFC * d / length(tangentialDelta), 1.f); // if so, apply Columb friction
+
+                pPosition[p1] += frictionalPosDelta;
+                pPosition[p2] -= frictionalPosDelta * invmass[p2] / (invmass[p1] + invmass[p2]);
+            }
+        }
     }
 }
 
@@ -175,10 +215,11 @@ void Physics::resolveCollisions(std::vector<glm::vec3> & position, std::vector<g
 {
     vec3 delta1(0);
     vec3 delta2(0);
-    for (int j = 0; j < collisionIterations; j++)
+    for (int j = 0; j < stabilizationIterations; j++)
     {
-        for (int i = 0; i < planeConstraints.cardinality; i++) {
-            if (planeConstraints.solvePlaneCollision(delta1, i, particles))
+        for (int i = 0; i < planeConstraints.cardinality; i++)
+        {
+            if (planeConstraints.solvePlaneCollision(delta1, i, particles, true))
             {
                 int p = planeConstraints.particles[i];
                 position[p] -= delta1 * overRelaxConst;
@@ -188,25 +229,14 @@ void Physics::resolveCollisions(std::vector<glm::vec3> & position, std::vector<g
 
         for (int i = 0; i < particleConstraints.cardinality; i++)
         {
-            if (particleConstraints.solveDistanceConstraint(delta1, delta2, i, particles))
+            if (particleConstraints.solveDistanceConstraint(delta1, delta2, i, particles, true))
             {
                 int p1 = particleConstraints.particles[i][0];
                 int p2 = particleConstraints.particles[i][1];
+                position[p1]  -= delta1 * overRelaxConst;
                 pPosition[p1] -= delta1 * overRelaxConst;
+                position[p2]  -= delta2 * overRelaxConst;
                 pPosition[p2] -= delta2 * overRelaxConst;
-
-                // Friction
-                glm::vec3 contactNormal = (pPosition[p1] - pPosition[p2]) / length(pPosition[p1] - pPosition[p2]); //-delta1 / d;
-                // d = distance along the collision normal that the particles are projected
-                float d = length(delta1 * overRelaxConst);
-                glm::vec3 v = (pPosition[p1] - position[p1]) - (pPosition[p2] - position[p2]);
-                glm::vec3 tangentialDelta = v - (dot(v, contactNormal) * contactNormal); // [(px[i] - x[i]) - (px[j] - x[j])] tangential to n
-                glm::vec3 frictionalPosDelta = (invmass[p1] / (invmass[p1] + invmass[p2])) * tangentialDelta;
-                if (length(tangentialDelta) >= (staticFC * d)) // Is particles relative velocity above traction threshold?
-                    frictionalPosDelta *= min(kineticFC * d / length(tangentialDelta), 1.f); // if so, apply Columb friction
-                
-                pPosition[p1] += frictionalPosDelta;
-                pPosition[p2] -= frictionalPosDelta * invmass[p2] / (invmass[p1] + invmass[p2]);
             }
         }
     }
@@ -214,7 +244,6 @@ void Physics::resolveCollisions(std::vector<glm::vec3> & position, std::vector<g
 
 void Physics::detectCollisions(Scene * scene, std::vector<tbb::atomic<int>> & numBoundConstraints, PlaneCollisionConstraintData & planeConstraints, std::vector<int> & phase, std::vector<glm::vec3> & pPosition)
 {
-    int id;
     if (parallelDetectCollisions)
     {
         tbb::parallel_for(

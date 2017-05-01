@@ -10,7 +10,7 @@ public:
     ~ConstraintData();
     DistanceConstraintData distanceConstraints;
     DistanceConstraintData particleCollisionConstraints;
-	PlaneCollisionConstraintData planeCollisionConstraints;
+    PlaneCollisionConstraintData planeCollisionConstraints;
     FixedPointConstraintData fixedPointConstraints;
 
     void clear();

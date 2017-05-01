@@ -39,6 +39,6 @@ public:
     Node* getRoot() { return root; }
     void construct(ParticleData & particles, BoundingVolume bv, int numParticles, float minVolume, bool ignorePhase);
     void findCollisions(ParticleData & particledata, DistanceConstraintData & constraints);
-	
+    
     ~Octree() { delete root; }
 };

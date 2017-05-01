@@ -24,16 +24,16 @@
 class ParticleRenderer
 {
 public:
-	ParticleRenderer();
-	~ParticleRenderer();
+    ParticleRenderer();
+    ~ParticleRenderer();
 
-	GLuint particleShader;
-	GLuint vao;
-	GLuint particleBuffer;
+    GLuint particleShader;
+    GLuint vao;
+    GLuint particleBuffer;
     GLuint sizeBuffer;
     unsigned int *particleCount;
 
-	void init();
-	void render(ParticleData &particles, glm::mat4 &modelViewProjectionMatrix, glm::mat4 &modelViewMatrix, glm::vec3 &viewSpaceLightPosition, glm::mat4 &projectionMatrix, GLint height);
+    void init();
+    void render(ParticleData &particles, glm::mat4 &modelViewProjectionMatrix, glm::mat4 &modelViewMatrix, glm::vec3 &viewSpaceLightPosition, glm::mat4 &projectionMatrix, GLint height);
 };
 

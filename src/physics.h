@@ -33,19 +33,19 @@ public:
     float staticFC; // static friction coefficient
 
     int iterations;
-	int collisionIterations;
+    int stabilizationIterations;
 
     ParticleData particles;
     ConstraintData constraints;
 
-	void step(Scene *scene, float dt);
+    void step(Scene *scene, float dt);
 
 private:
 
     /*
         Stationary iterative linear solver - Gauss-Seidel
     */
-    void resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector<float> & invmass, std::vector<tbb::atomic<int>> & numBoundConstraints);
+    void resolveConstraints(std::vector<glm::vec3> & position, std::vector<glm::vec3> & pPosition, std::vector<float> & invmass, std::vector<tbb::atomic<int>> & numBoundConstraints, PlaneCollisionConstraintData & planeConstraints, DistanceConstraintData & particleConstraints);
 
     void dampPlaneCollision(std::vector<tbb::atomic<int>> & numBoundConstraints, std::vector<glm::vec3> & velocity, PlaneCollisionConstraintData & triangleConstraints);
 

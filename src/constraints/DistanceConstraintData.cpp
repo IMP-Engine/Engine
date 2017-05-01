@@ -26,7 +26,7 @@ float DistanceConstraintData::evaluate(int constraintIndex, ParticleData &partic
     return length(p1 - p2) - distance[constraintIndex];
 }
 
-bool DistanceConstraintData::solveDistanceConstraint(glm::vec3 & delta1, glm::vec3 & delta2, int constraintIndex, ParticleData & particleData)
+bool DistanceConstraintData::solveDistanceConstraint(glm::vec3 & delta1, glm::vec3 & delta2, int constraintIndex, ParticleData & particleData, bool stabilize)
 {
     int firstParticleIndex = particles[constraintIndex].x;
     int secondParticleIndex = particles[constraintIndex].y;
@@ -40,6 +40,16 @@ bool DistanceConstraintData::solveDistanceConstraint(glm::vec3 & delta1, glm::ve
 
     if (!equality[constraintIndex] && c >= 0)
         return false;
+
+    if (stabilize)
+    {   // Calculate delta with position instead of pPosition
+        p1 = particleData.position[firstParticleIndex];
+        p2 = particleData.position[secondParticleIndex];
+
+        diff = p1 - p2;
+
+        c = length(diff) - distance[constraintIndex];
+    }
 
     vec3 grad = glm::normalize(diff);
     grad /= particleData.invmass[firstParticleIndex] + particleData.invmass[secondParticleIndex];
@@ -62,11 +72,12 @@ void DistanceConstraintData::clear()
 
 void DistanceConstraintData::removeBroken(ParticleData &particleData)
 {
-
-    for (int i = cardinality-1; i >= 0; i--) {
-        if (evaluate(i, particleData) > threshold[i]) {
-
-            for (unsigned int p = 0; p < 2; p++) {
+    for (int i = cardinality-1; i >= 0; i--)
+    {
+        if (evaluate(i, particleData) > threshold[i])
+        {
+            for (unsigned int p = 0; p < 2; p++)
+            {
                 particleData.numBoundConstraints[particles[i][p]]--;
             }
 
@@ -77,7 +88,6 @@ void DistanceConstraintData::removeBroken(ParticleData &particleData)
             threshold.erase(threshold.begin() + i);
             cardinality--;
         }
-
     }
 }
 
