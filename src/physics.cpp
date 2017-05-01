@@ -214,7 +214,6 @@ void Physics::resolveCollisions(std::vector<glm::vec3> & position, std::vector<g
 
 void Physics::detectCollisions(Scene * scene, std::vector<int> & numBoundConstraints, PlaneCollisionConstraintData & planeConstraints, std::vector<int> & phase, std::vector<glm::vec3> & pPosition)
 {
-    int id;
     if (parallelDetectCollisions)
     {
         tbb::parallel_for(
