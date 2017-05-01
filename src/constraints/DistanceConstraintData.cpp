@@ -42,7 +42,7 @@ bool DistanceConstraintData::solveDistanceConstraint(glm::vec3 & delta1, glm::ve
         return false;
 
     if (stabilize)
-    {
+    {   // Calculate delta with position instead of pPosition
         p1 = particleData.position[firstParticleIndex];
         p2 = particleData.position[secondParticleIndex];
 

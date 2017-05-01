@@ -156,7 +156,8 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & position, std::vector<
         */
         vec3 delta1(0);
         vec3 delta2(0);
-        for (int i = 0; i < planeConstraints.cardinality; i++) {
+        for (int i = 0; i < planeConstraints.cardinality; i++)
+        {
             if (planeConstraints.solvePlaneCollision(delta1, i, particles, false))
             {
                 int p = planeConstraints.particles[i];
@@ -164,6 +165,9 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & position, std::vector<
             }
         }
 
+        /**
+        * Particle Collision Constraints
+        */
         for (int i = 0; i < particleConstraints.cardinality; i++)
         {
             if (particleConstraints.solveDistanceConstraint(delta1, delta2, i, particles, false))
@@ -213,7 +217,8 @@ void Physics::resolveCollisions(std::vector<glm::vec3> & position, std::vector<g
     vec3 delta2(0);
     for (int j = 0; j < stabilizationIterations; j++)
     {
-        for (int i = 0; i < planeConstraints.cardinality; i++) {
+        for (int i = 0; i < planeConstraints.cardinality; i++)
+        {
             if (planeConstraints.solvePlaneCollision(delta1, i, particles, true))
             {
                 int p = planeConstraints.particles[i];

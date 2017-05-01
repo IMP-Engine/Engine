@@ -16,7 +16,7 @@ bool PlaneCollisionConstraintData::solvePlaneCollision(glm::vec3 & delta, const 
 	if (c > 0)
 		return false;
 
-    if (stabilize)
+    if (stabilize) // Calculate delta with position instead of pPosition
         c = glm::dot(normals[idx], particleData.position[particles[idx]]) - distances[idx];
 
 	delta = c * normals[idx];
