@@ -20,7 +20,6 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::M
     // Get the "minimum" corner to use as base position
     vec3 base_pos = config.centerPos - (config.scale * 0.5f);
 
-    int ph = 0;
     // Create particles
     for (int i = 0; i < config.numParticles.x; i++) {
         for (int j = 0; j < config.numParticles.y; j++) {
