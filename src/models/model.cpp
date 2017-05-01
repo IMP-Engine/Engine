@@ -6,34 +6,32 @@
 #define MODEL_FOLDER "../src/models/"
 #endif 
 
-model::ModelConfig config = { 0.8f, vec3(0), 0, 0.5f, 0.5, vec3(1), ivec3(4) };
+model::ModelConfig config = { 1.f, vec3(0), 0, 0.5f, 0.5f, vec3(4), ivec3(4) };
 std::vector<std::string> predefinedModels{ "Box" ,"Cloth"};
 std::vector<std::string> models;
 int selected = 0;
 bool fixedCorners = false;
 
 // Temporary solution. Reconsider when cleaning code/changing way that particles and constraints are handled
-
 void model::loadModelNames() {
-	models.clear();
-	models.insert(models.end(), predefinedModels.begin(), predefinedModels.end());
-	DIR *dir = opendir(MODEL_FOLDER);
-	struct dirent *ent;
-	while ((ent = readdir(dir)) != NULL)
-	{
-		std::string filename(ent->d_name);
-		if (filename.size() > 4 && filename.substr(filename.size() - 4) == std::string(".sdf"))
-			models.push_back(filename.substr(0, filename.size() - 4));
-	}
-	closedir(dir);
+    models.clear();
+    models.insert(models.end(), predefinedModels.begin(), predefinedModels.end());
+    DIR *dir = opendir(MODEL_FOLDER);
+    struct dirent *ent;
+    while ((ent = readdir(dir)) != NULL)
+    {
+        std::string filename(ent->d_name);
+        if (filename.size() > 4 && filename.substr(filename.size() - 4) == std::string(".sdf"))
+            models.push_back(filename.substr(0, filename.size() - 4));
+    }
+    closedir(dir);
 }
 
-// This 
 void model::loadPredefinedModel(std::string model, ParticleData &particles, ConstraintData &constraints, ModelConfig config)
 {
-	if (model == "Box")
-	{
-		Box::makeBox(particles, constraints, config);
+    if (model == "Box")
+    {
+        Box::makeBox(particles, constraints, config);
     }
     else if (model == "Cloth")
     {
@@ -77,61 +75,61 @@ void loadMesh(std::string filename, std::vector<glm::vec4> &vertices, std::vecto
 void model::loadModel(std::string model, ParticleData &particles, ConstraintData &constraints, ModelConfig config, ModelData &modelData)
 {
 
-	std::vector<Particle>::size_type start = particles.cardinality;
+    std::vector<Particle>::size_type start = particles.cardinality;
 
-	std::ifstream file(MODEL_FOLDER + model + ".sdf");
-	if (!file)
-	{
-		std::cerr << "Error opening file " << model << ".sdf" << std::endl;
-	}
+    std::ifstream file(MODEL_FOLDER + model + ".sdf");
+    if (!file)
+    {
+        std::cerr << "Error opening file " << model << ".sdf" << std::endl;
+    }
 
-	std::string line;
+    std::string line;
 
-	int imax, jmax, kmax;
-	std::getline(file, line);
-	std::stringstream data(line);
-	data >> imax >> jmax >> kmax;
+    int imax, jmax, kmax;
+    std::getline(file, line);
+    std::stringstream data(line);
+    data >> imax >> jmax >> kmax;
 
-	vec3 origin;
-	std::getline(file, line);
-	std::stringstream data2(line);
-	data2 >> origin.x >> origin.y >> origin.z;
+    vec3 origin;
+    std::getline(file, line);
+    std::stringstream data2(line);
+    data2 >> origin.x >> origin.y >> origin.z;
 
-	float spacing;
-	std::getline(file, line);
-	std::stringstream data3(line);
-	data3 >> spacing;
+    float spacing;
+    std::getline(file, line);
+    std::stringstream data3(line);
+    data3 >> spacing;
 
-	
+    
     // Normalize lengths - Removed for now
     float d = spacing;// / glm::length(origin);
-	//origin /= glm::length(origin);
+    //origin /= glm::length(origin);
 
     // Make sure particle representation is centered
     origin *= config.scale;
 
     for (int i = 0; i < imax; i++) for (int j = 0; j < jmax; j++) for (int k = 0; k < kmax; k++)
-	{
-		std::getline(file, line);
+    {
+        std::getline(file, line);
         std::stringstream data(line);
         float value;
         data >> value;
-		// Negative inside, positive outside
-		if ( value < d/ glm::length(origin))
-		{
-			
-			Particle p;
-			p.pos = config.centerPos + origin + vec3(i*d, j*d, k*d) * config.scale;
-			p.invmass = config.invmass;
-			p.numBoundConstraints = 0;
-			p.phase = config.phase;
-			p.radius = d * min(config.scale.x, min(config.scale.y, config.scale.z))/ 2;
+        // Negative inside, positive outside
+        if ( value < d/ glm::length(origin))
+        {
+            
+            Particle p;
+            p.pos = config.centerPos + origin + vec3(i*d, j*d, k*d) * config.scale;
+            p.invmass = config.invmass;
+            p.numBoundConstraints = 0;
+            p.phase = config.phase;
+            p.radius = d * min(config.scale.x, min(config.scale.y, config.scale.z))/ 2;
 
-			addParticle(p,particles);
-		}
-	}
+            addParticle(p,particles);
+        }
+    }
 
-	float maxDist = glm::length(d*config.scale);
+    float maxDist = glm::length(d*config.scale);
 
     std::vector<vec3> &position = particles.position;
     std::vector<int> &numBoundConstraints = particles.numBoundConstraints;
@@ -140,9 +138,9 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
     {
 
         for (std::vector<Particle>::size_type j = i+1; j < particles.cardinality; j++)
-	    {
-			    if (glm::distance(position[i], position[j]) <= maxDist )
-			    {
+        {
+                if (glm::distance(position[i], position[j]) <= maxDist )
+                {
                     DistanceConstraint constraint;
                     constraint.firstParticleIndex = i;
                     constraint.secondParticleIndex = j;
@@ -151,12 +149,12 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
                     constraint.threshold = config.distanceThreshold;
                     constraint.equality = true;
 
-				    addConstraint(constraints.distanceConstraints, constraint);
+                    addConstraint(constraints.distanceConstraints, constraint);
 
-				    numBoundConstraints[i]++;
-				    numBoundConstraints[j]++;
-			    }
-	    }
+                    numBoundConstraints[i]++;
+                    numBoundConstraints[j]++;
+                }
+        }
     }
 
 
@@ -298,41 +296,41 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
 
 void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints, std::vector< std::tuple<std::string, ModelConfig> > &objects, ModelData &modelData)
 {
-	if (!*show)
-	{
-		return;
-	}
+    if (!*show)
+    {
+        return;
+    }
 
-	ImGui::SetNextWindowSize(ImVec2(350, 560), ImGuiSetCond_FirstUseEver);
-	if (!ImGui::Begin("Models", show))
-	{
-		ImGui::End();
-		return;
-	}
+    ImGui::SetNextWindowSize(ImVec2(350, 560), ImGuiSetCond_FirstUseEver);
+    if (!ImGui::Begin("Models", show))
+    {
+        ImGui::End();
+        return;
+    }
 
-	// Dropdown of all models in this folder
-	ImGui::Combo("Choose model", &selected, [](void *a, int b, const char **c) -> bool { *c = ((std::vector<std::string>*)a)->at(b).c_str(); return true; }, &models, models.size());
-	
-	ImGui::SameLine();
-	if (ImGui::Button("Add"))
-	{
-		if ((unsigned int)selected >= predefinedModels.size())
-		{
-			loadModel(models[selected], particles, constraints, config, modelData);
-		}
-		else
-		{
-			loadPredefinedModel(models[selected], particles, constraints, config);
-		}
+    // Dropdown of all models in this folder
+    ImGui::Combo("Choose model", &selected, [](void *a, int b, const char **c) -> bool { *c = ((std::vector<std::string>*)a)->at(b).c_str(); return true; }, &models, models.size());
+    
+    ImGui::SameLine();
+    if (ImGui::Button("Add"))
+    {
+        if ((unsigned int)selected >= predefinedModels.size())
+        {
+            loadModel(models[selected], particles, constraints, config, modelData);
+        }
+        else
+        {
+            loadPredefinedModel(models[selected], particles, constraints, config);
+        }
     
         objects.push_back(std::make_tuple(models[selected], config));
         config.phase++;
 
-	}
+    }
     ImGui::SameLine();
     if (ImGui::Button("Clear and add")) {
         particles.clear();
-		constraints.clear();
+        constraints.clear();
         objects.clear();
         modelData.clear();
 
@@ -352,14 +350,14 @@ void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints
         config.phase++;
     }
 
-	// Below, sliders for deciding grejs
-	ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
-	ImGui::DragFloat3("Origin", &config.centerPos.x, 1.f, -(std::numeric_limits<float>::max)(), (std::numeric_limits<float>::max)());
-	ImGui::DragFloat3("Scale", &config.scale.x, 1.f, -(std::numeric_limits<float>::max)(), (std::numeric_limits<float>::max)());
-	ImGui::DragFloat("Invmass", &config.invmass, 0.005f, 0, 1000);
-	ImGui::DragFloat("Distance treshold", &config.distanceThreshold, 0.001f, 0, 10, "%.7f");
-	ImGui::SliderFloat("Stiffness", &config.stiffness, 0, 1);
-	ImGui::InputInt("Phase", &config.phase);
+    // Below, sliders for deciding grejs
+    ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+    ImGui::DragFloat3("Origin", &config.centerPos.x, 1.f, -(std::numeric_limits<float>::max)(), (std::numeric_limits<float>::max)());
+    ImGui::DragFloat3("Scale", &config.scale.x, 1.f, -(std::numeric_limits<float>::max)(), (std::numeric_limits<float>::max)());
+    ImGui::DragFloat("Invmass", &config.invmass, 0.005f, 0, 1000);
+    ImGui::DragFloat("Distance treshold", &config.distanceThreshold, 0.001f, 0, 10, "%.7f");
+    ImGui::SliderFloat("Stiffness", &config.stiffness, 0, 1);
+    ImGui::InputInt("Phase", &config.phase);
     if (selected == 1)
     {
         ImGui::Checkbox("Fixed Corners", &fixedCorners);
@@ -435,5 +433,5 @@ void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints
     ImGui::Columns(1);
     ImGui::Separator();
 
-	ImGui::End();
+    ImGui::End();
 }

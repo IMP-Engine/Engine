@@ -171,7 +171,7 @@ void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &modelViewProjectionMatrix, 
    
     glDrawArrays(GL_TRIANGLES, 0, vertices.size()/3);
 
-	glBindVertexArray(0);
+    glBindVertexArray(0);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glEnable(GL_CULL_FACE);
@@ -214,7 +214,7 @@ void Scene::init()
     glEnableVertexAttribArray(normal_location);
     glVertexAttribPointer(normal_location, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }

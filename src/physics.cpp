@@ -18,25 +18,25 @@ void Physics::step(Scene *scene, float dt)
     std::vector<int>   &phase     = particles.phase;
     std::vector<int>   &numBoundConstraints = particles.numBoundConstraints;
 
-	const float GRAVITY = 6.0f;
-	for (std::vector<glm::vec3>::size_type i = 0; i != particles.cardinality; i++) {
-		/*
-		* For all particles i
-		* Apply forces			v_i = v_i + dt * f_ext(x_i)
-		* Damp velocities		-- Skip for now -- TODO --
-		* Predict position		x_i^* = x_i + dt * v_i
-		*/
-		velocity[i] -= glm::vec3(0.f, dt * GRAVITY, 0.f); // Gravity
+    const float GRAVITY = 6.0f;
+    for (std::vector<glm::vec3>::size_type i = 0; i != particles.cardinality; i++) {
+        /*
+        * For all particles i
+        * Apply forces            v_i = v_i + dt * f_ext(x_i)
+        * Damp velocities        -- Skip for now -- TODO --
+        * Predict position        x_i^* = x_i + dt * v_i
+        */
+        velocity[i] -= glm::vec3(0.f, dt * GRAVITY, 0.f); // Gravity
 
         if (scene->windActive) {
             velocity[i] += glm::vec3(dt * WIND, 0.f, 0.f);
         }
 
-		pPosition[i] = position[i] + dt * velocity[i]; // symplectic Euler
-		// ******************************************************************************************************************
-		/*
-		* Clamp positions so that we do not lose any particles
-		*/
+        pPosition[i] = position[i] + dt * velocity[i]; // symplectic Euler
+        // ******************************************************************************************************************
+        /*
+        * Clamp positions so that we do not lose any particles
+        */
         pPosition[i] = (min)((max)(WORLD_MIN, pPosition[i]), WORLD_MAX);
         // ********************************************************************************
     }
@@ -69,7 +69,7 @@ void Physics::step(Scene *scene, float dt)
          * v_i = (x_i^* - x_i) / dt
          * x_i = x_i^*
          */
-        velocity[i] = (pPosition[i] - position[i]) / dt;	
+        velocity[i] = (pPosition[i] - position[i]) / dt;    
         if (glm::length(position[i] - pPosition[i]) > pSleeping)
         {
             position[i] = pPosition[i];
@@ -244,7 +244,6 @@ void Physics::resolveCollisions(std::vector<glm::vec3> & position, std::vector<g
 
 void Physics::detectCollisions(Scene * scene, std::vector<int> & numBoundConstraints, PlaneCollisionConstraintData & planeConstraints, std::vector<int> & phase, std::vector<glm::vec3> & pPosition)
 {
-    int id;
     if (parallelDetectCollisions)
     {
         tbb::parallel_for(

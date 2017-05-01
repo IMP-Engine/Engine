@@ -18,10 +18,10 @@ void printResult(string test, Intersection i, bool result, Intersection expected
         cout << "passed!" << endl;
     } else {
         cout << "failed!" << endl;
-		cout << "Intersection: " << endl;
-		cout << "    Gradient: ";
-		printVec(i.responseGradient);
-		cout << endl << "    Scale: " << i.responseDistance << endl;
+        cout << "Intersection: " << endl;
+        cout << "    Gradient: ";
+        printVec(i.responseGradient);
+        cout << endl << "    Scale: " << i.responseDistance << endl;
     }
 }
 
@@ -50,80 +50,80 @@ void doIntersectionTests() {
 }
 
 void doPlaneSeparateTest() {
-	Intersection i;
-	Particle p;
-	p.pos = glm::vec3(0, 1, 0);
-	p.pPos = glm::vec3(0, 1, 0);
-	p.radius = TEST_RADIUS;
+    Intersection i;
+    Particle p;
+    p.pos = glm::vec3(0, 1, 0);
+    p.pPos = glm::vec3(0, 1, 0);
+    p.radius = TEST_RADIUS;
 
     addParticle(p, pData);
 
-	bool result = intersect(t, pData, pData.cardinality, i);
-	printResult("PlaneSeparate", i, result, i, false);
+    bool result = intersect(t, pData, pData.cardinality, i);
+    printResult("PlaneSeparate", i, result, i, false);
 }
 
 void doVertexIntersectionTests() {
 
-	Intersection i, expectedI;
-	Particle p;
-	p.pPos = t.v1 + TEST_OFFSET*(t.v1 - t.v0);
+    Intersection i, expectedI;
+    Particle p;
+    p.pPos = t.v1 + TEST_OFFSET*(t.v1 - t.v0);
 
-	expectedI.responseDistance = TEST_RADIUS;
-	expectedI.responseGradient = t.normal;
+    expectedI.responseDistance = TEST_RADIUS;
+    expectedI.responseGradient = t.normal;
 
-	p.radius = TEST_RADIUS;
+    p.radius = TEST_RADIUS;
     addParticle(p, pData);
-	bool result = intersect(t, pData, pData.cardinality, i);
-	printResult("Vertex 1 Intersection", i, result, expectedI, true);
+    bool result = intersect(t, pData, pData.cardinality, i);
+    printResult("Vertex 1 Intersection", i, result, expectedI, true);
 
 
-	p.pPos = t.v2 + TEST_OFFSET*(t.v2 - t.v0);
+    p.pPos = t.v2 + TEST_OFFSET*(t.v2 - t.v0);
     addParticle(p, pData);
-	result = intersect(t, pData, pData.cardinality, i);
-	printResult("Vertex 2 Intersection", i, result, i, true);
+    result = intersect(t, pData, pData.cardinality, i);
+    printResult("Vertex 2 Intersection", i, result, i, true);
 
 
-	p.pPos = t.v0 + TEST_OFFSET*(t.v0 - t.v1);
+    p.pPos = t.v0 + TEST_OFFSET*(t.v0 - t.v1);
     addParticle(p, pData);
-	result = intersect(t, pData, pData.cardinality, i);
-	printResult("Vertex 3 Intersection", i, result, i, true);
+    result = intersect(t, pData, pData.cardinality, i);
+    printResult("Vertex 3 Intersection", i, result, i, true);
 }
 
 
 void doCenterInTriangleTest() {
-	Intersection i;
-	Particle p;
-	p.pPos = glm::vec3(.7f, .8f, 0.5f);
-	p.radius = 0.2f;
+    Intersection i;
+    Particle p;
+    p.pPos = glm::vec3(.7f, .8f, 0.5f);
+    p.radius = 0.2f;
     addParticle(p, pData);
-	bool result = intersect(t, pData, pData.cardinality, i);
-	printResult("Center Inside Intersection", i, result, i, true);
+    bool result = intersect(t, pData, pData.cardinality, i);
+    printResult("Center Inside Intersection", i, result, i, true);
 }
 
 void doEdgeIntersectionTests() {
 
-	Intersection i, expectedI;
-	Particle p;
-	p.radius = TEST_RADIUS;
+    Intersection i, expectedI;
+    Particle p;
+    p.radius = TEST_RADIUS;
 
 
-	expectedI.responseDistance = TEST_RADIUS;
-	expectedI.responseGradient = t.normal;
+    expectedI.responseDistance = TEST_RADIUS;
+    expectedI.responseGradient = t.normal;
 
-	p.pPos = glm::vec3(.5f,.5f,1.f);
+    p.pPos = glm::vec3(.5f,.5f,1.f);
     addParticle(p, pData);
-	bool result = intersect(t, pData, pData.cardinality, i);
-	printResult("Edge 1 Intersection", i, result, expectedI, true);
+    bool result = intersect(t, pData, pData.cardinality, i);
+    printResult("Edge 1 Intersection", i, result, expectedI, true);
 
 
-	p.pPos = glm::vec3(0.5, .5, -0.3);
+    p.pPos = glm::vec3(0.5, .5, -0.3);
     addParticle(p, pData);
-	result = intersect(t, pData, pData.cardinality, i);
-	printResult("Edge 2 Intersection", i, result, expectedI, true);
+    result = intersect(t, pData, pData.cardinality, i);
+    printResult("Edge 2 Intersection", i, result, expectedI, true);
 
 
-	p.pPos = glm::vec3(1.3, 1.3, 0.5);
+    p.pPos = glm::vec3(1.3, 1.3, 0.5);
     addParticle(p, pData);
-	result = intersect(t, pData, pData.cardinality, i);
-	printResult("Edge 3 Intersection", i, result, expectedI, true);
+    result = intersect(t, pData, pData.cardinality, i);
+    printResult("Edge 3 Intersection", i, result, expectedI, true);
 }

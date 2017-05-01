@@ -122,7 +122,7 @@ void init() {
         exit(EXIT_FAILURE);
     }
 
-#if _DEBUG		
+#if _DEBUG        
     debug::printGLDiagnostics();
     debug::setupGLDebugMessages();
 #endif
@@ -142,11 +142,11 @@ void init() {
     scene = new Scene;
     physicSystem = Physics();
 
-    physicSystem.iterations = 5;
-    physicSystem.stabilizationIterations = 3;
+    physicSystem.iterations = 4;
+    physicSystem.stabilizationIterations = 2;
     physicSystem.pSleeping = 0.0001f;
     physicSystem.overRelaxConst = 1.0f;
-    physicSystem.restitutionCoefficientT = 0.8f; 
+    physicSystem.restitutionCoefficientT = 0.8f;
     physicSystem.restitutionCoefficientN = 0.8f;
     physicSystem.parallelConstraintSolve = false;
     physicSystem.parallelDetectCollisions = false;
@@ -158,15 +158,15 @@ void init() {
 
     scene->init();
 
-	model::loadModelNames();
+    model::loadModelNames();
 
     // Load some model to begin with, so that debugging is easier on us
     model::ModelConfig conf;
     conf.setDefaults();
-	model::loadPredefinedModel("Box", physicSystem.particles, physicSystem.constraints, conf);
+    model::loadPredefinedModel("Box", physicSystem.particles, physicSystem.constraints, conf);
 
-	particleRenderer = new ParticleRenderer();
-	particleRenderer->init();
+    particleRenderer = new ParticleRenderer();
+    particleRenderer->init();
 
     modelRenderer = new ModelRenderer();
     modelRenderer->init();
@@ -250,8 +250,8 @@ void gui()
     if (ImGui::Button("Performance Window CPU")) showPerformance ^= 1; ImGui::SameLine();
     if (ImGui::Button("Collision detection")) showCollision ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-	visualization::gui();
-	ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
+    visualization::gui();
+    ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
     ImGui::Checkbox("Timestep from framerate", &useVariableTimestep);
     ImGui::Checkbox("Parallel constraint solve", &physicSystem.parallelConstraintSolve); ImGui::SameLine();
     //ImGui::Checkbox("Parallel collision detection", &physicSystem.parallelDetectCollisions);
@@ -275,14 +275,6 @@ void gui()
     collision::gui(&showCollision);
     model::gui(&showModels, physicSystem.particles, physicSystem.constraints, objects, modelData);
     scene->gui(&showSceneSelection);
-
-    // Remove when all group members feel comfortable with how GUI works and what it can provide
-    // Demo window
-    if (show_demo_window)
-    {
-        ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
-        ImGui::ShowTestWindow(&show_demo_window);
-    }
 }
 
 int main(void) {

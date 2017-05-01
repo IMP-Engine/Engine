@@ -9,8 +9,8 @@
 class ModelData
 {
 public:
-	ModelData();
-	~ModelData();
+    ModelData();
+    ~ModelData();
 
     std::vector<int> elements;
     std::vector<float> bcCoords;

@@ -22,17 +22,17 @@
 class ModelRenderer
 {
 public:
-	ModelRenderer();
-	~ModelRenderer();
+    ModelRenderer();
+    ~ModelRenderer();
 
-	GLuint simpleShader;
-	GLuint vao;
-	GLuint vbo;
+    GLuint simpleShader;
+    GLuint vao;
+    GLuint vbo;
     GLuint nbo;
     GLuint ibo;
     unsigned int *particleCount;
 
-	void init();
-	void render(ParticleData &particles, ModelData &data, glm::mat4 &modelViewProjectionMatrix, glm::mat4 &modelViewMatrix, const glm::vec3 &lightPosition, glm::mat4 &projectionMatrix);
+    void init();
+    void render(ParticleData &particles, ModelData &data, glm::mat4 &modelViewProjectionMatrix, glm::mat4 &modelViewMatrix, const glm::vec3 &lightPosition, glm::mat4 &projectionMatrix);
 };
 

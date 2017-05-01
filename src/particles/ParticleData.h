@@ -9,8 +9,8 @@
 class ParticleData
 {
 public:
-	ParticleData();
-	~ParticleData();
+    ParticleData();
+    ~ParticleData();
     unsigned int cardinality;
 
     std::vector<glm::vec3> position;

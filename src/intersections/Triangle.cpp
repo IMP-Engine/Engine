@@ -25,8 +25,8 @@ bool intersect(Triangle &triangle, ParticleData &particles, int index, Intersect
     }
 
 
-	isect.responseGradient = triangle.normal;
-	isect.responseDistance = (radius - dist);
+    isect.responseGradient = triangle.normal;
+    isect.responseDistance = (radius - dist);
 
 
     vec3 A = triangle.v1 - triangle.v0;
@@ -37,23 +37,23 @@ bool intersect(Triangle &triangle, ParticleData &particles, int index, Intersect
      */
 
     // First vertex
-	float aa = dot(triangle.v0 - pPos, triangle.v0 - pPos);
+    float aa = dot(triangle.v0 - pPos, triangle.v0 - pPos);
     if (aa < rr) 
-	{
+    {
         return true;
     }
 
     // Second vertex
-	float bb = dot(triangle.v1 - pPos, triangle.v1 - pPos);
+    float bb = dot(triangle.v1 - pPos, triangle.v1 - pPos);
     if (bb < rr) 
-	{
+    {
         return true;
     }
 
     // Third vertex
-	float cc = dot(triangle.v2 - pPos, triangle.v2 - pPos);
+    float cc = dot(triangle.v2 - pPos, triangle.v2 - pPos);
     if (cc < rr) 
-	{
+    {
         return true;
     }
     
@@ -65,7 +65,7 @@ bool intersect(Triangle &triangle, ParticleData &particles, int index, Intersect
 
     // Baycentric check
     
-	// particle position relative to v0
+    // particle position relative to v0
     vec3 pPrim = projetedPosition - triangle.v0; 
 
     // Compute dot products
@@ -84,7 +84,7 @@ bool intersect(Triangle &triangle, ParticleData &particles, int index, Intersect
 
     // Check if point is in triangle
     if ((u >= 0) && (v >= 0) && (u + v < 1)) 
-	{
+    {
         return true;
     }
 
@@ -94,10 +94,10 @@ bool intersect(Triangle &triangle, ParticleData &particles, int index, Intersect
      **/
 
 
-	// First edge, v0 to v1
+    // First edge, v0 to v1
     float t = (dot(A, pPos) - dot(A, triangle.v0)) / dot(A,A);
     vec3 Q = triangle.v0 + t*A;
-	vec3 Qp = pPos - Q;
+    vec3 Qp = pPos - Q;
     float d2 = dot(Qp,Qp);
 
     if (d2 < rr && (t >= 0 || t <= 1)) {
@@ -106,7 +106,7 @@ bool intersect(Triangle &triangle, ParticleData &particles, int index, Intersect
 
     t = (dot(B, pPos) - dot(B, triangle.v0)) / dot(B,B);
     Q = triangle.v0 + t*B;
-	Qp = pPos - Q;
+    Qp = pPos - Q;
     d2 = dot(Qp, Qp);
 
     if (d2 < rr && (t >= 0 || t <= 1)) {
@@ -115,7 +115,7 @@ bool intersect(Triangle &triangle, ParticleData &particles, int index, Intersect
 
     t = (dot(C, pPos) - dot(C, triangle.v1)) / dot(C,C);
     Q = triangle.v1 + t*C;
-	Qp = pPos - Q;
+    Qp = pPos - Q;
     d2 = dot(Qp, Qp);
 
     if (d2 < rr && (t >= 0 || t <= 1)) {
