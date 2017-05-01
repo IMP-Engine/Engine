@@ -47,7 +47,7 @@ public:
         PlaneCollisionConstraintData & planeConstraints;
 
         void operator()(const tbb::blocked_range<size_t>& r) const {
-            std::vector<int> &numBoundConstraints = particles.numBoundConstraints;
+            std::vector<tbb::atomic<int>> &numBoundConstraints = particles.numBoundConstraints;
 
             for (size_t particleIndex = r.begin(); particleIndex != r.end(); ++particleIndex)
             {

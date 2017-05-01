@@ -134,7 +134,7 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
 	float maxDist = glm::length(d*config.scale);
 
     std::vector<vec3> &position = particles.position;
-    std::vector<int> &numBoundConstraints = particles.numBoundConstraints;
+    std::vector<tbb::atomic<int>> &numBoundConstraints = particles.numBoundConstraints;
 
     for (std::vector<Particle>::size_type i = start; i < particles.cardinality; i++) 
     {

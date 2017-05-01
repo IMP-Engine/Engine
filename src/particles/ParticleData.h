@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "../tbb/include/tbb/atomic.h"
 #include "glm/glm.hpp"
 #include "Particle.h"
 
@@ -18,7 +19,7 @@ public:
     std::vector<glm::vec3> velocity;
     std::vector<float> invmass;
     std::vector<int> phase;
-    std::vector<int> numBoundConstraints;
+    std::vector<tbb::atomic<int>> numBoundConstraints;
     std::vector<float> radius;
 
 
