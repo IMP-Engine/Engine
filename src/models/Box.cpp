@@ -49,7 +49,7 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::M
     float maxDist = sqrt(dx*dx + dy*dy + dz*dz);
 
     std::vector<vec3> &position = particles.position;
-    std::vector<int> &numBoundConstraints = particles.numBoundConstraints;
+    std::vector<tbb::atomic<int>> &numBoundConstraints = particles.numBoundConstraints;
 
     for (unsigned int i = start; i < particles.cardinality; i++) 
     {

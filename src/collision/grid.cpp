@@ -1,12 +1,14 @@
 #include "grid.h"
 
+tbb::mutex mutexGrid;
+
 Grid::Grid(int numCellsSide)
 {
     this->numCellsSide = numCellsSide;
     this->numCells = numCellsSide * numCellsSide * numCellsSide;
     int paddedSide = numCellsSide + 2;
     for (int i = 0; i < paddedSide * paddedSide * paddedSide; ++i) {
-        grid.push_back(std::vector<int>());
+        grid.push_back(tbb::concurrent_vector<int>());
     }
 }
 
@@ -42,6 +44,7 @@ void Grid::buildGrid(ParticleData &particles, BoundingVolume bv, bool parallel)
                 ++x;
                 ++y;
                 ++z;
+                
                 grid[x + numCellsSide * y + numCellsSide * numCellsSide * z].push_back(i);
             }
         });
@@ -78,7 +81,7 @@ void Grid::findCollisions(DistanceConstraintData &constraints, ParticleData &par
 {
     if (parallel)
     {
-        tbb::parallel_for(tbb::blocked_range<size_t>(0, particles.cardinality),
+        tbb::parallel_for(tbb::blocked_range<size_t>(0, grid.size()),
                 [&](const tbb::blocked_range<size_t>& r) {
             for (size_t i = r.begin(); i != r.end(); ++i)
             {
@@ -105,8 +108,8 @@ void Grid::findCollisions(DistanceConstraintData &constraints, ParticleData &par
                                 c.secondParticleIndex = idx2;
                                 c.equality = false;
                                 c.distance = particles.radius[idx1] + particles.radius[idx2];
-                                particles.numBoundConstraints[idx1]++;
-                                particles.numBoundConstraints[idx2]++;
+                                particles.numBoundConstraints[idx1].fetch_and_increment();
+                                particles.numBoundConstraints[idx2].fetch_and_increment();
 
                                 addConstraint(constraints, c);
                             }
