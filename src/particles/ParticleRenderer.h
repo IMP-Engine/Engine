@@ -31,6 +31,7 @@ public:
     GLuint vao;
     GLuint particleBuffer;
     GLuint sizeBuffer;
+    GLuint phaseBuffer;
     unsigned int *particleCount;
 
     void init();
