@@ -33,7 +33,7 @@ void Physics::step(Scene *scene, float dt)
         }
 
         pPosition[i] = position[i] + dt * velocity[i]; // symplectic Euler
-        // ******************************************************************************************************************
+        // ********************************************************************************
         /*
         * Clamp positions so that we do not lose any particles
         */
@@ -123,14 +123,12 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & position, std::vector<
                     pPosition[p1] -= 
                         delta1
                         * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
-                        * overRelaxConst
-                        / (float)numBoundConstraints[p1];
+                        * overRelaxConst;
 
                     pPosition[p2] -= 
                         delta2 
                         * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
-                        * overRelaxConst
-                        / (float)numBoundConstraints[p2];
+                        * overRelaxConst;
                 }
             }
         }
