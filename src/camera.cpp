@@ -71,7 +71,7 @@ void Camera::mouseButtonCallback(GLFWwindow* window, int button, int action, int
             config.numParticles = ivec3(2);
             config.distanceThreshold = 2.f;
             config.scale = vec3(1);
-            config.stiffness = 1;
+            config.elasticity = 1;
             config.centerPos = cameraPos + 5.f*cameraFront;
 
             Box::makeBox(physicSystem->particles, physicSystem->constraints, config);

@@ -32,7 +32,7 @@ void model::makeClothModel(ModelConfig & config, bool hasFixedCorners, ParticleD
             DistanceConstraint c;
             c.threshold = config.distanceThreshold;
             c.equality = true;
-            c.stiffness = config.stiffness;
+            c.elasticity = config.elasticity;
 
             if (i > 0) {
                 c.distance = dx;
@@ -55,7 +55,7 @@ void model::makeClothModel(ModelConfig & config, bool hasFixedCorners, ParticleD
             }
 
 
-            c.stiffness = config.stiffness * 0.01f;
+            c.elasticity = config.elasticity * 0.01f;
 
             if (j > 0 && i > 0) {
                 c.distance = sqrt(dx*dx + dz*dz);
