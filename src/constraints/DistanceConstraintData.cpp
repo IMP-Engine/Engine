@@ -5,7 +5,7 @@ tbb::mutex mutex;
 DistanceConstraintData::DistanceConstraintData()
 {
     particles.reserve(MAX_DISTANCE_CONSTRAINTS);
-    stiffness.reserve(MAX_DISTANCE_CONSTRAINTS);
+    elasticity.reserve(MAX_DISTANCE_CONSTRAINTS);
     threshold.reserve(MAX_DISTANCE_CONSTRAINTS);
     distance.reserve(MAX_DISTANCE_CONSTRAINTS);
     equality.reserve(MAX_DISTANCE_CONSTRAINTS);
@@ -53,9 +53,52 @@ bool DistanceConstraintData::solveDistanceConstraint(glm::vec3 & delta1, glm::ve
 
     vec3 grad = glm::normalize(diff);
     grad /= particleData.invmass[firstParticleIndex] + particleData.invmass[secondParticleIndex];
-    
+
     delta1 = particleData.invmass[firstParticleIndex] * c * grad;
     delta2 = -particleData.invmass[secondParticleIndex] * c * grad;
+
+    return true;
+}
+
+bool DistanceConstraintData::solveDistanceConstraint(
+    glm::vec3 & delta1,
+    glm::vec3 & delta2,
+    int constraintIndex,
+    ParticleData & particleData,
+    bool stabilize,
+    float & dLambda,
+    float lambda,
+    float dt)
+{
+    int firstParticleIndex = particles[constraintIndex].x;
+    int secondParticleIndex = particles[constraintIndex].y;
+
+    glm::vec3 p1 = particleData.pPosition[firstParticleIndex];
+    glm::vec3 p2 = particleData.pPosition[secondParticleIndex];
+
+    vec3 diff = p1 - p2;
+
+    float c = length(diff) - distance[constraintIndex];
+    float aDash = elasticity[constraintIndex] / (dt*dt);
+    dLambda = (c + aDash*lambda) / (particleData.invmass[firstParticleIndex] + particleData.invmass[secondParticleIndex] + aDash);
+
+    if (!equality[constraintIndex] && c >= 0)
+        return false;
+
+    if (stabilize)
+    {   // Calculate delta with position instead of pPosition
+        p1 = particleData.position[firstParticleIndex];
+        p2 = particleData.position[secondParticleIndex];
+
+        diff = p1 - p2;
+
+        c = length(diff) - distance[constraintIndex];
+    }
+
+    vec3 grad = glm::normalize(diff);
+    
+    delta1 = particleData.invmass[firstParticleIndex] * dLambda * grad;
+    delta2 = particleData.invmass[secondParticleIndex] * dLambda * -grad;
 
     return true;
 }
@@ -63,7 +106,7 @@ bool DistanceConstraintData::solveDistanceConstraint(glm::vec3 & delta1, glm::ve
 void DistanceConstraintData::clear()
 {
     particles.clear();
-    stiffness.clear();
+    elasticity.clear();
     distance.clear();
     equality.clear();
     threshold.clear();
@@ -82,7 +125,7 @@ void DistanceConstraintData::removeBroken(ParticleData &particleData)
             }
 
             particles.erase(particles.begin() + i);
-            stiffness.erase(stiffness.begin() + i);
+            elasticity.erase(elasticity.begin() + i);
             distance.erase( distance.begin()  + i);
             equality.erase( equality.begin()  + i);
             threshold.erase(threshold.begin() + i);
@@ -97,7 +140,7 @@ void addConstraint(DistanceConstraintData &data, DistanceConstraint &config)
 {
     mutex.lock();
     data.particles.push_back({ config.firstParticleIndex, config.secondParticleIndex });
-    data.stiffness.push_back(config.stiffness);
+    data.elasticity.push_back(config.elasticity);
     data.distance.push_back(config.distance);
     data.equality.push_back(config.equality);
     data.threshold.push_back(config.threshold);

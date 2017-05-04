@@ -21,64 +21,24 @@ public:
     int cardinality;
 
     std::vector<ivec2> particles; // Assume there is 2 particles 
-    std::vector<float> stiffness;
+    std::vector<float> elasticity;
     std::vector<float> distance;
     std::vector<bool>  equality;
     std::vector<float> threshold;
 
     float evaluate(int constraintIndex, ParticleData &particleData);
 
-    bool solveDistanceConstraint(glm::vec3 &delta1, glm::vec3 &delta2, int constraintIndex, ParticleData &particleData, bool stabilize);
+    bool solveDistanceConstraint(glm::vec3 & delta1, glm::vec3 & delta2, int constraintIndex, ParticleData & particleData, bool stabilize);
+    bool solveDistanceConstraint(glm::vec3 &delta1, glm::vec3 &delta2, int constraintIndex, ParticleData &particleData, bool stabilize, float & dLambda, float lambda, float dt);
 
     void clear();
     void removeBroken(ParticleData &particleData);
-
-    /*
-        Used for parallelizing distance constraint solving
-    */
-    class SolveDistanceConstraint {
-    public:
-        ParticleData & particles;
-        DistanceConstraintData & distanceConstraints;
-        float overRelaxConst;
-        int iterationNum;
-
-        void operator()(const tbb::blocked_range<size_t>& r) const {
-            vec3 delta1(0);
-            vec3 delta2(0);
-            std::vector<tbb::atomic<int>> &numBoundConstraints = particles.numBoundConstraints;
-            std::vector<vec3> &pPosition = particles.pPosition;
-            for (size_t constraintIndex = r.begin(); constraintIndex != r.end(); ++constraintIndex)
-            {
-                if (distanceConstraints.solveDistanceConstraint(delta1, delta2, constraintIndex, particles, false))
-                {
-                    ivec2 &constraintParticles = distanceConstraints.particles[constraintIndex];
-                    int p1 = constraintParticles[0];
-                    int p2 = constraintParticles[1];
-                    pPosition[p1] -=
-                        delta1
-                        * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)iterationNum))
-                        * overRelaxConst
-                        / (float)numBoundConstraints[p1];
-
-                    pPosition[p2] -=
-                        delta2
-                        * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)iterationNum))
-                        * overRelaxConst
-                        / (float)numBoundConstraints[p2];
-                }
-            }
-        }
-        SolveDistanceConstraint(ParticleData & a, DistanceConstraintData & b, float c, int d) :
-            particles(a), distanceConstraints(b), overRelaxConst(c), iterationNum(d)
-        {}
-    };
 
 };
 struct DistanceConstraint {
     int firstParticleIndex;
     int secondParticleIndex;
-    float stiffness;
+    float elasticity;
     float distance;
     float threshold;
     bool equality;

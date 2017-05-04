@@ -7,6 +7,8 @@
 
 #define WIND 4.f
 
+std::vector<int> lambda;
+
 void Physics::step(Scene *scene, float dt)
 {
 
@@ -45,6 +47,9 @@ void Physics::step(Scene *scene, float dt)
     int id = performance::startTimer("Remove broken constraints");
     constraints.removeBroken(particles);
     performance::stopTimer(id);
+
+    lambda.resize(constraints.distanceConstraints.cardinality);
+    for (int i = 0; i < lambda.size(); ++i) lambda[i] = 0;
     
     id = performance::startTimer("Scene collision detection");
     detectCollisions(scene, numBoundConstraints, constraints.planeCollisionConstraints, phase, pPosition);
@@ -59,7 +64,7 @@ void Physics::step(Scene *scene, float dt)
     performance::stopTimer(id);
 
     id = performance::startTimer("Solve constraints");
-    resolveConstraints(position, pPosition, invmass, numBoundConstraints, constraints.planeCollisionConstraints, constraints.particleCollisionConstraints);
+    resolveConstraints(position, pPosition, invmass, numBoundConstraints, constraints.planeCollisionConstraints, constraints.particleCollisionConstraints, dt);
     performance::stopTimer(id);
 
     for (std::vector<glm::vec3>::size_type i = 0; i != particles.cardinality; i++) 
@@ -96,7 +101,7 @@ void Physics::step(Scene *scene, float dt)
 
 }
 
-void Physics::resolveConstraints(std::vector<glm::vec3> & position, std::vector<glm::vec3> & pPosition, std::vector<float> & invmass, std::vector<tbb::atomic<int>> & numBoundConstraints, PlaneCollisionConstraintData & planeConstraints, DistanceConstraintData & particleConstraints)
+void Physics::resolveConstraints(std::vector<glm::vec3> & position, std::vector<glm::vec3> & pPosition, std::vector<float> & invmass, std::vector<tbb::atomic<int>> & numBoundConstraints, PlaneCollisionConstraintData & planeConstraints, DistanceConstraintData & particleConstraints, float dt)
 {
     DistanceConstraintData &distanceConstraints = constraints.distanceConstraints;
     for (int i = 0; i < iterations; i++)
@@ -108,28 +113,40 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & position, std::vector<
         if (parallelConstraintSolve) {
             tbb::parallel_for(
                     tbb::blocked_range<size_t>(0, distanceConstraints.cardinality), 
-                    DistanceConstraintData::SolveDistanceConstraint(particles, constraints.distanceConstraints, overRelaxConst, i));
+                [&](const tbb::blocked_range<size_t>& r) {
+                vec3 delta1(0);
+                vec3 delta2(0);
+                for (size_t constraintIndex = r.begin(); constraintIndex != r.end(); ++constraintIndex)
+                {
+                    float dLambda;
+                    if (distanceConstraints.solveDistanceConstraint(delta1, delta2, constraintIndex, particles, false, dLambda, lambda[constraintIndex], dt))
+                    {
+                        // delta p_i = -w_i * s * grad_{p_i} C(p) * stiffness correction 
+                        ivec2 &constraintParticles = distanceConstraints.particles[constraintIndex];
+                        int p1 = constraintParticles[0];
+                        int p2 = constraintParticles[1];
+                        pPosition[p1] -= delta1 * overRelaxConst;
+                        pPosition[p2] -= delta2 * overRelaxConst;
+                    }
+                    lambda[constraintIndex] += dLambda;
+                }
+            });
         } else {
             vec3 delta1(0);
             vec3 delta2(0);
             for (int constraintIndex = 0; constraintIndex < distanceConstraints.cardinality; constraintIndex++)
             {
-                if (distanceConstraints.solveDistanceConstraint(delta1, delta2, constraintIndex, particles, false))
+                float dLambda;
+                if (distanceConstraints.solveDistanceConstraint(delta1, delta2, constraintIndex, particles, false, dLambda, lambda[constraintIndex], dt))
                 {
                     // delta p_i = -w_i * s * grad_{p_i} C(p) * stiffness correction 
                     ivec2 &constraintParticles = distanceConstraints.particles[constraintIndex];
                     int p1 = constraintParticles[0];
                     int p2 = constraintParticles[1];
-                    pPosition[p1] -= 
-                        delta1
-                        * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
-                        * overRelaxConst;
-
-                    pPosition[p2] -= 
-                        delta2 
-                        * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)i))
-                        * overRelaxConst;
+                    pPosition[p1] -= delta1 * overRelaxConst;
+                    pPosition[p2] -= delta2 * overRelaxConst;
                 }
+                lambda[constraintIndex] += dLambda;
             }
         }
         

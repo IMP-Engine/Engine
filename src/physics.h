@@ -45,7 +45,7 @@ private:
     /*
         Stationary iterative linear solver - Gauss-Seidel
     */
-    void resolveConstraints(std::vector<glm::vec3> & position, std::vector<glm::vec3> & pPosition, std::vector<float> & invmass, std::vector<tbb::atomic<int>> & numBoundConstraints, PlaneCollisionConstraintData & planeConstraints, DistanceConstraintData & particleConstraints);
+    void resolveConstraints(std::vector<glm::vec3> & position, std::vector<glm::vec3> & pPosition, std::vector<float> & invmass, std::vector<tbb::atomic<int>> & numBoundConstraints, PlaneCollisionConstraintData & planeConstraints, DistanceConstraintData & particleConstraints, float dt);
 
     void dampPlaneCollision(std::vector<tbb::atomic<int>> & numBoundConstraints, std::vector<glm::vec3> & velocity, PlaneCollisionConstraintData & triangleConstraints);
 
