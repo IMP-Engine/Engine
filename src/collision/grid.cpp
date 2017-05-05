@@ -24,9 +24,9 @@ void Grid::buildGrid(ParticleData &particles, BoundingVolume bv, bool parallel)
             for (size_t i = r.begin(); i != r.end(); ++i)
             {
                 int x, y, z;
-                x = (int)(numCellsSide / bv.length * (particles.pPosition[i].x - bv.corner.x));
-                y = (int)(numCellsSide / bv.length * (particles.pPosition[i].y - bv.corner.y));
-                z = (int)(numCellsSide / bv.length * (particles.pPosition[i].z - bv.corner.z));
+                x = (int)floor(numCellsSide / bv.length * (particles.pPosition[i].x - bv.corner.x));
+                y = (int)floor(numCellsSide / bv.length * (particles.pPosition[i].y - bv.corner.y));
+                z = (int)floor(numCellsSide / bv.length * (particles.pPosition[i].z - bv.corner.z));
                 if (x < 0)
                     continue;
                 if (y < 0)
@@ -51,9 +51,9 @@ void Grid::buildGrid(ParticleData &particles, BoundingVolume bv, bool parallel)
         for (unsigned int i = 0; i < particles.cardinality; ++i)
         {
             int x, y, z;
-            x = (int)(numCellsSide / bv.length * (particles.pPosition[i].x - bv.corner.x));
-            y = (int)(numCellsSide / bv.length * (particles.pPosition[i].y - bv.corner.y));
-            z = (int)(numCellsSide / bv.length * (particles.pPosition[i].z - bv.corner.z));
+            x = (int)floor(numCellsSide / bv.length * (particles.pPosition[i].x - bv.corner.x));
+            y = (int)floor(numCellsSide / bv.length * (particles.pPosition[i].y - bv.corner.y));
+            z = (int)floor(numCellsSide / bv.length * (particles.pPosition[i].z - bv.corner.z));
             if (x < 0)
                 continue;
             if (y < 0)

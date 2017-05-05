@@ -184,7 +184,7 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & position, std::vector<
                 glm::vec3 tangentialDelta = v - (dot(v, contactNormal) * contactNormal); // [(px[i] - x[i]) - (px[j] - x[j])] tangential to n
                 glm::vec3 frictionalPosDelta = (invmass[p1] / (invmass[p1] + invmass[p2])) * tangentialDelta;
                 if (length(tangentialDelta) >= (staticFC * d)) // Is particles relative velocity above traction threshold?
-                    frictionalPosDelta *= min(kineticFC * d / length(tangentialDelta), 1); // if so, apply Columb friction
+                    frictionalPosDelta *= min(kineticFC * d / length(tangentialDelta), 1.f); // if so, apply Columb friction
 
                 pPosition[p1] += frictionalPosDelta;
                 pPosition[p2] -= frictionalPosDelta * invmass[p2] / (invmass[p1] + invmass[p2]);
