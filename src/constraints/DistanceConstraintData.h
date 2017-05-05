@@ -46,7 +46,7 @@ public:
         void operator()(const tbb::blocked_range<size_t>& r) const {
             vec3 delta1(0);
             vec3 delta2(0);
-            std::vector<int> &numBoundConstraints = particles.numBoundConstraints;
+            std::vector<tbb::atomic<int>> &numBoundConstraints = particles.numBoundConstraints;
             std::vector<vec3> &pPosition = particles.pPosition;
             for (size_t constraintIndex = r.begin(); constraintIndex != r.end(); ++constraintIndex)
             {

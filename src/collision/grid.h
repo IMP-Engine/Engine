@@ -2,6 +2,8 @@
 
 #include <vector>
 #include "../../tbb/include/tbb/parallel_for.h"
+#include "../tbb/include/tbb/mutex.h"
+#include "../tbb/include/tbb/concurrent_vector.h"
 #include "../particles/ParticleData.h"
 #include "../constraints/DistanceConstraintData.h"
 #include "../intersections.h"
@@ -10,7 +12,7 @@
 class Grid
 {
     public:
-        std::vector<std::vector<int>> grid;
+        std::vector<tbb::concurrent_vector<int>> grid;
         int numCells;
         int numCellsSide;
 

@@ -45,9 +45,9 @@ private:
     /*
         Stationary iterative linear solver - Gauss-Seidel
     */
-    void resolveConstraints(std::vector<glm::vec3> & position, std::vector<glm::vec3> & pPosition, std::vector<float> & invmass, std::vector<int> & numBoundConstraints, PlaneCollisionConstraintData & planeConstraints, DistanceConstraintData & particleConstraints);
+    void resolveConstraints(std::vector<glm::vec3> & position, std::vector<glm::vec3> & pPosition, std::vector<float> & invmass, std::vector<tbb::atomic<int>> & numBoundConstraints, PlaneCollisionConstraintData & planeConstraints, DistanceConstraintData & particleConstraints);
 
-    void dampPlaneCollision(std::vector<int> & numBoundConstraints, std::vector<glm::vec3> & velocity, PlaneCollisionConstraintData & triangleConstraints);
+    void dampPlaneCollision(std::vector<tbb::atomic<int>> & numBoundConstraints, std::vector<glm::vec3> & velocity, PlaneCollisionConstraintData & triangleConstraints);
 
     /*
         Project position and predicted positions to valid states as specified by the planeCollisions constraints
@@ -57,5 +57,5 @@ private:
     /*
         If there is a collision with the scene, add that constraint to triangleConstraints.
     */
-    void detectCollisions(Scene * scene, std::vector<int> & numBoundConstraints, PlaneCollisionConstraintData & triangleConstraints, std::vector<int> & phase, std::vector<glm::vec3> & pPosition);
+    void detectCollisions(Scene * scene, std::vector<tbb::atomic<int>> & numBoundConstraints, PlaneCollisionConstraintData & triangleConstraints, std::vector<int> & phase, std::vector<glm::vec3> & pPosition);
 };
