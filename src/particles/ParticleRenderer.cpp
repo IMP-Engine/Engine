@@ -2,7 +2,6 @@
 
 
 
-
 ParticleRenderer::ParticleRenderer()
 {
 }
@@ -49,10 +48,11 @@ void ParticleRenderer::init()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(sizeAttribLocation, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void *)0);
 
-    /*
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(phaseAttribLocation, 1, GL_INT, GL_FALSE, sizeof(int), (void *)(sizeof(Particle) - sizeof(int)));
-    */
+    glGenBuffers(1, &phaseBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, phaseBuffer);
+    glEnableVertexAttribArray(2);
+    glVertexAttribIPointer(phaseAttribLocation, 1, GL_INT, sizeof(GLint), (void *)0);
+   
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -63,6 +63,8 @@ void ParticleRenderer::render(ParticleData &particles, glm::mat4 &modelViewProje
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * particles.cardinality, &particles.position[0], GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, sizeBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * particles.cardinality, &particles.radius[0], GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, phaseBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(int) * particles.cardinality, &particles.phase[0], GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glUseProgram(particleShader);
