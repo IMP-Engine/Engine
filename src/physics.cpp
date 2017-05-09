@@ -128,7 +128,7 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & position, std::vector<
                         pPosition[p1] -= delta1 * overRelaxConst;
                         pPosition[p2] -= delta2 * overRelaxConst;
                     }
-                    lambda[constraintIndex] += dLambda;
+                    lambda[constraintIndex] -= dLambda;
                 }
             });
         } else {
