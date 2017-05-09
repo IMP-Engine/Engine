@@ -41,7 +41,7 @@ namespace model {
     /*
         Loads a non sdf model into particles and adds object specific constraints.
     */
-    void loadPredefinedModel(std::string model, ParticleData &particles, ConstraintData &constraints, ModelConfig config);
+    void loadPredefinedModel(std::string model, ParticleData &particles, ConstraintData &constraints, ModelConfig config, ModelData &modelData);
 
     /*
         Loads the object located at path into particles and adds simple 

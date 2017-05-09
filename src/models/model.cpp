@@ -27,7 +27,7 @@ void model::loadModelNames() {
     closedir(dir);
 }
 
-void model::loadPredefinedModel(std::string model, ParticleData &particles, ConstraintData &constraints, ModelConfig config)
+void model::loadPredefinedModel(std::string model, ParticleData &particles, ConstraintData &constraints, ModelConfig config, ModelData &modelData)
 {
     if (model == "Box")
     {
@@ -35,7 +35,26 @@ void model::loadPredefinedModel(std::string model, ParticleData &particles, Cons
     }
     else if (model == "Cloth")
     {
+        unsigned int start = particles.cardinality;
         model::makeClothModel(config, fixedCorners, particles, constraints);
+        int dx = config.numParticles.x;
+        for (int i = dx+1; i < particles.cardinality; i++)
+        {
+            std::vector<int> e;
+            e.push_back(i); e.push_back(i - 1); e.push_back(i - 1 - dx);
+            std::vector<float[3]> bc; bc.push_back({ 0.f,0.f,0.f });
+
+            std::vector<int[3]> ps;
+            ps.push_back({ i,i,i });
+            ps.push_back({ i,i,i });
+            ps.push_back({ i,i,i });
+            modelData.addVertices(
+                e, 
+                bc, 
+                ps,
+                modelData
+            );
+        }
     }
 }
 
@@ -320,7 +339,7 @@ void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints
         }
         else
         {
-            loadPredefinedModel(models[selected], particles, constraints, config);
+            loadPredefinedModel(models[selected], particles, constraints, config, modelData);
         }
     
         objects.push_back(std::make_tuple(models[selected], config));
@@ -342,7 +361,7 @@ void model::gui(bool *show, ParticleData &particles, ConstraintData &constraints
         }
         else
         {
-            loadPredefinedModel(models[selected], particles, constraints, config);
+            loadPredefinedModel(models[selected], particles, constraints, config, modelData);
         }
 
         objects.push_back(std::make_tuple(models[selected], config));

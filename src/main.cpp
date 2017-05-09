@@ -163,7 +163,7 @@ void init() {
     // Load some model to begin with, so that debugging is easier on us
     model::ModelConfig conf;
     conf.setDefaults();
-    model::loadPredefinedModel("Box", physicSystem.particles, physicSystem.constraints, conf);
+    model::loadPredefinedModel("Box", physicSystem.particles, physicSystem.constraints, conf, modelData);
 
     particleRenderer = new ParticleRenderer();
     particleRenderer->init();
