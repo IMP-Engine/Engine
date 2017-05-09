@@ -29,6 +29,7 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::M
 
                 // Offset from base
                 p.pos = base_pos + vec3(i*dx, j*dy, k*dz);
+                p.pPos = base_pos + vec3(i*dx, j*dy, k*dz);
 
                 // Uniform distribution of mass
                 p.invmass = config.invmass;
@@ -73,37 +74,7 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::M
         }
     }
 
-
-    /* 
-        The following code is a bit of a hack to att corner to corner constraints
-        These help alot in preventing "folding" of the cube.
-    */
-    ivec3 n = config.numParticles;
- 
-
-    int pairs[] = {
-              0 * n.y * n.z +   0 * n.z +       0, (n.x-1) * n.y * n.z + (n.y-1) * n.z + (n.z-1),
-        (n.x-1) * n.y * n.z +   0 * n.z +       0,       0 * n.y * n.z + (n.y-1) * n.z + (n.z-1),
-        (n.x-1) * n.y * n.z +   0 * n.z + (n.z-1),       0 * n.y * n.z + (n.y-1) * n.z +       0,
-              0 * n.y * n.z +   0 * n.z + (n.z-1), (n.x-1) * n.y * n.z + (n.y-1) * n.z +       0,
-    };
-
-    for (int k = 0; k < 8; k+=2)
-    {
-        int i = pairs[k];
-        int j = pairs[k + 1];
-
-        DistanceConstraint constraint;
-        constraint.firstParticleIndex  = i;
-        constraint.secondParticleIndex = j;
-        constraint.stiffness = config.stiffness;
-        constraint.distance  = glm::distance(position[i], position[j]);
-        constraint.threshold = config.distanceThreshold;
-        constraint.equality  = true;
-
-        addConstraint(constraints.distanceConstraints, constraint);
-
-        numBoundConstraints[i]++;
-        numBoundConstraints[j]++;
-    }
+for (int i = 0; i < particles.position.size(); i++) {
+    particles.position[i] *= 4;
+}
 }

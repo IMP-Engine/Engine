@@ -91,5 +91,10 @@ void model::makeClothModel(ModelConfig & config, bool hasFixedCorners, ParticleD
         c.position = particles.position[c.particle];
         addConstraint(constraints.fixedPointConstraints, c);
     }
+
+    for (int i = 0; i < particles.position.size(); i++) {
+    particles.position[i] *= 4;
+    particles.pPosition[i] *= 4;
+}
     
 }
