@@ -19,6 +19,9 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::M
 
     // Get the "minimum" corner to use as base position
     vec3 base_pos = config.centerPos - (config.scale * 0.5f);
+    if (config.numParticles.y == 1) {
+        dy = 0;       
+    }
 
     // Create particles
     for (int i = 0; i < config.numParticles.x; i++) {
@@ -56,7 +59,7 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::M
     {
         for (unsigned int j = i + 1; j < particles.cardinality; j++) 
         {
-            if (glm::distance(particles.position[i], particles.position[j]) <= maxDist)
+            if (glm::distance(particles.position[i], particles.position[j]) <= maxDist + 0.0001)
             {
                 DistanceConstraint constraint;
                 constraint.firstParticleIndex  = i;
@@ -76,5 +79,6 @@ void Box::makeBox(ParticleData &particles, ConstraintData &constraints, model::M
 
 for (int i = 0; i < particles.position.size(); i++) {
     particles.position[i] *= 4;
+    particles.pPosition[i] *= 4;
 }
 }

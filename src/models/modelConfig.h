@@ -21,9 +21,9 @@ namespace model {
             distanceThreshold = 2;
             invmass = 0.8f;
             phase = 0;
-            scale = glm::vec3(4.f);
+            scale = glm::vec3(5.f, 1.f, 5.f);
             stiffness = 0.8f;
-            numParticles = glm::ivec3(4);
+            numParticles = glm::ivec3(100, 1, 100);
         }
     };
 
