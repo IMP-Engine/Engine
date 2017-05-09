@@ -42,12 +42,21 @@ void model::loadPredefinedModel(std::string model, ParticleData &particles, Cons
         {
             std::vector<int> e;
             e.push_back(i); e.push_back(i - 1); e.push_back(i - 1 - dx);
-            std::vector<float[3]> bc; bc.push_back({ 0.f,0.f,0.f });
+            std::vector<float[3]> bc; 
+            float bcArray[3];
+            bcArray[0] = 0.f;
+            bcArray[1] = 0.f;
+            bcArray[2] = 0.f;
+            bc.push_back(bcArray);
 
             std::vector<int[3]> ps;
-            ps.push_back({ i,i,i });
-            ps.push_back({ i,i,i });
-            ps.push_back({ i,i,i });
+            int tmp[3];
+            tmp[0] = i;
+            tmp[1] = i;
+            tmp[2] = i;
+            ps.push_back(tmp);
+            ps.push_back(tmp);
+            ps.push_back(tmp);
             modelData.addVertices(
                 e, 
                 bc, 
