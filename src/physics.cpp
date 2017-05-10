@@ -114,9 +114,9 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & pPosition, std::vector
             sumC += std::abs(distanceConstraints.evaluate(constraintIndex, particles));
         }
         // print time and residual
-        printf("%f\t%f\n", glfwGetTime(),  sumC);
+        printf("%f\t%i\t%f\n", glfwGetTime(), iter,  sumC);
         // print iteration and residual
-        printf("%i\t%f\n", iter, sumC);
+        //printf("%i\t%f\n", iter, sumC);
 
         for (int constraintIndex = 0; constraintIndex < distanceConstraints.cardinality; constraintIndex++)
         {
