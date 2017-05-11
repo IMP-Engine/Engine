@@ -34,6 +34,10 @@ res7 = gsPara7(1:timePlot, 3);
 res8 = gsPara8(1:timePlot, 3);
 %res = [res1 res2 res3 res4 res5 res6 res7 res8];
 res = [res1 res2 res4 res8];
+res(:, 1) = smooth(res(:, 1), 100);
+res(:, 2) = smooth(res(:, 2), 100);
+res(:, 3) = smooth(res(:, 3), 100);
+res(:, 4) = smooth(res(:, 4), 100);
 
 w = 300;
 h = 240;
@@ -68,7 +72,7 @@ for i = 1 : size(res, 2)
 	ip = semilogy(res(:, i), strcat('-', markers(i)), 'LineWidth', 2);
 	ip.MarkerSize = markerSize;
 	%ip.MarkerIndices = 400*i : floor(timePlot/(1+i*0.25)) : timePlot;
-	ip.MarkerIndices = 4000 + 1000*(i-1);
+	ip.MarkerIndices = 6000 + 700*(i-1);
 	hold on
 end
 
