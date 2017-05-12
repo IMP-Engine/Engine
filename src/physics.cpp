@@ -145,7 +145,7 @@ void Physics::resolveConstraints(std::vector<glm::vec3> & position, std::vector<
             {
                 // delta p_i = -w_i * s * grad_{p_i} C(p) * stiffness correction
                 int p = fixedPosConstraints.particle[constraintIndex];
-                pPosition[p] -= delta * overRelaxConst / (float)numBoundConstraints[p];
+                pPosition[p] -= delta * overRelaxConst;
             }
         }
 

@@ -58,14 +58,12 @@ public:
                     pPosition[p1] -=
                         delta1
                         * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)iterationNum))
-                        * overRelaxConst
-                        / (float)numBoundConstraints[p1];
+                        * overRelaxConst;
 
                     pPosition[p2] -=
                         delta2
                         * (1 - pow(1 - distanceConstraints.stiffness[constraintIndex], 1 / (float)iterationNum))
-                        * overRelaxConst
-                        / (float)numBoundConstraints[p2];
+                        * overRelaxConst;
                 }
             }
         }
