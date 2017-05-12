@@ -82,12 +82,22 @@ void model::makeClothModel(ModelConfig & config, bool hasFixedCorners, ParticleD
 
     if (hasFixedCorners) {
         FixedPointConstraint c;
+        int nx = config.numParticles.x;
+        int nz = config.numParticles.z;
+
         c.particle = start;
         c.position = particles.position[start];
         addConstraint(constraints.fixedPointConstraints, c);
 
+        c.particle = start + nx - 1;
+        c.position = particles.position[c.particle];
+        addConstraint(constraints.fixedPointConstraints, c);
 
-        c.particle = start+ config.numParticles.x-1;
+        c.particle = start + nx*(nz-1);
+        c.position = particles.position[c.particle];
+        addConstraint(constraints.fixedPointConstraints, c);
+
+        c.particle = start + nx*nz-1;
         c.position = particles.position[c.particle];
         addConstraint(constraints.fixedPointConstraints, c);
     }
