@@ -100,6 +100,8 @@ void ModelRenderer::render(ParticleData &particles, ModelData &data, glm::mat4 &
     // Send uniforms to shader
     glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
     glUniformMatrix4fv(glGetUniformLocation(simpleShader, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
+    vec3 col = vec3(0.89, 0.09, 0.05);
+    glUniform3fv(glGetUniformLocation(simpleShader, "vCol"), 1, &col.x);
     //glUniformMatrix4fv(glGetUniformLocation(simpleShader, "projectionM4atrix"), 1, false, &projectionMatrix[0].x);
     glUniform3fv(glGetUniformLocation(simpleShader, "lightPos"), 1, &lightPosition.x);
 

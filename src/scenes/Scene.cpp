@@ -161,6 +161,8 @@ void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &modelViewProjectionMatrix, 
     glUniformMatrix4fv(glGetUniformLocation(shader, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
     glUniformMatrix4fv(glGetUniformLocation(shader, "modelViewMatrix"), 1, false, &viewMatrix[0].x);
     glUniform3fv(glGetUniformLocation(shader, "lightPos"), 1, &lightPosition.x);
+    vec3 col = vec3(1.f, 1.f, 1.f);
+    glUniform3fv(glGetUniformLocation(shader, "vCol"), 1, &col.x);
 
     // Draw cube
     glDisable(GL_CULL_FACE);
