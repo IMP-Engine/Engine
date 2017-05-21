@@ -6,7 +6,7 @@
 #define MODEL_FOLDER "../src/models/"
 #endif 
 
-model::ModelConfig config = { 1.f, vec3(0), 0, 0.5f, 0.5f, vec3(4), ivec3(4) };
+model::ModelConfig config;
 std::vector<std::string> predefinedModels{ "Box" ,"Cloth"};
 std::vector<std::string> models;
 int selected = 0;
@@ -38,32 +38,31 @@ void model::loadPredefinedModel(std::string model, ParticleData &particles, Cons
         unsigned int start = particles.cardinality;
         model::makeClothModel(config, fixedCorners, particles, constraints);
         int dx = config.numParticles.x;
-        for (int i = dx+1; i < particles.cardinality; i++)
+        std::vector<int> e;
+        std::vector<vec3> bc;
+        std::vector<ivec3> ps;
+        for (int i = 0; i < (int)particles.cardinality; i++)
         {
-            std::vector<int> e;
-            e.push_back(i); e.push_back(i - 1); e.push_back(i - 1 - dx);
-            std::vector<float[3]> bc; 
-            float bcArray[3];
-            bcArray[0] = 0.f;
-            bcArray[1] = 0.f;
-            bcArray[2] = 0.f;
-            bc.push_back(bcArray);
+            if (i >= dx + 1 && i % dx != 0) {
+                e.push_back(i);
+                e.push_back(i - 1);
+                e.push_back(i - 1 - dx);
 
-            std::vector<int[3]> ps;
-            int tmp[3];
-            tmp[0] = i;
-            tmp[1] = i;
-            tmp[2] = i;
-            ps.push_back(tmp);
-            ps.push_back(tmp);
-            ps.push_back(tmp);
-            modelData.addVertices(
-                e, 
-                bc, 
-                ps,
-                modelData
-            );
+                e.push_back(i);
+                e.push_back(i - 1 - dx);
+                e.push_back(i - dx);
+
+            }
+            bc.push_back(vec3(0.f));
+
+            ps.push_back(ivec3(i));
         }
+        modelData.addVertices(
+            e, 
+            bc, 
+            ps,
+            modelData
+        );
     }
 }
 
@@ -193,8 +192,8 @@ void model::loadModel(std::string model, ParticleData &particles, ConstraintData
     loadMesh(model, vertices, elements, config.centerPos, config.scale);
 
     // Find three closest particles and calculate barycentric coordinates for all vertices
-    std::vector<float[3]> bcCoords(vertices.size());
-    std::vector<int[3]> closestParticles(vertices.size());
+    std::vector<vec3> bcCoords(vertices.size());
+    std::vector<ivec3> closestParticles(vertices.size());
 
     // For all vertices, find three closest particles
     for (uint i = 0; i < vertices.size(); i++)

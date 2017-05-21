@@ -3,6 +3,7 @@
 #ifndef __gl_h_
 #include "../glad/glad.h"
 #endif
+#include "glm/glm.hpp"
 
 #define MAX_VERTICES 200000
 
@@ -18,5 +19,5 @@ public:
 
     void clear();
 
-    void addVertices(std::vector<int> &e, std::vector<float[3]> &bc, std::vector<int[3]> &particles, ModelData &data);
+    void addVertices(std::vector<int> &e, std::vector<glm::vec3> &bc, std::vector<glm::ivec3> &particles, ModelData &data);
 };

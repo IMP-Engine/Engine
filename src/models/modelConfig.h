@@ -16,6 +16,8 @@ namespace model {
         glm::vec3 scale;          // Scale factor that model is scaled by (can be used to rotate)
         glm::ivec3 numParticles;    // Number of particles in each direction (used by predefined model)
 
+        ModelConfig() { setDefaults(); };
+
         void setDefaults() {
             centerPos = glm::vec3(0.f);
             distanceThreshold = 2;
