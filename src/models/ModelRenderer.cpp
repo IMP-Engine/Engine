@@ -52,6 +52,9 @@ void calculateVertices(ParticleData &particles, ModelData &data, std::vector<glm
         glm::vec3 u = (p3 - p1);
         glm::vec3 v = (p2 - p1);
         glm::vec3 normal = normalize(cross(u, v));
+        if (normal.x != normal.x) normal.x = 0;
+        if (normal.y != normal.y) normal.y = 0;
+        if (normal.z != normal.z) normal.z = 0;
         u *= data.bcCoords[i];
         v *= data.bcCoords[i + 1];
 
