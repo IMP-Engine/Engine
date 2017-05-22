@@ -54,6 +54,8 @@ void Physics::step(Scene *scene, float dt)
     collision::createCollisionConstraints(particles, constraints.particleCollisionConstraints);
     performance::stopTimer(id);
 
+    GPU->run(particles, constraints);
+
     id = performance::startTimer("Solve collisions");
     resolveCollisions(position, pPosition, invmass, constraints.planeCollisionConstraints, constraints.particleCollisionConstraints);
     performance::stopTimer(id);

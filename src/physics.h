@@ -15,12 +15,12 @@
 #include "constraints/ConstraintData.h"
 #include "intersections.h"
 #include "performance.h"
-
+#include "GPU\GPU.h"
 
 class Physics 
 {
 public:
-    Physics() {};
+    Physics() { GPU = new ::GPU(); }
     ~Physics() {};
 
     float overRelaxConst;
@@ -37,6 +37,8 @@ public:
 
     ParticleData particles;
     ConstraintData constraints;
+
+    GPU * GPU;
 
     void step(Scene *scene, float dt);
 
