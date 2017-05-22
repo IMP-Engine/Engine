@@ -24,6 +24,54 @@ set ( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin )
 
 set ( DEBUG )
 
+########################################################################################
+# openCL
+
+if( NOT BITNESS )
+  if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(BITNESS 64)
+  else()
+    set(BITNESS 32)
+  endif()
+endif()
+
+# Select bitness for non-msvc platform. Can be specified as -DBITNESS=32/64 at command-line
+if( NOT MSVC )
+  set(BITNESS ${BITNESS} CACHE STRING "Specify bitness")
+  set_property(CACHE BITNESS PROPERTY STRINGS "64" "32")
+endif()
+
+MESSAGE( STATUS "blabla: " ${CMAKE_SIZEOF_VOID_P} )
+
+# Unset OPENCL_LIBRARIES, so that corresponding arch specific libs are found when bitness is changed
+unset(OPENCL_LIBRARIES CACHE)
+
+if( BITNESS EQUAL 64 )
+  set(BITNESS_SUFFIX x86_64)
+elseif( BITNESS EQUAL 32 )
+  set(BITNESS_SUFFIX x86)
+else()
+  message( FATAL_ERROR "Bitness specified is invalid" )
+endif()
+# Find OpenCL include and libs
+find_path( OPENCL_INCLUDE_DIRS 
+    NAMES OpenCL/cl.h CL/cl.h
+    HINTS ../../../../../include/ $ENV{AMDAPPSDKROOT}/include/
+)
+mark_as_advanced(OPENCL_INCLUDE_DIRS)
+
+find_library( OPENCL_LIBRARIES
+	NAMES OpenCL
+	HINTS ../../../../../lib/ $ENV{AMDAPPSDKROOT}/lib
+	PATH_SUFFIXES ${PLATFORM}${BITNESS} ${BITNESS_SUFFIX}
+)
+mark_as_advanced( OPENCL_LIBRARIES )
+
+if( OPENCL_INCLUDE_DIRS STREQUAL "" OR OPENCL_LIBRARIES STREQUAL "")
+	message( FATAL_ERROR "Could not locate OpenCL include & libs" )
+endif( )
+include_directories( ${OPENCL_INCLUDE_DIRS} $ENV{AMDAPPSDKROOT}/include/SDKUtil )
+#####################################################################################
 # GLFW
 add_subdirectory(external/glfw-3.2.1)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
