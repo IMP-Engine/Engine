@@ -100,7 +100,9 @@ bool intersect(Triangle &triangle, ParticleData &particles, int index, Intersect
     vec3 Qp = pPos - Q;
     float d2 = dot(Qp,Qp);
 
-    if (d2 < rr && (t >= 0 || t <= 1)) {
+    if (d2 < rr && (t >= 0 && t <= 1)) {
+        isect.responseGradient = normalize(Qp);
+        isect.responseDistance = sqrt(d2);
         return true;
     }
 
@@ -109,7 +111,9 @@ bool intersect(Triangle &triangle, ParticleData &particles, int index, Intersect
     Qp = pPos - Q;
     d2 = dot(Qp, Qp);
 
-    if (d2 < rr && (t >= 0 || t <= 1)) {
+    if (d2 < rr && (t >= 0 && t <= 1)) {
+        isect.responseGradient = normalize(Qp);
+        isect.responseDistance = sqrt(d2);
         return true;
     }
 
@@ -118,7 +122,9 @@ bool intersect(Triangle &triangle, ParticleData &particles, int index, Intersect
     Qp = pPos - Q;
     d2 = dot(Qp, Qp);
 
-    if (d2 < rr && (t >= 0 || t <= 1)) {
+    if (d2 < rr && (t >= 0 && t <= 1)) {
+        isect.responseGradient = normalize(Qp);
+        isect.responseDistance = sqrt(d2);
         return true;
     }
 
