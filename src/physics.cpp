@@ -54,15 +54,18 @@ void Physics::step(Scene *scene, float dt)
     collision::createCollisionConstraints(particles, constraints.particleCollisionConstraints);
     performance::stopTimer(id);
 
-    GPU->run(particles, constraints);
-
     id = performance::startTimer("Solve collisions");
     resolveCollisions(position, pPosition, invmass, constraints.planeCollisionConstraints, constraints.particleCollisionConstraints);
     performance::stopTimer(id);
 
+
     id = performance::startTimer("Solve constraints");
-    resolveConstraints(position, pPosition, invmass, numBoundConstraints, constraints.planeCollisionConstraints, constraints.particleCollisionConstraints);
+    GPU->run(particles, constraints);
     performance::stopTimer(id);
+
+    /*id = performance::startTimer("Solve constraints");
+    resolveConstraints(position, pPosition, invmass, numBoundConstraints, constraints.planeCollisionConstraints, constraints.particleCollisionConstraints);
+    performance::stopTimer(id);*/
 
     for (std::vector<glm::vec3>::size_type i = 0; i != particles.cardinality; i++) 
     {
