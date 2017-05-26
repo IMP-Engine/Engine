@@ -4,11 +4,19 @@
 #include "../glad/glad.h"
 #endif // !__gl_h_
 
+#include "../glHelper.h"
 #include "../particles/ParticleData.h"
 #include "../constraints/ConstraintData.h"
 
+#ifdef _WIN32
+#define SC_SHADER_PATH "../../src/GPU/solveConstraints.frag"
+#define VERTEX_SHADER_PATH "../../src/GPU/passthrough.vert"
+#elif __unix__
+#define SC_SHADER_PATH "../src/GPU/solveConstraints.frag"
+#define VERTEX_SHADER_PATH "../src/GPU/passthrough.vert"
+#endif
 
-#define target GL_TEXTURE_2D
+#define target GL_TEXTURE_RECTANGLE
 
 /***************************************************************/
 /* For the verlet integration step, only position and velocity */
@@ -30,7 +38,19 @@ public:
     void run(ParticleData & particles, ConstraintData & constraints);
 
 private:
-   
+
+    /* Geometry to cover the whole screen and accompanying texcoords */
+     GLfloat vertices[20] = {  
+        -1.0f, -1.0f, 0.0f,
+        1.0f, -1.0f, 0.0f,
+        1.0f, 1.0f, 0.0f,
+        -1.0f, 1.0f, 0.0f
+    };
+
+    GLuint program;
+
+    GLuint vao;
+    GLuint vbo;
     GLuint fbo;
 
     /************************************/

@@ -3,6 +3,18 @@
 GPU::GPU()
 {
     glGenFramebuffers(1, &fbo);
+    program = glHelper::loadShader(VERTEX_SHADER_PATH, SC_SHADER_PATH);
+
+    glGenBuffers(1, &vbo);
+
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+        
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+        glEnableVertexAttribArray(0);
+    glBindVertexArray(0);
 
     glGenTextures(1, &posMain);
     glGenTextures(1, &posSub);
@@ -14,6 +26,8 @@ GPU::~GPU()
 {
     glDeleteFramebuffers(1, &fbo);
     glDeleteProgram(program);
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &vbo);
     glDeleteTextures(1, &posMain);
     glDeleteTextures(1, &posSub);
     glDeleteTextures(1, &invmasses);
@@ -50,24 +64,30 @@ void GPU::restart(ParticleData & particles, ConstraintData & constraints)
         data[i + 2] = constraints.distanceConstraints.distance[i];
         data[i + 3] = constraints.distanceConstraints.stiffness[i];
     }
-    initiateTexture(100, 100, GL_RGBA32F, GL_RGBA, data);
+    initiateTexture(15, 15, GL_RGBA32F, GL_RGBA, data);
     free(data);
 }
 
 void GPU::run(ParticleData & particles, ConstraintData & constraints)
 {
     //DEBUG
-    float* res = (float*)malloc(10 * 10 * sizeof(glm::vec3));
+    glm::vec3* res = (glm::vec3*)malloc(10 * 10 * sizeof(glm::vec3));
     memset(res, 1, 10 * 10 * sizeof(glm::vec3));
     
+    glUseProgram(program);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, posMain, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, posSub, 0);
+
+    glBindVertexArray(vao);
+    glDrawArrays(GL_QUADS, 0, 4);
+    glBindVertexArray(0);
 
     glReadBuffer(GL_COLOR_ATTACHMENT0);
     glReadPixels(0, 0, 10, 10, GL_RGB, GL_FLOAT, res);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glUseProgram(0);
     std::swap(posMain, posSub);
 
     // DEBUG
