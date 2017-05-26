@@ -61,7 +61,7 @@ int aPhysics;
 
 // Scene
 Scene *scene;
-Physics physicSystem;
+Physics *physicSystem;
 std::vector< std::tuple<std::string, model::ModelConfig> > objects;
 
 // Shaders and rendering 
@@ -133,25 +133,25 @@ void init() {
     ImGui_ImplGlfwGL3_Init(window, true); 
 
     input::initialize(window);
-    camera.physicSystem = &physicSystem;
+    camera.physicSystem = physicSystem;
 
     visualization::initialize();
 
     performance::initialize();
 
     scene = new Scene;
-    physicSystem = Physics();
+    physicSystem = new Physics();
 
-    physicSystem.iterations = 4;
-    physicSystem.stabilizationIterations = 2;
-    physicSystem.pSleeping = 0.0001f;
-    physicSystem.overRelaxConst = 1.0f;
-    physicSystem.restitutionCoefficientT = 0.8f;
-    physicSystem.restitutionCoefficientN = 0.8f;
-    physicSystem.parallelConstraintSolve = false;
-    physicSystem.parallelDetectCollisions = false;
-    physicSystem.kineticFC = 0.2f;
-    physicSystem.staticFC = 0.2f;
+    physicSystem->iterations = 4;
+    physicSystem->stabilizationIterations = 2;
+    physicSystem->pSleeping = 0.0001f;
+    physicSystem->overRelaxConst = 1.0f;
+    physicSystem->restitutionCoefficientT = 0.8f;
+    physicSystem->restitutionCoefficientN = 0.8f;
+    physicSystem->parallelConstraintSolve = false;
+    physicSystem->parallelDetectCollisions = false;
+    physicSystem->kineticFC = 0.2f;
+    physicSystem->staticFC = 0.2f;
 
     modelData = ModelData();
     modelData.clear();
@@ -163,7 +163,9 @@ void init() {
     // Load some model to begin with, so that debugging is easier on us
     model::ModelConfig conf;
     conf.setDefaults();
-    model::loadPredefinedModel("Box", physicSystem.particles, physicSystem.constraints, conf);
+    model::loadPredefinedModel("Box", physicSystem->particles, physicSystem->constraints, conf);
+
+    physicSystem->GPU->restart(physicSystem->particles, physicSystem->constraints);
 
     particleRenderer = new ParticleRenderer();
     particleRenderer->init();
@@ -202,7 +204,7 @@ void display(double deltaTime) {
 
     if (doPyshics)
     {
-        physicSystem.step(scene, useVariableTimestep ? (float)deltaTime : timestep);
+        physicSystem->step(scene, useVariableTimestep ? (float)deltaTime : timestep);
     }
 
     aPhysics = performance::startTimer("After physics");
@@ -210,7 +212,7 @@ void display(double deltaTime) {
     if (renderSurfaces)
     {
         int id = performance::startTimer("Render surfaces");
-        modelRenderer->render(physicSystem.particles, modelData, modelViewProjectionMatrix, modelViewMatrix, lightPosition, projectionMatrix);
+        modelRenderer->render(physicSystem->particles, modelData, modelViewProjectionMatrix, modelViewMatrix, lightPosition, projectionMatrix);
 
     }
     else // render particles
@@ -220,9 +222,9 @@ void display(double deltaTime) {
 
         GLint heightOfNearPlane = (GLint)round(abs(viewport[3] - viewport[1]) / (2 * tan(0.5*camera.getFovy() * glm::pi<float>() / 180.0)));
 
-        particleRenderer->render(physicSystem.particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix, heightOfNearPlane);
+        particleRenderer->render(physicSystem->particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix, heightOfNearPlane);
 
-        visualization::drawConstraints(physicSystem.constraints, physicSystem.particles, modelViewProjectionMatrix);
+        visualization::drawConstraints(physicSystem->constraints, physicSystem->particles, modelViewProjectionMatrix);
     }
 
     // Since we may want to measure performance of something that happens after the call to gui()
@@ -253,18 +255,18 @@ void gui()
     visualization::gui();
     ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
     ImGui::Checkbox("Timestep from framerate", &useVariableTimestep);
-    ImGui::Checkbox("Parallel constraint solve", &physicSystem.parallelConstraintSolve); ImGui::SameLine();
+    ImGui::Checkbox("Parallel constraint solve", &physicSystem->parallelConstraintSolve); ImGui::SameLine();
     //ImGui::Checkbox("Parallel collision detection", &physicSystem.parallelDetectCollisions);
     ImGui::Checkbox("Apply windlike force", &scene->windActive);
     ImGui::Checkbox("Render surfaces", &renderSurfaces);
-    ImGui::SliderInt("Solver Iterations", &physicSystem.iterations, 1, 32);
-    ImGui::SliderInt("Collision Stabilization Iterations", &physicSystem.stabilizationIterations, 0, 32);
-    ImGui::SliderFloat("Over-relax-constant", &physicSystem.overRelaxConst, 1, 5);
-    ImGui::SliderFloat("Particle Sleeping (squared)", &physicSystem.pSleeping, 0, 1, "%.9f", 10.f);
-    ImGui::SliderFloat("Tangential COR", &physicSystem.restitutionCoefficientT, -1, 1);
-    ImGui::SliderFloat("Normal COR", &physicSystem.restitutionCoefficientN, 0, 1);
-    ImGui::SliderFloat("Kinetic Friction Coefficient", &physicSystem.kineticFC, 0, 1);
-    ImGui::SliderFloat("Static Friction Coefficient", &physicSystem.staticFC, 0, 1);
+    ImGui::SliderInt("Solver Iterations", &physicSystem->iterations, 1, 32);
+    ImGui::SliderInt("Collision Stabilization Iterations", &physicSystem->stabilizationIterations, 0, 32);
+    ImGui::SliderFloat("Over-relax-constant", &physicSystem->overRelaxConst, 1, 5);
+    ImGui::SliderFloat("Particle Sleeping (squared)", &physicSystem->pSleeping, 0, 1, "%.9f", 10.f);
+    ImGui::SliderFloat("Tangential COR", &physicSystem->restitutionCoefficientT, -1, 1);
+    ImGui::SliderFloat("Normal COR", &physicSystem->restitutionCoefficientN, 0, 1);
+    ImGui::SliderFloat("Kinetic Friction Coefficient", &physicSystem->kineticFC, 0, 1);
+    ImGui::SliderFloat("Static Friction Coefficient", &physicSystem->staticFC, 0, 1);
     if (!useVariableTimestep) 
     {
         ImGui::SliderFloat("Timestep", &timestep, 0, .05f, "%.5f"); ImGui::SameLine();
@@ -273,7 +275,7 @@ void gui()
     ImGui::End();
 
     collision::gui(&showCollision);
-    model::gui(&showModels, physicSystem.particles, physicSystem.constraints, objects, modelData);
+    model::gui(&showModels, physicSystem->particles, physicSystem->constraints, objects, modelData);
     scene->gui(&showSceneSelection);
 }
 
