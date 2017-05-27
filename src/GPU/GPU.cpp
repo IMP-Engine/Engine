@@ -34,57 +34,71 @@ GPU::~GPU()
     glDeleteTextures(1, &constraint);
 }
 
-void initiateTexture(float width, float height, GLint internalFormat, GLenum format, void* data) {
+void initiateTexture(GLuint width, GLuint height, GLint internalFormat, GLenum format, void* data) {
 
     glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    //glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glTexImage2D(target, 0, internalFormat, width, height, 0, format, GL_FLOAT, data);
 }
 
 void GPU::restart(ParticleData & particles, ConstraintData & constraints)
 {
+    pWidth = particles.cardinality; pHeight = 1; cWidth = constraints.distanceConstraints.cardinality; cHeight = 1;
     // Particle data
     glBindTexture(target, posMain);
-    initiateTexture(10, 10, GL_RGB32F, GL_RGB, &particles.pPosition[0]);
+    initiateTexture(pWidth, pHeight, GL_RGB32F, GL_RGB, &particles.pPosition[0]);
     glBindTexture(target, posSub);
-    initiateTexture(10, 10, GL_RGB32F, GL_RGB, NULL);
+    initiateTexture(pWidth, pHeight, GL_RGB32F, GL_RGB, NULL);
     glBindTexture(target, invmasses);
-    initiateTexture(10, 10, GL_R32F, GL_RED, &particles.invmass[0]);
+    initiateTexture(pWidth, pHeight, GL_R32F, GL_RED, &particles.invmass[0]);
 
-    glBindBuffer(target, constraint);
-    float* data = (float*)malloc(constraints.distanceConstraints.cardinality * sizeof(glm::vec4));
-    for (int i = 0; i < constraints.distanceConstraints.cardinality; i += 4)
+    glBindTexture(target, constraint);
+    float* data = (float*)malloc(cWidth * cHeight * sizeof(glm::vec4));
+    for (int i = 0; i < cWidth * cHeight; i += 4)
     {
         data[i] = (float) constraints.distanceConstraints.particles[i].x;     // eps ?
         data[i + 1] = (float) constraints.distanceConstraints.particles[i].y; // eps ?
         data[i + 2] = constraints.distanceConstraints.distance[i];
         data[i + 3] = constraints.distanceConstraints.stiffness[i];
     }
-    initiateTexture(15, 15, GL_RGBA32F, GL_RGBA, data);
+    initiateTexture(cWidth, cHeight, GL_RGBA32F, GL_RGBA, data);
     free(data);
 }
 
 void GPU::run(ParticleData & particles, ConstraintData & constraints)
 {
+    this->restart(particles, constraints);
+
     //DEBUG
-    glm::vec3* res = (glm::vec3*)malloc(10 * 10 * sizeof(glm::vec3));
-    memset(res, 1, 10 * 10 * sizeof(glm::vec3));
+    glm::vec3* res = (glm::vec3*)malloc(pWidth * pHeight * sizeof(glm::vec3));
+    memset(res, 1, pWidth * pHeight * sizeof(glm::vec3));
     
     glUseProgram(program);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(target, posMain);
+    glUniform1i(glGetUniformLocation(program, "oldPos"), 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(target, posMain);
+    glUniform1i(glGetUniformLocation(program, "invmasses"), 1);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(target, posMain);
+    glUniform1i(glGetUniformLocation(program, "constraints"), 2);
+    
+    glViewport(0, 0, pWidth, pHeight);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, posSub, 0);
-
+    
     glBindVertexArray(vao);
-    glDrawArrays(GL_QUADS, 0, 4);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
-
+    
     glReadBuffer(GL_COLOR_ATTACHMENT0);
-    glReadPixels(0, 0, 10, 10, GL_RGB, GL_FLOAT, res);
+    glReadPixels(0, 0, pWidth, pHeight, GL_RGB, GL_FLOAT, res);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glUseProgram(0);

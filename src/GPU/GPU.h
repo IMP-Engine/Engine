@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glm/common.hpp>
+
 #ifndef __gl_h_
 #include "../glad/glad.h"
 #endif // !__gl_h_
@@ -39,12 +41,14 @@ public:
 
 private:
 
-    /* Geometry to cover the whole screen and accompanying texcoords */
+    /* Geometry to cover the whole screen */
      GLfloat vertices[20] = {  
+        -1.0f, 1.0f, 0.0f,
         -1.0f, -1.0f, 0.0f,
         1.0f, -1.0f, 0.0f,
+        -1.0f, 1.0f, 0.0f,
+        1.0f, -1.0f, 0.0f,
         1.0f, 1.0f, 0.0f,
-        -1.0f, 1.0f, 0.0f
     };
 
     GLuint program;
@@ -53,6 +57,9 @@ private:
     GLuint vbo;
     GLuint fbo;
 
+    // Worksize
+    GLuint pWidth, pHeight, cWidth, cHeight;
+
     /************************************/
     /* +----------+----------+--------+ */
     /* | variable | internal | format | */
@@ -60,6 +67,7 @@ private:
     /* | posMain  | RGB32F   | RGB    | */
     /* | posSub   | RGB32F   | RGB    | */
     /* | invmass  | R32F     | RED    | */
+    /* |constraint| RGBA32F  | RGBA   | */
     /* +----------+----------+--------+ */
     /************************************/
     GLuint posMain, posSub, invmasses;          

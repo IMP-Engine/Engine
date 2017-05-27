@@ -1,7 +1,12 @@
 #version 430
 
-out vec3 pos;
+out vec3 newPos;
+
+uniform sampler2DRect oldPos;
+uniform sampler2DRect invmasses;
+uniform sampler2DRect constraints; 
 
 void main() {
-    pos = vec3(gl_FragCoord.xy, 0);
+    vec3 pos = texture(oldPos, gl_FragCoord.xy).xyz;//texture() or texelFetc() ?
+    newPos = pos;
 }
