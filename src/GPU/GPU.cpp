@@ -71,11 +71,8 @@ void GPU::restart(ParticleData & particles, ConstraintData & constraints)
 
 void GPU::run(ParticleData & particles, ConstraintData & constraints)
 {
+    // There should not be any need to upload data every iteration
     this->restart(particles, constraints);
-
-    //DEBUG
-    glm::vec3* res = (glm::vec3*)malloc(pWidth * pHeight * sizeof(glm::vec3));
-    memset(res, 1, pWidth * pHeight * sizeof(glm::vec3));
     
     glUseProgram(program);
 
@@ -97,13 +94,12 @@ void GPU::run(ParticleData & particles, ConstraintData & constraints)
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
     
+    // There should not be any need to actually download data each iteration
     glReadBuffer(GL_COLOR_ATTACHMENT0);
-    glReadPixels(0, 0, pWidth, pHeight, GL_RGB, GL_FLOAT, res);
+    glReadPixels(0, 0, pWidth, pHeight, GL_RGB, GL_FLOAT, &particles.pPosition[0]);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glUseProgram(0);
     std::swap(posMain, posSub);
 
-    // DEBUG
-    free(res);
 }

@@ -175,6 +175,12 @@ void init() {
 }
 
 void display(double deltaTime) {
+
+    if (doPyshics)
+    {
+        physicSystem->step(scene, useVariableTimestep ? (float)deltaTime : timestep);
+    }
+
     GLfloat ratio;
     GLint width, height;
     mat4 viewMatrix, modelViewProjectionMatrix, modelViewMatrix, projectionMatrix;
@@ -202,10 +208,7 @@ void display(double deltaTime) {
 
     performance::stopTimer(bPhysics);
 
-    if (doPyshics)
-    {
-        physicSystem->step(scene, useVariableTimestep ? (float)deltaTime : timestep);
-    }
+    
 
     aPhysics = performance::startTimer("After physics");
 
