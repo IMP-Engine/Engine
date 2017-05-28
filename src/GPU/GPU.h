@@ -24,8 +24,17 @@
 /* For the verlet integration step, only position and velocity */
 /* is required in order to do the computation. It is therefore */
 /* unnecessary to store AoS. The constraint information, on    */
-/* the other hand is always queried all at the same time.      */
+/* the other hand, is always queried all at the same time.     */
 /* Thusly, particle info is SoA. Constraint data is AoS        */
+/***************************************************************/
+
+/***************************************************************/
+/* The current implementation iterates over particles. How to  */
+/* actually do a constraint-centric solve is not clear at the  */
+/* moment as that would require both atomic updates and        */
+/* mapping the solve step outputs into a smaller texture.      */
+/* The tradeoff for these methods are atomic operations,       */
+/* memory fetches and actual required computation.             */
 /***************************************************************/
 
 class GPU
@@ -37,7 +46,7 @@ public:
 
     void restart(ParticleData & particles, ConstraintData & constraints);
 
-    void run(ParticleData & particles, ConstraintData & constraints);
+    void run(ParticleData & particles, ConstraintData & constraints, int iterations, float omega);
 
 private:
 
@@ -68,10 +77,12 @@ private:
     /* | posSub   | RGB32F   | RGB    | */
     /* | invmass  | R32F     | RED    | */
     /* |constraint| RGBA32F  | RGBA   | */
+    /* | segments | R32UI    | RED    | */ 
+    /* | indirect | R32UI    | RED    | */
     /* +----------+----------+--------+ */
     /************************************/
     GLuint posMain, posSub, invmasses;          
-
+    GLuint boundConstraints; // TODO Remove in favor of GS
     /**************************************************/
     /*         Distance constraint parameters         */
     /* This represents a RGBA32F texture, i.e. vec4.  */
@@ -79,4 +90,11 @@ private:
     /* vec4.z is rest length. vec4.a is the stiffnes. */
     /**************************************************/
     GLuint constraint; // TODO is particles needed? Use indirection matrix
+
+    /****************************************************/
+    /* These textures are stored as integer values.     */
+    /* Therefore note that texelFetch() is used instead */
+    /* of texture() when accesing elements from segment */
+    /****************************************************/
+    GLuint segment, indirect;
 };

@@ -41,12 +41,12 @@ void Physics::step(Scene *scene, float dt)
         // ********************************************************************************
     }
 
-    // Breakable constraints
+    /*// Breakable constraints
     int id = performance::startTimer("Remove broken constraints");
     constraints.removeBroken(particles);
     performance::stopTimer(id);
-    
-    id = performance::startTimer("Scene collision detection");
+    */
+    int id = performance::startTimer("Scene collision detection");
     detectCollisions(scene, numBoundConstraints, constraints.planeCollisionConstraints, phase, pPosition);
     performance::stopTimer(id);
 
@@ -60,7 +60,7 @@ void Physics::step(Scene *scene, float dt)
 
 
     id = performance::startTimer("Solve constraints");
-    GPU->run(particles, constraints);
+    GPU->run(particles, constraints, iterations, overRelaxConst);
     performance::stopTimer(id);
 
     /*id = performance::startTimer("Solve constraints");
