@@ -13,7 +13,7 @@ ParticleRenderer::~ParticleRenderer()
 
 void ParticleRenderer::init()
 {
-    glEnable(GL_POINT_SPRITE);
+    //glEnable(GL_POINT_SPRITE);
 
     /*
     If GL_PROGRAM_POINT_SIZE is enabled, then the point size comes from the output variable float gl_PointSize.

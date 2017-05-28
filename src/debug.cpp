@@ -20,13 +20,15 @@ void printGLDiagnostics()
 
 namespace
 {
-#	if defined(_WIN32)
-#		define CALLBACK_ CALLBACK
-#	else // !win32
-#		define CALLBACK_
-#	endif // ~ platform
-
-	GLvoid CALLBACK_ handle_debug_message_(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, GLchar const* message, GLvoid* /*user*/)
+    static void APIENTRY openglCallbackFunction(
+        GLenum source,
+        GLenum type,
+        GLuint id,
+        GLenum severity,
+        GLsizei length,
+        const GLchar* message,
+        const void* userParam
+    )
 	{
 		// source string
 		const char* srcStr = 0;
@@ -95,13 +97,14 @@ void setupGLDebugMessages() {
 		/* This causes a distinc performance loss but allows
 		*  the callback to be called immediately on error.
 		*/
+        glEnable(GL_DEBUG_OUTPUT);
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-		glDebugMessageCallback((GLDEBUGPROC)handle_debug_message_, 0);
+		glDebugMessageCallback(openglCallbackFunction, nullptr);
 		glDebugMessageControl(GL_DONT_CARE,
 			GL_DONT_CARE,
 			GL_DONT_CARE,
 			0,
-			0,
+			NULL,
 			true);
 	}
 	else
