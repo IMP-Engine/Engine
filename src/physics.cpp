@@ -7,6 +7,25 @@
 
 #define WIND 4.f
 
+Physics::Mode Physics::getMode() { return mode; }
+
+void Physics::setMode(Mode newMode) {
+    if (mode == newMode) return;
+
+    switch (mode) {
+    case sequential: break;
+    case multicore: break;
+    case GPGPU: GPU->stop(particles); break;
+    }
+
+    switch (newMode) {
+    case sequential: break;
+    case multicore: break;
+    case GPGPU: GPU->start(particles, constraints); break;
+    }
+
+    mode = newMode;
+}
 void Physics::step(Scene *scene, float dt)
 {
 

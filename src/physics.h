@@ -15,14 +15,22 @@
 #include "constraints/ConstraintData.h"
 #include "intersections.h"
 #include "performance.h"
-#include "GPU\GPU.h"
+#include "GPU/GPU.h"
 
 class Physics 
 {
 public:
     Physics() { GPU = new ::GPU(); }
+    enum Mode {
+        sequential,
+        multicore,
+        GPGPU
+    };
     ~Physics() {};
 
+    Mode getMode();
+
+    void setMode(Mode newMode);
     float overRelaxConst;
     float pSleeping;
     float restitutionCoefficientN;
@@ -43,6 +51,8 @@ public:
     void step(Scene *scene, float dt);
 
 private:
+
+    Mode mode;
 
     /*
         Stationary iterative linear solver - Gauss-Seidel
