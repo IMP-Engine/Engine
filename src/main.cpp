@@ -76,7 +76,6 @@ ModelData modelData;
 const vec3 lightPosition = vec3(4.0f);
 
 // Simulation variables and parameters
-bool doPyshics = false;
 bool showModels = false;
 bool showCollision = false;
 bool useVariableTimestep = false;
@@ -142,17 +141,6 @@ void init() {
     scene = new Scene;
     physicSystem = new Physics();
 
-    physicSystem->iterations = 4;
-    physicSystem->stabilizationIterations = 2;
-    physicSystem->pSleeping = 0.0001f;
-    physicSystem->overRelaxConst = 1.0f;
-    physicSystem->restitutionCoefficientT = 0.8f;
-    physicSystem->restitutionCoefficientN = 0.8f;
-    physicSystem->parallelConstraintSolve = false;
-    physicSystem->parallelDetectCollisions = false;
-    physicSystem->kineticFC = 0.2f;
-    physicSystem->staticFC = 0.2f;
-
     modelData = ModelData();
     modelData.clear();
 
@@ -165,8 +153,6 @@ void init() {
     conf.setDefaults();
     model::loadPredefinedModel("Box", physicSystem->particles, physicSystem->constraints, conf);
 
-    physicSystem->GPU->restart(physicSystem->particles, physicSystem->constraints);
-
     particleRenderer = new ParticleRenderer();
     particleRenderer->init();
 
@@ -176,10 +162,8 @@ void init() {
 
 void display(double deltaTime) {
 
-    if (doPyshics)
-    {
-        physicSystem->step(scene, useVariableTimestep ? (float)deltaTime : timestep);
-    }
+
+    physicSystem->step(scene, useVariableTimestep ? (float)deltaTime : timestep);
 
     GLfloat ratio;
     GLint width, height;
@@ -256,20 +240,13 @@ void gui()
     if (ImGui::Button("Collision detection")) showCollision ^= 1;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     visualization::gui();
-    ImGui::Checkbox("Physics", &doPyshics); ImGui::SameLine();
+    physicSystem->gui();
     ImGui::Checkbox("Timestep from framerate", &useVariableTimestep);
-    ImGui::Checkbox("Parallel constraint solve", &physicSystem->parallelConstraintSolve); ImGui::SameLine();
     //ImGui::Checkbox("Parallel collision detection", &physicSystem.parallelDetectCollisions);
     ImGui::Checkbox("Apply windlike force", &scene->windActive);
     ImGui::Checkbox("Render surfaces", &renderSurfaces);
-    ImGui::SliderInt("Solver Iterations", &physicSystem->iterations, 1, 32);
-    ImGui::SliderInt("Collision Stabilization Iterations", &physicSystem->stabilizationIterations, 0, 32);
-    ImGui::SliderFloat("Over-relax-constant", &physicSystem->overRelaxConst, 1, 5);
-    ImGui::SliderFloat("Particle Sleeping (squared)", &physicSystem->pSleeping, 0, 1, "%.9f", 10.f);
-    ImGui::SliderFloat("Tangential COR", &physicSystem->restitutionCoefficientT, -1, 1);
-    ImGui::SliderFloat("Normal COR", &physicSystem->restitutionCoefficientN, 0, 1);
-    ImGui::SliderFloat("Kinetic Friction Coefficient", &physicSystem->kineticFC, 0, 1);
-    ImGui::SliderFloat("Static Friction Coefficient", &physicSystem->staticFC, 0, 1);
+    
+    
     if (!useVariableTimestep) 
     {
         ImGui::SliderFloat("Timestep", &timestep, 0, .05f, "%.5f"); ImGui::SameLine();

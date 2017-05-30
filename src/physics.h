@@ -20,17 +20,23 @@
 class Physics 
 {
 public:
-    Physics() { GPU = new ::GPU(); }
+
     enum Mode {
         sequential,
         multicore,
         GPGPU
     };
+
+    Physics();
     ~Physics() {};
+
+    void gui();
 
     Mode getMode();
 
     void setMode(Mode newMode);
+
+    bool doPhysics;
     float overRelaxConst;
     float pSleeping;
     float restitutionCoefficientN;

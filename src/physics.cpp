@@ -7,6 +7,31 @@
 
 #define WIND 4.f
 
+Physics::Physics()
+    : GPU(), mode(Mode::sequential), iterations(4), stabilizationIterations(2), pSleeping(0.0001f),
+    overRelaxConst(1.f), restitutionCoefficientT(0.8f), restitutionCoefficientN(0.8f),
+    kineticFC(0.2f), staticFC(0.2f), doPhysics(false)
+{}
+
+void Physics::gui() {
+    ImGui::Checkbox("Physics", &doPhysics);
+
+    Mode mode = this->getMode();
+    ImGui::RadioButton("Sequential", reinterpret_cast<int*>(&mode), static_cast<int>(sequential)); ImGui::SameLine();
+    ImGui::RadioButton("Multicore", reinterpret_cast<int*>(&mode), static_cast<int>(multicore)); ImGui::SameLine();
+    ImGui::RadioButton("GPGPU", reinterpret_cast<int*>(&mode), static_cast<int>(GPGPU));
+    this->setMode(mode);
+
+    ImGui::SliderInt("Solver Iterations", &iterations, 1, 32);
+    ImGui::SliderInt("Collision Stabilization Iterations", &stabilizationIterations, 0, 32);
+    ImGui::SliderFloat("Over-relax-constant", &overRelaxConst, 1, 5);
+    ImGui::SliderFloat("Particle Sleeping (squared)", &pSleeping, 0, 1, "%.9f", 10.f);
+    ImGui::SliderFloat("Tangential COR", &restitutionCoefficientT, -1, 1);
+    ImGui::SliderFloat("Normal COR", &restitutionCoefficientN, 0, 1);
+    ImGui::SliderFloat("Kinetic Friction Coefficient", &kineticFC, 0, 1);
+    ImGui::SliderFloat("Static Friction Coefficient", &staticFC, 0, 1);
+}
+
 Physics::Mode Physics::getMode() { return mode; }
 
 void Physics::setMode(Mode newMode) {
@@ -26,8 +51,10 @@ void Physics::setMode(Mode newMode) {
 
     mode = newMode;
 }
+
 void Physics::step(Scene *scene, float dt)
 {
+    if (!doPhysics) return;
 
     /* Aliases */
     std::vector<vec3>  &position  = particles.position;
