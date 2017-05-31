@@ -139,12 +139,13 @@ void init() {
     performance::initialize();
 
     scene = new Scene;
-    physicSystem = new Physics();
+    scene->init();
+    physicSystem = new Physics(scene->triangles);
 
     modelData = ModelData();
     modelData.clear();
 
-    scene->init();
+    
 
     model::loadModelNames();
 
@@ -242,10 +243,7 @@ void gui()
     visualization::gui();
     physicSystem->gui();
     ImGui::Checkbox("Timestep from framerate", &useVariableTimestep);
-    //ImGui::Checkbox("Parallel collision detection", &physicSystem.parallelDetectCollisions);
-    ImGui::Checkbox("Apply windlike force", &scene->windActive);
     ImGui::Checkbox("Render surfaces", &renderSurfaces);
-    
     
     if (!useVariableTimestep) 
     {

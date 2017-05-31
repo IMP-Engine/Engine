@@ -5,13 +5,12 @@
 #define WORLD_MAX vec3( 20.f, 20.f, 20.f)
 #endif // !WORLD_MIN
 
-#define WIND 4.f
-
-Physics::Physics()
-    : GPU(), mode(Mode::sequential), iterations(4), stabilizationIterations(2), pSleeping(0.0001f),
+Physics::Physics(std::vector<Triangle> triangles)
+    : mode(Mode::sequential), iterations(4), stabilizationIterations(2), pSleeping(0.0001f),
     overRelaxConst(1.f), restitutionCoefficientT(0.8f), restitutionCoefficientN(0.8f),
-    kineticFC(0.2f), staticFC(0.2f), doPhysics(false)
-{}
+    kineticFC(0.2f), staticFC(0.2f), gravity(6.f), wind(4.f), doPhysics(false)
+{
+    this->triangles = triangles;
 
 void Physics::gui() {
     ImGui::Checkbox("Physics", &doPhysics);
@@ -30,6 +29,9 @@ void Physics::gui() {
     ImGui::SliderFloat("Normal COR", &restitutionCoefficientN, 0, 1);
     ImGui::SliderFloat("Kinetic Friction Coefficient", &kineticFC, 0, 1);
     ImGui::SliderFloat("Static Friction Coefficient", &staticFC, 0, 1);
+    ImGui::SliderFloat("Gravity", &gravity, 0, 10);
+    ImGui::SliderFloat("Wind", &wind, 0, 10); ImGui::SameLine();
+    ImGui::Checkbox("Wind", &windActive);
 }
 
 Physics::Mode Physics::getMode() { return mode; }
@@ -64,7 +66,6 @@ void Physics::step(Scene *scene, float dt)
     std::vector<int>   &phase     = particles.phase;
     std::vector<tbb::atomic<int>>   &numBoundConstraints = particles.numBoundConstraints;
 
-    const float GRAVITY = 6.0f;
     for (std::vector<glm::vec3>::size_type i = 0; i != particles.cardinality; i++) {
         /*
         * For all particles i

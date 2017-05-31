@@ -27,7 +27,7 @@ public:
         GPGPU
     };
 
-    Physics();
+    Physics(std::vector<Triangle> triangles);
     ~Physics() {};
 
     void gui();
@@ -46,11 +46,16 @@ public:
     float kineticFC; // kinetic friction coefficient
     float staticFC; // static friction coefficient
 
+    float gravity;
+    float wind;
+    bool windActive;
+
     int iterations;
     int stabilizationIterations;
 
     ParticleData particles;
     ConstraintData constraints;
+    std::vector<Triangle> triangles;
 
     GPU * GPU;
 
