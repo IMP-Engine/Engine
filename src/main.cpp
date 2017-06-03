@@ -23,7 +23,6 @@
 #include "collision/collision.h"
 #include "performance.h"
 #include "physics.h"
-#include "particles/ParticleRenderer.h"
 #include "scenes/Scene.h"
 #include "models/ModelRenderer.h"
 
@@ -65,7 +64,6 @@ Physics *physicSystem;
 std::vector< std::tuple<std::string, model::ModelConfig> > objects;
 
 // Shaders and rendering 
-ParticleRenderer *particleRenderer;
 ModelRenderer *modelRenderer;
 bool renderSurfaces = false;
 
@@ -132,7 +130,7 @@ void init() {
     ImGui_ImplGlfwGL3_Init(window, true); 
 
     input::initialize(window);
-    camera.physicSystem = physicSystem;
+    
 
     visualization::initialize();
 
@@ -141,7 +139,7 @@ void init() {
     scene = new Scene;
     scene->init();
     physicSystem = new Physics(scene->triangles);
-
+    camera.physicSystem = physicSystem;
     modelData = ModelData();
     modelData.clear();
 
@@ -154,17 +152,14 @@ void init() {
     conf.setDefaults();
     model::loadPredefinedModel("Box", physicSystem->particles, physicSystem->constraints, conf);
 
-    particleRenderer = new ParticleRenderer();
-    particleRenderer->init();
-
     modelRenderer = new ModelRenderer();
     modelRenderer->init();
 }
 
-void display(double deltaTime) {
+ void display(double deltaTime) {
 
 
-    physicSystem->step(scene, useVariableTimestep ? (float)deltaTime : timestep);
+    physicSystem->step(useVariableTimestep ? (float)deltaTime : timestep);
 
     GLfloat ratio;
     GLint width, height;
@@ -210,7 +205,7 @@ void display(double deltaTime) {
 
         GLint heightOfNearPlane = (GLint)round(abs(viewport[3] - viewport[1]) / (2 * tan(0.5*camera.getFovy() * glm::pi<float>() / 180.0)));
 
-        particleRenderer->render(physicSystem->particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix, heightOfNearPlane);
+        physicSystem->device->renderParticles(modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix, heightOfNearPlane);
 
         visualization::drawConstraints(physicSystem->constraints, physicSystem->particles, modelViewProjectionMatrix);
     }

@@ -15,26 +15,33 @@
 #include "constraints/ConstraintData.h"
 #include "intersections.h"
 #include "performance.h"
+#include "devices/Device.h"
+#include "devices/CPU.h"
 #include "GPU/GPU.h"
 
 class Physics 
 {
 public:
 
-    enum Mode {
+    enum ParallelMode {
         sequential,
         multicore,
         GPGPU
     };
 
-    Physics(std::vector<Triangle> triangles);
+    enum ConstraintSolve {
+        jacobi,
+        gaussSeidel
+    };
+
+    Physics(std::vector<Triangle> & triangles);
     ~Physics() {};
 
     void gui();
 
-    Mode getMode();
+    ParallelMode getMode();
 
-    void setMode(Mode newMode);
+    void setMode(ParallelMode newMode);
 
     bool doPhysics;
     float overRelaxConst;
@@ -48,7 +55,6 @@ public:
 
     float gravity;
     float wind;
-    bool windActive;
 
     int iterations;
     int stabilizationIterations;
@@ -57,28 +63,13 @@ public:
     ConstraintData constraints;
     std::vector<Triangle> triangles;
 
-    GPU * GPU;
+    Device* device;
 
-    void step(Scene *scene, float dt);
+    void step(float dt);
 
 private:
 
-    Mode mode;
+    ParallelMode mode;
+    ConstraintSolve solve;
 
-    /*
-        Stationary iterative linear solver - Gauss-Seidel
-    */
-    void resolveConstraints(std::vector<glm::vec3> & position, std::vector<glm::vec3> & pPosition, std::vector<float> & invmass, std::vector<tbb::atomic<int>> & numBoundConstraints, PlaneCollisionConstraintData & planeConstraints, DistanceConstraintData & particleConstraints);
-
-    void dampPlaneCollision(std::vector<tbb::atomic<int>> & numBoundConstraints, std::vector<glm::vec3> & velocity, PlaneCollisionConstraintData & triangleConstraints);
-
-    /*
-        Project position and predicted positions to valid states as specified by the planeCollisions constraints
-    */
-    void resolveCollisions(std::vector<glm::vec3> & position, std::vector<glm::vec3> & pPosition, std::vector<glm::float32> & invmass, PlaneCollisionConstraintData & planeConstraints, DistanceConstraintData & particleConstraints);
-
-    /*
-        If there is a collision with the scene, add that constraint to triangleConstraints.
-    */
-    void detectCollisions(Scene * scene, std::vector<tbb::atomic<int>> & numBoundConstraints, PlaneCollisionConstraintData & triangleConstraints, std::vector<int> & phase, std::vector<glm::vec3> & pPosition);
 };

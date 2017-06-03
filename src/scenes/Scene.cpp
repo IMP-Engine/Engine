@@ -179,9 +179,6 @@ void Scene::render(glm::mat4 &viewMatrix, glm::mat4 &modelViewProjectionMatrix, 
 
 void Scene::init() 
 {
-
-    windActive = false;
-
     // Shader setup
     shader = glHelper::loadShader(VERT_SHADER_PATH, FRAG_SHADER_PATH);
     GLuint mvp_location = glGetUniformLocation(shader, "MVP");

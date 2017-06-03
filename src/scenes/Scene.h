@@ -36,8 +36,6 @@ public:
     unsigned int normalBuffer;
     unsigned int shader;
 
-    bool windActive;
-
     std::vector<glm::vec3> loadedVertices;
     std::vector<glm::vec3> normalVectors;
     std::vector<float> vertices;

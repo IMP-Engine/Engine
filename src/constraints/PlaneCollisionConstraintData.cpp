@@ -1,5 +1,6 @@
-#pragma once
 #include "PlaneCollisionConstraintData.h"
+
+tbb::mutex lockMutex;
 
 PlaneCollisionConstraintData::PlaneCollisionConstraintData()
 {
@@ -33,8 +34,11 @@ void PlaneCollisionConstraintData::clear()
 
 void PlaneCollisionConstraintData::addConstraint(PlaneCollisionConstraint & config)
 {
+     
+    lockMutex.lock();
     particles.push_back(config.particleIndex);
     normals.push_back(config.normal);
     distances.push_back(config.distance);
     cardinality++;
+    lockMutex.unlock();
 }
