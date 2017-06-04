@@ -17,7 +17,7 @@
 #include "performance.h"
 #include "devices/Device.h"
 #include "devices/CPU.h"
-#include "GPU/GPU.h"
+#include "devices/GPU.h"
 
 class Physics 
 {

@@ -6,15 +6,22 @@
 #include "../glad/glad.h"
 #endif // !__gl_h_
 
+#include "Device.h"
 #include "../glHelper.h"
 #include "../particles/ParticleData.h"
 #include "../constraints/ConstraintData.h"
 
 #ifdef _WIN32
 #define SC_SHADER_PATH "../../src/GPU/solveConstraints.frag"
+#define VI_SHADER_PATH "../../src/GPU/verletIntegration.frag"
+#define UV_SHADER_PATH "../../src/GPU/updateVelocity.frag"
+#define UP_SHADER_PATH "../../src/GPU/updatePosition.frag"
 #define VERTEX_SHADER_PATH "../../src/GPU/passthrough.vert"
 #elif __unix__
 #define SC_SHADER_PATH "../src/GPU/solveConstraints.frag"
+#define VI_SHADER_PATH "../src/GPU/verletIntegration.frag"
+#define UV_SHADER_PATH "../src/GPU/updateVelocity.frag"
+#define UP_SHADER_PATH "../src/GPU/updatePosition.frag"
 #define VERTEX_SHADER_PATH "../src/GPU/passthrough.vert"
 #endif
 
@@ -37,16 +44,23 @@
 /* memory fetches and actual required computation.             */
 /***************************************************************/
 
-class GPU
+class GPU : public Device
 {
 public:
     
-    GPU();
+    GPU(ParticleData & particles, ConstraintData & constraints, std::vector<Triangle> & triangles);
     ~GPU();
 
-    void restart(ParticleData & particles, ConstraintData & constraints);
+    // Start and stop does not allow for smooth transition
+    void start(ParticleData & particles, ConstraintData & constraints);
+    void stop(ParticleData & particles);
 
-    void run(ParticleData & particles, ConstraintData & constraints, int iterations, float omega);
+    void verletIntegrate(float dt, glm::vec3 forces);
+
+    void solveConstraintsJacobi(int iterations, float omega);
+
+    void updateParticles(float dt);
+
 
 private:
 
@@ -60,7 +74,7 @@ private:
         1.0f, 1.0f, 0.0f,
     };
 
-    GLuint program;
+    GLuint constraintSolveProgram, verletIntegrationProgram, updateVelocityProgram, updatePositionProgram;
 
     GLuint vao;
     GLuint vbo;
@@ -73,15 +87,17 @@ private:
     /* +----------+----------+--------+ */
     /* | variable | internal | format | */
     /* +----------+----------+--------+ */
-    /* | posMain  | RGB32F   | RGB    | */
-    /* | posSub   | RGB32F   | RGB    | */
+    /* | bufMain  | RGB32F   | RGB    | */
+    /* | bufSub   | RGB32F   | RGB    | */
+    /* | posStart | RGB32F   | RGB    | */
     /* | invmass  | R32F     | RED    | */
     /* |constraint| RGBA32F  | RGBA   | */
     /* | segments | R32UI    | RED    | */ 
     /* | indirect | R32UI    | RED    | */
     /* +----------+----------+--------+ */
     /************************************/
-    GLuint posMain, posSub, invmasses;          
+    GLuint bufMain, bufSub; // Ping pong buffers
+    GLuint posStart, invmasses;          
     GLuint boundConstraints; // TODO Remove in favor of GS
     /**************************************************/
     /*         Distance constraint parameters         */
@@ -97,4 +113,13 @@ private:
     /* of texture() when accesing elements from segment */
     /****************************************************/
     GLuint segment, indirect;
+
+    // Inherited via Device
+    virtual void solveConstraintsGaussSeidel(int iterations, float omega) override;
+    virtual void updateParticles(float dt, float pSleeping) override;
+    virtual void detectCollisionsTriangles() override;
+    virtual void detectCollisionParticles() override;
+    virtual void stabilizationPass(int stabilizationIterations) override;
+    virtual void dampCollision(float restitutionCoefficientT, float restitutionCoefficientN) override;
+    virtual void renderParticles(glm::mat4 & modelViewProjectionMatrix, glm::mat4 & modelViewMatrix, glm::vec3 & viewSpaceLightPosition, glm::mat4 & projectionMatrix, int height) override;
 };
