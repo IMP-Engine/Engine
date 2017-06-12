@@ -68,7 +68,7 @@ void Physics::step(float dt)
     std::vector<int>   &phase     = particles.phase;
     std::vector<tbb::atomic<int>>   &numBoundConstraints = particles.numBoundConstraints;
 
-    device->verletIntegrate(dt, glm::vec3(wind, gravity, 0.f));
+    device->verletIntegrate(dt, glm::vec3(wind, -gravity, 0.f));
 
     /*// Breakable constraints
     int id = performance::startTimer("Remove broken constraints");

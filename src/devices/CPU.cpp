@@ -17,7 +17,7 @@ void CPU::verletIntegrate(float dt, glm::vec3 forces)
         {
             for (size_t i = r.begin(); i != r.end(); i++)
             {
-                particles.velocity[i] -= dt * forces;
+                particles.velocity[i] += dt * forces;
                 particles.pPosition[i] = particles.position[i] + dt * particles.velocity[i];
             }
         });
@@ -26,7 +26,7 @@ void CPU::verletIntegrate(float dt, glm::vec3 forces)
     {
         for (size_t i = 0; i != particles.cardinality; i++) 
         {
-            particles.velocity[i] -= dt * forces;
+            particles.velocity[i] += dt * forces;
             particles.pPosition[i] = particles.position[i] + dt * particles.velocity[i];
         }
     }
