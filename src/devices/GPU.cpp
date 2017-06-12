@@ -1,9 +1,11 @@
 #include "gpu.h"
 
 GPU::GPU(ParticleData & particles, ConstraintData & constraints, std::vector<Triangle>& triangles)
-    : Device(particles, constraints, triangles)
+    : Device(particles, constraints, triangles), particleRenderer()
 {
     glGenFramebuffers(1, &fbo);
+
+    particleRenderer.init();
 
     constraintSolveProgram = glHelper::loadShader(VERTEX_SHADER_PATH, SC_SHADER_PATH);
     verletIntegrationProgram = glHelper::loadShader(VERTEX_SHADER_PATH, VI_SHADER_PATH);
@@ -25,6 +27,7 @@ GPU::GPU(ParticleData & particles, ConstraintData & constraints, std::vector<Tri
     glGenTextures(1, &bufSub);
     glGenTextures(1, &posStart);
     glGenTextures(1, &invmasses);
+    glGenTextures(1, &radii);
     glGenTextures(1, &boundConstraints); // TODO remove in favor of GS
     glGenTextures(1, &constraint);
     glGenTextures(1, &segment);
@@ -44,6 +47,7 @@ GPU::~GPU()
     glDeleteTextures(1, &bufSub);
     glDeleteTextures(1, &posStart);
     glDeleteTextures(1, &invmasses);
+    glDeleteTextures(1, &radii);
     glDeleteTextures(1, &boundConstraints); // TODO remove in favor of GS
     glDeleteTextures(1, &constraint);
     glDeleteTextures(1, &segment);
@@ -70,9 +74,11 @@ void GPU::start(ParticleData & particles, ConstraintData & constraints)
     glBindTexture(target, bufSub);
     initiateTexture(pWidth, pHeight, GL_RGB32F, GL_RGB, GL_FLOAT, NULL);
     glBindTexture(target, posStart);
-    initiateTexture(pWidth, pHeight, GL_RGB32F, GL_RGB, GL_FLOAT, &particles.position);
+    initiateTexture(pWidth, pHeight, GL_RGB32F, GL_RGB, GL_FLOAT, &particles.position[0]);
     glBindTexture(target, invmasses);
     initiateTexture(pWidth, pHeight, GL_R32F, GL_RED, GL_FLOAT, &particles.invmass[0]);
+    glBindTexture(target, radii);
+    initiateTexture(pWidth, pHeight, GL_R32F, GL_RED, GL_FLOAT, &particles.radius[0]);
     // TODO remove in favor of GS
     glBindTexture(target, boundConstraints);
     initiateTexture(pWidth, pHeight, GL_R32I, GL_RED_INTEGER, GL_INT, &particles.numBoundConstraints[0]);
@@ -252,4 +258,15 @@ void GPU::dampCollision(float restitutionCoefficientT, float restitutionCoeffici
 
 void GPU::renderParticles(glm::mat4 & modelViewProjectionMatrix, glm::mat4 & modelViewMatrix, glm::vec3 & viewSpaceLightPosition, glm::mat4 & projectionMatrix, int height)
 {
+    particleRenderer.render(pWidth*pHeight, posStart, radii, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix, height);
+}
+
+void GPU::stop(ParticleData & particles, ConstraintData & constraints)
+{
+    particles.position.clear();
+    particles.position.resize(pWidth*pHeight);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, posStart, 0);
+    glReadPixels(0, 0, pWidth, pHeight, GL_RGB, GL_FLOAT, &particles.position[0]);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

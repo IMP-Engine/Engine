@@ -276,5 +276,13 @@ void CPU::renderParticles(glm::mat4 & modelViewProjectionMatrix, glm::mat4 & mod
     particleRenderer.render(particles, modelViewProjectionMatrix, modelViewMatrix, viewSpaceLightPosition, projectionMatrix, height);
 }
 
+void CPU::stop(ParticleData & particles, ConstraintData & constraints)
+{
+}
+
+void CPU::start(ParticleData & particles, ConstraintData & constraints)
+{
+}
+
 
 

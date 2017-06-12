@@ -27,6 +27,7 @@ void ParticleRenderer::init()
     */
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
+    particleShaderGPU = glHelper::loadShader(PARTICLE_VERT_GPU_SHADER_PATH, PARTICLE_FRAG_SHADER_PATH);
     particleShader = glHelper::loadShader(PARTICLE_VERT_SHADER_PATH, PARTICLE_FRAG_SHADER_PATH);
 
     int positionAttribLocation = glGetAttribLocation(particleShader, "position");
@@ -81,4 +82,28 @@ void ParticleRenderer::render(ParticleData &particles, glm::mat4 &modelViewProje
     glBindVertexArray(0);
     glUseProgram(0);
 
+}
+
+void ParticleRenderer::render(int numParticles, GLuint particles, GLuint radii, glm::mat4 & modelViewProjectionMatrix, glm::mat4 & modelViewMatrix, glm::vec3 & viewSpaceLightPosition, glm::mat4 & projectionMatrix, GLint height)
+{
+    glUseProgram(particleShaderGPU);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_RECTANGLE, particles);
+    glUniform1i(glGetUniformLocation(particleShaderGPU, "position"), 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_RECTANGLE, radii);
+    glUniform1i(glGetUniformLocation(particleShaderGPU, "particleSize"), 1);
+
+    glUniformMatrix4fv(glGetUniformLocation(particleShaderGPU, "modelViewProjectionMatrix"), 1, false, &modelViewProjectionMatrix[0].x);
+    glUniformMatrix4fv(glGetUniformLocation(particleShaderGPU, "modelViewMatrix"), 1, false, &modelViewMatrix[0].x);
+    glUniformMatrix4fv(glGetUniformLocation(particleShaderGPU, "projectionM4atrix"), 1, false, &projectionMatrix[0].x);
+    glUniform3fv(glGetUniformLocation(particleShaderGPU, "viewSpaceLightPos"), 1, &viewSpaceLightPosition.x);
+    glUniform1i(glGetUniformLocation(particleShaderGPU, "height"), height);
+    // TODO if we want to have non 1D textures we need to tell shader when to wrap (start next row)
+
+    glDrawArrays(GL_POINTS, 0, numParticles);
+
+    glUseProgram(0);
 }

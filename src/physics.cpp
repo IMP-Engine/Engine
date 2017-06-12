@@ -43,19 +43,15 @@ Physics::ParallelMode Physics::getMode() { return mode; }
 void Physics::setMode(ParallelMode newMode) {
     if (mode == newMode) return;
 
-    //TODO download particle and constraintdata
-
-    switch (mode) {
-    case sequential:  break;
-    case multicore:  break;
-    //case GPGPU: GPU->stop(particles); break;
-    }
-
+    device->stop(particles, constraints);
+    
     switch (newMode) {
     case sequential: device = new CPU(particles, constraints, triangles, false); break;
     case multicore: device = new CPU(particles, constraints, triangles, true); break;
-    //case GPGPU: GPU->start(particles, constraints); break;
+    case GPGPU: device = new GPU(particles, constraints, triangles); break;
     }
+
+    device->start(particles, constraints);
 
     mode = newMode;
 }

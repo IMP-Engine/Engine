@@ -10,19 +10,20 @@
 #include "../glHelper.h"
 #include "../particles/ParticleData.h"
 #include "../constraints/ConstraintData.h"
+#include "../particles/ParticleRenderer.h"
 
 #ifdef _WIN32
-#define SC_SHADER_PATH "../../src/GPU/solveConstraints.frag"
-#define VI_SHADER_PATH "../../src/GPU/verletIntegration.frag"
-#define UV_SHADER_PATH "../../src/GPU/updateVelocity.frag"
-#define UP_SHADER_PATH "../../src/GPU/updatePosition.frag"
-#define VERTEX_SHADER_PATH "../../src/GPU/passthrough.vert"
+#define SC_SHADER_PATH "../../src/devices/solveConstraints.frag"
+#define VI_SHADER_PATH "../../src/devices/verletIntegration.frag"
+#define UV_SHADER_PATH "../../src/devices/updateVelocity.frag"
+#define UP_SHADER_PATH "../../src/devices/updatePosition.frag"
+#define VERTEX_SHADER_PATH "../../src/devices/passthrough.vert"
 #elif __unix__
-#define SC_SHADER_PATH "../src/GPU/solveConstraints.frag"
-#define VI_SHADER_PATH "../src/GPU/verletIntegration.frag"
-#define UV_SHADER_PATH "../src/GPU/updateVelocity.frag"
-#define UP_SHADER_PATH "../src/GPU/updatePosition.frag"
-#define VERTEX_SHADER_PATH "../src/GPU/passthrough.vert"
+#define SC_SHADER_PATH "../src/devices/solveConstraints.frag"
+#define VI_SHADER_PATH "../src/devices/verletIntegration.frag"
+#define UV_SHADER_PATH "../src/devices/updateVelocity.frag"
+#define UP_SHADER_PATH "../src/devices/updatePosition.frag"
+#define VERTEX_SHADER_PATH "../src/devices/passthrough.vert"
 #endif
 
 #define target GL_TEXTURE_RECTANGLE
@@ -64,6 +65,8 @@ public:
 
 private:
 
+    ParticleRenderer particleRenderer;
+
     /* Geometry to cover the whole screen */
      GLfloat vertices[20] = {  
         -1.0f, 1.0f, 0.0f,
@@ -97,7 +100,7 @@ private:
     /* +----------+----------+--------+ */
     /************************************/
     GLuint bufMain, bufSub; // Ping pong buffers
-    GLuint posStart, invmasses;          
+    GLuint posStart, invmasses, radii;          
     GLuint boundConstraints; // TODO Remove in favor of GS
     /**************************************************/
     /*         Distance constraint parameters         */
@@ -122,4 +125,5 @@ private:
     virtual void stabilizationPass(int stabilizationIterations) override;
     virtual void dampCollision(float restitutionCoefficientT, float restitutionCoefficientN) override;
     virtual void renderParticles(glm::mat4 & modelViewProjectionMatrix, glm::mat4 & modelViewMatrix, glm::vec3 & viewSpaceLightPosition, glm::mat4 & projectionMatrix, int height) override;
+    virtual void stop(ParticleData & particles, ConstraintData & constraints) override;
 };

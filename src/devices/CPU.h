@@ -35,4 +35,8 @@ private:
 
     virtual void renderParticles(glm::mat4 &modelViewProjectionMatrix, glm::mat4 &modelViewMatrix, glm::vec3 &viewSpaceLightPosition, glm::mat4 &projectionMatrix, int height) override;
 
+    virtual void stop(ParticleData & particles, ConstraintData & constraints) override;
+
+    virtual void start(ParticleData & particles, ConstraintData & constraints) override;
+
 };
