@@ -1,11 +1,14 @@
 #pragma once
 
 #include <vector>
+#ifndef __gl_h_
 #include "../glad/glad.h"
+#endif // !__gl_h_
+
 #include <GLFW/glfw3.h>
 #include "glm/glm.hpp"
 #include "../glHelper.h"
-#include "Particle.h";
+#include "ParticleData.h"
 
 
 
@@ -21,15 +24,17 @@
 class ParticleRenderer
 {
 public:
-	ParticleRenderer(std::vector<Particle> *particleVector) : particles(particleVector) { };
-	~ParticleRenderer();
-	std::vector<Particle> *particles;
+    ParticleRenderer();
+    ~ParticleRenderer();
 
-	GLuint particleShader;
-	GLuint vao;
-	GLuint particleBuffer;
+    GLuint particleShader;
+    GLuint vao;
+    GLuint particleBuffer;
+    GLuint sizeBuffer;
+    GLuint phaseBuffer;
+    unsigned int *particleCount;
 
-	void init();
-	void render(mat4 &modelViewProjectionMatrix);
+    void init();
+    void render(ParticleData &particles, glm::mat4 &modelViewProjectionMatrix, glm::mat4 &modelViewMatrix, glm::vec3 &viewSpaceLightPosition, glm::mat4 &projectionMatrix, GLint height);
 };
 
